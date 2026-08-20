@@ -1,0 +1,272 @@
+{
+  "artifact": "Galevein: Stormflight public demo",
+  "generatedAt": "2026-08-20T15:01:32.077Z",
+  "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
+  "files": [
+    {
+      "path": ".nojekyll",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "assets/galevein_stormlance.glb",
+      "bytes": 146048,
+      "sha256": "ebc1529491563db6d6cd6d4b971b7c5f16f175b315b253e38b39ee4a19e34954"
+    },
+    {
+      "path": "audio/amb_sea.mp3",
+      "bytes": 257088,
+      "sha256": "67289d5fc2c4836bf48cfd867056b81675cb2a77139dcde55b8b5f89974a4932"
+    },
+    {
+      "path": "audio/crash.mp3",
+      "bytes": 14151,
+      "sha256": "6a0c0a76a93c7cdf0969a90880ad51634d25f70b0ef1451b6c7df71af6ebb576"
+    },
+    {
+      "path": "audio/detected.mp3",
+      "bytes": 9449,
+      "sha256": "6c2c6e3d1eabd129b418c402c55eb031c21ac590bb5b4f908feb0840294e4464"
+    },
+    {
+      "path": "audio/flap.mp3",
+      "bytes": 9135,
+      "sha256": "e10f97b0f72153285e241b83d31c1ca6caca80b5fc9e46c7935bea8c3dc957c1"
+    },
+    {
+      "path": "audio/menu_music_cc0.mp3",
+      "bytes": 926741,
+      "sha256": "3f25710090659287e3f184a2968af8c965b1480eb6d7665b0a0c43866eb8af85"
+    },
+    {
+      "path": "audio/music_tension.mp3",
+      "bytes": 240789,
+      "sha256": "fd97a4f5cf3e5c85d65c55e47c0c1f93c5ee98fed0749b9ae4ee71107f2f5785"
+    },
+    {
+      "path": "audio/ring.mp3",
+      "bytes": 18226,
+      "sha256": "748288b8d03041b03673a540d4238d92c2b95fc386c75fd1cd640c3482f882ae"
+    },
+    {
+      "path": "audio/thunder.mp3",
+      "bytes": 61902,
+      "sha256": "b2077a83cb9b0bb5bf30bc06deaabad68c91aaf1234180d620993999cd7c4824"
+    },
+    {
+      "path": "audio/wind.mp3",
+      "bytes": 257088,
+      "sha256": "ffc752cfde9440004aebe89c219e3a95120f9f4ac42e8618abbc9a3a5fe023a7"
+    },
+    {
+      "path": "audio/zap.mp3",
+      "bytes": 10076,
+      "sha256": "65940fc34d084f67eff155fc77c820072825675d53182dc938d13617e5f7dbad"
+    },
+    {
+      "path": "index.html",
+      "bytes": 203575,
+      "sha256": "0bda7fbba9f2831657fd712c05196cbbadb50835a19e972997aedf5f7ede0485"
+    },
+    {
+      "path": "licenses/poseidon-MIT.txt",
+      "bytes": 1067,
+      "sha256": "453959c42b49782fa6e3154fbba21720582694547e073e0647de1d042522c424"
+    },
+    {
+      "path": "licenses/three-r184-MIT.txt",
+      "bytes": 1081,
+      "sha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc"
+    },
+    {
+      "path": "OCEAN_PROVENANCE.md",
+      "bytes": 2697,
+      "sha256": "f88c6c4ff38c559c83edc4de3305318eb2b73306d267f74789b9c3ba5c57c7cd"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2648,
+      "sha256": "c97ad96ceefea2696b7cdd0a51d375255ab3cdf795388061b72562d5e88921c8"
+    },
+    {
+      "path": "RELEASE_READINESS.md",
+      "bytes": 2702,
+      "sha256": "53448b1f1fe1ebbbe6dbd9e09bbbc033e8e6605253d6dd5c7207860bd1af9b7a"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "bytes": 2712,
+      "sha256": "f28c7ffbfb52809438f6e1bef5332b50ff64ad8f89b47b8de8b027fed084ea04"
+    },
+    {
+      "path": "utils/BufferGeometryUtils.js",
+      "bytes": 31768,
+      "sha256": "c25b7930e570e9ec56173cd3b866ec8d2e10016630db3937efb439daf1cedbf6"
+    },
+    {
+      "path": "vendor/draco/draco_decoder.js",
+      "bytes": 512465,
+      "sha256": "8625489da79a805f4f2a7d511c3e52d8b4085608a9d2a4d5f4f9de5db0aea04f"
+    },
+    {
+      "path": "vendor/draco/draco_decoder.wasm",
+      "bytes": 192420,
+      "sha256": "a680d927bed9cb864ddbd63521868891af2bfbe755092761b4837487618df8ac"
+    },
+    {
+      "path": "vendor/draco/draco_wasm_wrapper.js",
+      "bytes": 58456,
+      "sha256": "8bb2952d2ba7d67e1414f8df819410cb0434a666be53f671fff75f68843d76f6"
+    },
+    {
+      "path": "vendor/DRACOLoader.js",
+      "bytes": 13637,
+      "sha256": "cc54e930544deb21180d2b3425138556b7e4d27a01c8f58caf132eb8d8b731a5"
+    },
+    {
+      "path": "vendor/GLTFLoader.js",
+      "bytes": 109831,
+      "sha256": "32e8ea1535e3016302dec82371beccd60e9cd371ee09fd8daee2ac45e8148a56"
+    },
+    {
+      "path": "vendor/poseidon-ocean/atmosphere.js",
+      "bytes": 2156,
+      "sha256": "664b3a69c9bea7adabb03cb4804be25b42edf354d1253ca5bf0ae1fcd1df9e3b"
+    },
+    {
+      "path": "vendor/poseidon-ocean/detailTexture.js",
+      "bytes": 10793,
+      "sha256": "98e0080aed7f78f36ebcc90ae61397616a20187bb0c94d9b5939964457f2786d"
+    },
+    {
+      "path": "vendor/poseidon-ocean/fft.js",
+      "bytes": 5815,
+      "sha256": "2f8e95db5137c26880ba4d505338610e0125f9cfe04c97b6b261637ea5712418"
+    },
+    {
+      "path": "vendor/poseidon-ocean/gaussianNoise.js",
+      "bytes": 1886,
+      "sha256": "315120cb6d9c6fb6bb5495e763b2e7e2c2ca600cd26a5b478c126bf694db6281"
+    },
+    {
+      "path": "vendor/poseidon-ocean/maps.js",
+      "bytes": 2650,
+      "sha256": "787b1c6221ad5c6a0d50a3a97ae20ad275376e75b5e3ebafd2602895587c11ae"
+    },
+    {
+      "path": "vendor/poseidon-ocean/Ocean.js",
+      "bytes": 4357,
+      "sha256": "124124b31e89c6e8567d522151c03ba22b1cf84af20e2d73ac8247280677d820"
+    },
+    {
+      "path": "vendor/poseidon-ocean/OceanCascade.js",
+      "bytes": 1800,
+      "sha256": "91fffde4ceb1e7c9cb494d21c79d7c0da9b8528243cd4d6c9aa66a78d8e8648a"
+    },
+    {
+      "path": "vendor/poseidon-ocean/oceanGrid.js",
+      "bytes": 3576,
+      "sha256": "06c42608882e20743814e98479841463fd3f74c000a0528872a59cecc2c9f423"
+    },
+    {
+      "path": "vendor/poseidon-ocean/oceanSurfaceMaterial.js",
+      "bytes": 77133,
+      "sha256": "9fdc164a99da517780b1d76757831cb37f4f7636946c48ae2930ecee79fc83f6"
+    },
+    {
+      "path": "vendor/poseidon-ocean/params.js",
+      "bytes": 22294,
+      "sha256": "d5eda6e83cc36e7875248557536d7256f22af28f3fce8a9a95f089f0147740f6"
+    },
+    {
+      "path": "vendor/poseidon-ocean/spectrum.js",
+      "bytes": 16925,
+      "sha256": "69a9b7a98f827aa24c2492af61245124467f5c2ef8d9f37c0d7d22cfda7daba1"
+    },
+    {
+      "path": "vendor/poseidon-ocean/water.js",
+      "bytes": 3154,
+      "sha256": "6889a78c24ff4e73dc16c62e878bf18ae4743c3aa4cd87dc361476a88e0e7b38"
+    },
+    {
+      "path": "vendor/poseidon-r184/three.core.js",
+      "bytes": 1427503,
+      "sha256": "8e9859d01fe1b91b0f486dd7d0109c0aba76258e885764fa905609eb18c91d3b"
+    },
+    {
+      "path": "vendor/poseidon-r184/three.tsl.js",
+      "bytes": 33614,
+      "sha256": "e6c3b8f03ef9e4a2fdf5500db72399a2e36574287e55190c9e641bc72968e436"
+    },
+    {
+      "path": "vendor/poseidon-r184/three.webgpu.js",
+      "bytes": 2061465,
+      "sha256": "444f623f1dc99228ee6fc68b68f83a8e1741059363df9796c48a68925ca05363"
+    },
+    {
+      "path": "vendor/three.module.js",
+      "bytes": 1284652,
+      "sha256": "5916c8dfb5f4e3eede312de305345868d4a0a8105383b080c6985565d6e79b46"
+    },
+    {
+      "path": "world-expansion/data/chapters.json",
+      "bytes": 6108,
+      "sha256": "eed7ae97dffa91f545c2808b972266b1590426b2eae696b679776ce85d51c885"
+    },
+    {
+      "path": "world-expansion/data/regions.json",
+      "bytes": 5884,
+      "sha256": "791c08e07b7721ff97fadc86aaed93b824e9d6f90dacf15c3455e21bbb7e1e57"
+    },
+    {
+      "path": "world-expansion/modules/chapterDirector.js",
+      "bytes": 11381,
+      "sha256": "15791f8e14125bc3f5d657872823ca0ac5471289319826bd091ecf977658d220"
+    },
+    {
+      "path": "world-expansion/modules/cinematicDof.js",
+      "bytes": 4700,
+      "sha256": "cd7fc0d30ea02b7b9882504ef8693d013f9c2a246f63c27c5d0682c5060161fc"
+    },
+    {
+      "path": "world-expansion/modules/dragonRigs.js",
+      "bytes": 901,
+      "sha256": "4d8728ee1df2f0ba20558f4569c58d390da6137e0bb227ab5c5a3c50e370fcb2"
+    },
+    {
+      "path": "world-expansion/modules/galeveinPoseidonSky.js",
+      "bytes": 1439,
+      "sha256": "98ffb291b333ca5056512bf5f30d842acddf0cf7e8b9c459a93440aeae9239fe"
+    },
+    {
+      "path": "world-expansion/modules/gameStructure.js",
+      "bytes": 7145,
+      "sha256": "150288982d5786c55aceb962d05058f7998a419ebdac05c25a2a84178bc63373"
+    },
+    {
+      "path": "world-expansion/modules/horizonDirector.js",
+      "bytes": 7887,
+      "sha256": "4030a6b5b0d11dabdd0e7098de818a6d6edec802bfa8afbc3973beed7cf2796f"
+    },
+    {
+      "path": "world-expansion/modules/landmarkPath.js",
+      "bytes": 8644,
+      "sha256": "f94f94db67a7ccec71dcd8ef1a14ce5f0dc72a282765bbc875cdeb9b95a0998e"
+    },
+    {
+      "path": "world-expansion/modules/lobbyHub.js",
+      "bytes": 8168,
+      "sha256": "01af4b97076a5cbad9be1844cb4191b1b42108df082e31e61ef60a237237db40"
+    },
+    {
+      "path": "world-expansion/modules/poseidonOceanLayer.js",
+      "bytes": 8860,
+      "sha256": "7de8dffa3f2eb597640db176812aa8365908fb355198f53de998409ee58da389"
+    },
+    {
+      "path": "world-expansion/modules/proceduralLandmarks.js",
+      "bytes": 57676,
+      "sha256": "7dcbb8ba8e431e03df3db8756b15f90f4d02afec4a5d79a5ce7e0dc8daf7aad0"
+    }
+  ]
+}

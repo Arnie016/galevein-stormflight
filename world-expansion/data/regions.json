@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "game": "Galevein: Stormflight",
+  "dragonWingspanUnits": 8,
+  "regions": [
+    {
+      "id": "wake_cove",
+      "name": "Wake Cove",
+      "theme": "Tutorial shelter — cliff stacks, calm shallows, first trust between rider and Galevein",
+      "bounds": {
+        "minX": -140,
+        "maxX": 220,
+        "minZ": 160,
+        "maxZ": 420,
+        "center": [56, 0, 31],
+        "radius": 180
+      },
+      "narrative": "A Galevein rests in the lee of the home stacks. Three low rings teach weight and beat before the open sea takes you seriously.",
+      "storyBeats": ["bond_dragon", "learn_flight"],
+      "allowedLandmarkArchetypes": ["viaduct"],
+      "allowedLandmarkIds": ["wake-arch", "tide-viaduct"],
+      "landmarkScaleRange": [0.85, 1.0],
+      "skyPreset": {
+        "id": "cove_dawn",
+        "fogDensity": 0.00062,
+        "horizonNear": 900,
+        "horizonFar": 3200,
+        "silhouetteCount": 18,
+        "silhouetteHeightMul": 0.72,
+        "hueShift": 0.04,
+        "emissivePulse": 0.10,
+        "palette": ["#1a2838", "#2a4a52", "#86f0e2"]
+      },
+      "ambientLine": "She answers you in the cove. Out past the stacks, the keepers are lighting their lamps."
+    },
+    {
+      "id": "keeper_shallows",
+      "name": "Keeper Shallows",
+      "theme": "Inner archipelago — patrol lights, modular ruins, echo-friendly rain",
+      "bounds": {
+        "minX": -280,
+        "maxX": 320,
+        "minZ": -80,
+        "maxZ": 320,
+        "center": [20, 0, 120],
+        "radius": 340
+      },
+      "narrative": "Home waters under keeper watch. Beacons thread between tide viaducts and the storm spire — rebuild confidence before the canyon tightens.",
+      "storyBeats": ["rebuild_trust", "echo_training"],
+      "allowedLandmarkArchetypes": ["viaduct", "beacon", "seagate"],
+      "allowedLandmarkIds": ["storm-spire", "keeper-arcade", "drowned-gate"],
+      "landmarkScaleRange": [0.58, 1.12],
+      "skyPreset": {
+        "id": "shallows_dusk",
+        "fogDensity": 0.00074,
+        "horizonNear": 850,
+        "horizonFar": 3400,
+        "silhouetteCount": 24,
+        "silhouetteHeightMul": 0.88,
+        "hueShift": 0.02,
+        "emissivePulse": 0.12,
+        "palette": ["#1b2234", "#3a4068", "#9fc6ff"]
+      },
+      "ambientLine": "Echo through the rain. The first lights are still slow — use that."
+    },
+    {
+      "id": "serpent_reach",
+      "name": "Serpent Reach",
+      "theme": "Weaving canyon slot and cinder coast — dive gates, drowned hearths, harbor works",
+      "bounds": {
+        "minX": -220,
+        "maxX": 680,
+        "minZ": -580,
+        "maxZ": -80,
+        "center": [280, 0, -340],
+        "radius": 420
+      },
+      "narrative": "The canyon throat rewards threading at speed. Beyond it, char on the water — four burned longhouses and one spared torch. Collect altitude over the harbor works.",
+      "storyBeats": ["thread_canyon", "rescue_clue", "collect_altitude"],
+      "allowedLandmarkArchetypes": ["harbor", "viaduct", "seagate"],
+      "allowedLandmarkIds": ["cinder-harbor", "salt-arcade"],
+      "landmarkScaleRange": [0.92, 1.12],
+      "skyPreset": {
+        "id": "serpent_storm",
+        "fogDensity": 0.00088,
+        "horizonNear": 820,
+        "horizonFar": 3600,
+        "silhouetteCount": 28,
+        "silhouetteHeightMul": 1.0,
+        "hueShift": -0.03,
+        "emissivePulse": 0.16,
+        "palette": ["#241820", "#5b3f39", "#ffb27a"]
+      },
+      "ambientLine": "Char on the water. Four hearths — and only one was spared."
+    },
+    {
+      "id": "rib_wastes",
+      "name": "Rib Wastes",
+      "theme": "Bleached bone arches and keeper works — vast ribs, gale spire, long night",
+      "bounds": {
+        "minX": -620,
+        "maxX": 120,
+        "minZ": -720,
+        "maxZ": -260,
+        "center": [-280, 0, -480],
+        "radius": 380
+      },
+      "narrative": "Ribs like sea-stacks. Whatever hunted the keepers' fathers was real. The gale spire marks the last shelter before the open night.",
+      "storyBeats": ["cross_bone_arches", "destroy_tower", "survive_long_night"],
+      "allowedLandmarkArchetypes": ["ribhall", "beacon", "harbor"],
+      "allowedLandmarkIds": ["bone-sentinel", "gale-spire", "keeper-works"],
+      "landmarkScaleRange": [0.94, 1.08],
+      "skyPreset": {
+        "id": "rib_twilight",
+        "fogDensity": 0.00096,
+        "horizonNear": 780,
+        "horizonFar": 3800,
+        "silhouetteCount": 30,
+        "silhouetteHeightMul": 1.12,
+        "hueShift": 0.06,
+        "emissivePulse": 0.14,
+        "palette": ["#1a1824", "#424a70", "#dcbcff"]
+      },
+      "ambientLine": "Ribs like sea-stacks. The keepers turn faster now — break their lock or fall."
+    },
+    {
+      "id": "aurora_gate",
+      "name": "Aurora Gate",
+      "theme": "Tempest sea-stack ring — aurora curtain, final beacon, nightfall escape",
+      "bounds": {
+        "minX": -320,
+        "maxX": 320,
+        "minZ": 480,
+        "maxZ": 920,
+        "center": [0, 0, 780],
+        "radius": 260
+      },
+      "narrative": "The stacks close ranks behind you. The aurora pours into the gate like a tide. One beacon remains — reach it before nightfall swallows the road.",
+      "storyBeats": ["reach_aurora", "nightfall_escape"],
+      "allowedLandmarkArchetypes": ["seagate", "ribhall"],
+      "allowedLandmarkIds": ["rib-vault", "aurora-crown"],
+      "landmarkScaleRange": [1.0, 1.18],
+      "skyPreset": {
+        "id": "aurora_night",
+        "fogDensity": 0.00104,
+        "horizonNear": 760,
+        "horizonFar": 4000,
+        "silhouetteCount": 22,
+        "silhouetteHeightMul": 1.28,
+        "hueShift": 0.10,
+        "emissivePulse": 0.20,
+        "palette": ["#0f1a28", "#3f6664", "#7dffc8"]
+      },
+      "ambientLine": "The aurora pours in like a tide. Home — or whatever waits on the other side."
+    }
+  ]
+}
