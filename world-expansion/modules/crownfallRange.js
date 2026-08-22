@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const PROFILE = 'crownfall-range-v1';
+const PROFILE = 'crownfall-range-v2';
 const ANCHOR = Object.freeze([-850, 0, -250]);
 const FOOTPRINT = Object.freeze({ width: 980, depth: 740, maxHeight: 560 });
 const LANE_RADIUS = 22;
@@ -28,36 +28,85 @@ function deterministicNoise(x, z) {
 function terrainHeight(nx, nz) {
   const radial = Math.hypot(nx * 1.02, nz * 1.12);
   const island = smoothstep(1.06, .69, radial);
-  const crown = gaussian(nx, nz, -.29, -.03, .29, .38);
+  const crown = gaussian(nx, nz, -.29, -.03, .31, .40);
+  const westPeak = gaussian(nx, nz, -.43, -.12, .13, .19);
+  const eastPeak = gaussian(nx, nz, -.16, .11, .14, .18);
   const east = gaussian(nx, nz, .39, .14, .25, .31);
+  const stormscar = gaussian(nx, nz, .79, .02, .20, .30);
   const south = gaussian(nx, nz, .06, -.48, .31, .23);
   const north = gaussian(nx, nz, .02, .48, .27, .24);
   const ridge = Math.exp(-Math.pow((nz + .04 + Math.sin(nx * 3.8) * .11) / .22, 2)) * (1 - Math.min(.75, Math.abs(nx) * .48));
   const pass = gaussian(nx, nz, .74, .08, .12, .32);
   const strata = deterministicNoise(nx, nz) * (16 + 18 * (1 - radial));
-  const mass = 42 + 422 * crown + 278 * east + 230 * south + 192 * north + 116 * ridge - 128 * pass + strata;
+  const mass = 42 + 338 * crown + 174 * westPeak + 142 * eastPeak + 250 * east + 342 * stormscar +
+    230 * south + 192 * north + 116 * ridge - 138 * pass + strata;
   return Math.max(-30, Math.min(FOOTPRINT.maxHeight, -30 + island * mass));
 }
 
-function colorAt(height, nx, nz, target) {
+function terrainSlope(nx, nz) {
+  const epsilon = .008;
+  const dx = (terrainHeight(nx + epsilon, nz) - terrainHeight(nx - epsilon, nz)) / (epsilon * FOOTPRINT.width);
+  const dz = (terrainHeight(nx, nz + epsilon) - terrainHeight(nx, nz - epsilon)) / (epsilon * FOOTPRINT.depth);
+  return Math.hypot(dx, dz);
+}
+
+function colorAt(height, nx, nz, slope, target) {
   const wet = new THREE.Color(0x213039);
-  const basalt = new THREE.Color(0x354850);
-  const heath = new THREE.Color(0x52675b);
-  const upper = new THREE.Color(0x85878c);
-  const crown = new THREE.Color(0xd9dde0);
+  const basalt = new THREE.Color(0x3c4a4d);
+  const heath = new THREE.Color(0x516757);
+  const lichen = new THREE.Color(0x71806a);
+  const upper = new THREE.Color(0x74777a);
+  const crown = new THREE.Color(0xd5dcde);
   const t = clamp01(height / FOOTPRINT.maxHeight);
-  if (t < .08) target.copy(wet).lerp(basalt, t / .08);
-  else if (t < .38) target.copy(basalt).lerp(heath, (t - .08) / .30);
-  else if (t < .70) target.copy(heath).lerp(upper, (t - .38) / .32);
-  else target.copy(upper).lerp(crown, smoothstep(.70, .92, t));
-  const striation = .92 + .10 * Math.sin(height * .12 + nx * 27 - nz * 19);
+  const noise = deterministicNoise(nx * 1.8, nz * 1.8);
+  const exposure = smoothstep(.28, .72, slope);
+  if (t < .07) target.copy(wet).lerp(basalt, t / .07);
+  else if (t < .48) target.copy(heath).lerp(lichen, clamp01((noise + .7) * .42));
+  else target.copy(upper);
+  target.lerp(basalt, exposure * (.55 + t * .25));
+  const snow = smoothstep(.68, .90, t) * (1 - smoothstep(.46, .92, slope)) * smoothstep(-.42, .30, noise);
+  target.lerp(crown, snow);
+  const striation = .975 + .035 * Math.sin(height * .08 + nx * 17 - nz * 13) * (.35 + exposure * .65);
   target.multiplyScalar(striation);
+}
+
+function surfaceSignal(u, v) {
+  const tau = Math.PI * 2;
+  return Math.sin(u * tau * 5 + Math.sin(v * tau * 2) * .7) * .46 +
+    Math.cos(v * tau * 7 - Math.sin(u * tau * 3) * .5) * .31 +
+    Math.sin((u + v) * tau * 13) * .15 + Math.cos((u - v) * tau * 19) * .08;
+}
+
+function terrainDetailTextures(size = 256) {
+  const normal = new Uint8Array(size * size * 4);
+  const roughness = new Uint8Array(size * size * 4);
+  const step = 1 / size;
+  for (let y = 0; y < size; y += 1) for (let x = 0; x < size; x += 1) {
+    const u = x / size, v = y / size, signal = surfaceSignal(u, v);
+    const dx = surfaceSignal(u + step, v) - surfaceSignal(u - step, v);
+    const dz = surfaceSignal(u, v + step) - surfaceSignal(u, v - step);
+    const nx = -dx * 2.0, ny = -dz * 2.0, nz = 1, length = Math.hypot(nx, ny, nz);
+    const index = (y * size + x) * 4;
+    normal[index] = Math.round((nx / length * .5 + .5) * 255);
+    normal[index + 1] = Math.round((ny / length * .5 + .5) * 255);
+    normal[index + 2] = Math.round((nz / length * .5 + .5) * 255); normal[index + 3] = 255;
+    const rough = Math.round(228 + Math.abs(signal) * 18);
+    roughness[index] = roughness[index + 1] = roughness[index + 2] = rough; roughness[index + 3] = 255;
+  }
+  const make = (data) => {
+    const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping; texture.repeat.set(3, 2);
+    texture.anisotropy = 4;
+    texture.needsUpdate = true; return texture;
+  };
+  return { normal: make(normal), roughness: make(roughness), size };
 }
 
 function terrainGeometry(xSegments, zSegments) {
   const columns = xSegments + 1, rows = zSegments + 1;
   const positions = new Float32Array(columns * rows * 3);
   const colors = new Float32Array(columns * rows * 3);
+  const uvs = new Float32Array(columns * rows * 2);
   const indices = [];
   const color = new THREE.Color();
   let ptr = 0;
@@ -69,8 +118,9 @@ function terrainGeometry(xSegments, zSegments) {
       positions[ptr] = nx * FOOTPRINT.width * .5;
       positions[ptr + 1] = y;
       positions[ptr + 2] = nz * FOOTPRINT.depth * .5;
-      colorAt(y, nx, nz, color);
+      colorAt(y, nx, nz, terrainSlope(nx, nz), color);
       colors[ptr] = color.r; colors[ptr + 1] = color.g; colors[ptr + 2] = color.b;
+      const uv = (z * columns + x) * 2; uvs[uv] = x / xSegments; uvs[uv + 1] = z / zSegments;
       ptr += 3;
     }
   }
@@ -91,6 +141,7 @@ function terrainGeometry(xSegments, zSegments) {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
@@ -181,10 +232,13 @@ export class CrownfallRange {
     this.root.userData.profile = PROFILE;
     this.scene.add(this.root);
 
+    this.detailTextures = terrainDetailTextures();
     this.terrainMaterial = new THREE.MeshStandardMaterial({
-      name: 'Crownfall_BasaltHeathSnow', vertexColors: true, roughness: .92,
+      name: 'Crownfall_SlopeBiomes_MicroStrata', vertexColors: true, roughness: .94,
       metalness: .015, flatShading: false, fog: true,
-      emissive: 0x10191a, emissiveIntensity: .12
+      emissive: 0x10191a, emissiveIntensity: .08,
+      normalMap: this.detailTextures.normal,
+      normalScale: new THREE.Vector2(.18, .18), roughnessMap: this.detailTextures.roughness
     });
     this.lod = new THREE.LOD();
     this.lod.name = 'Crownfall_TerrainLOD';
@@ -303,6 +357,10 @@ export class CrownfallRange {
       routeLaneRadius: LANE_RADIUS,
       minRouteClearance: this.routeClearance == null ? null : +this.routeClearance.toFixed(1),
       waterline: 'irregular-contour-animated-surf',
+      surfaceProfile: 'slope-biomes-generated-microstrata-v2',
+      generatedSurfaceTextures: 2,
+      surfaceTextureResolution: this.detailTextures.size,
+      silhouette: 'twin-peak-summit-connected-stormscar-shoulder',
       navigationHierarchy: ['Crownfall macro landmark', 'four named districts', 'twelve-beacon route']
     };
   }
@@ -311,6 +369,7 @@ export class CrownfallRange {
     this.scene.remove(this.root);
     for (const level of this.lod.levels) level.object.geometry.dispose();
     this.terrainMaterial.dispose();
+    this.detailTextures.normal.dispose(); this.detailTextures.roughness.dispose();
     this.cliffs.geometry.dispose(); this.cliffMaterial.dispose();
     this.foam.geometry.dispose(); this.foamMaterial.dispose();
     this.waterfalls.geometry.dispose(); this.waterfalls.material.dispose();

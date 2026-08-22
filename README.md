@@ -48,6 +48,15 @@ round victory, and respawn timing out of both browsers. The normal public URL
 still uses the same-device fallback because no internet backend has been
 provisioned or deployed.
 
+Build r14 gives **Crownfall Range** a stronger authored silhouette and surface
+hierarchy. Two connected summit masses and a broad Stormscar shoulder replace
+the single smooth mound, while slope-aware wet basalt, heath, lichen, exposed
+rock, and summit frost replace the old altitude bands. Two small generated
+normal/roughness maps add close surface breakup without external textures or
+extra terrain draw calls. The first high-frequency material candidate was
+rejected for visible moire; the retained calmer pass is still stylized
+prototype terrain, not Fortnite-level environment art.
+
 ## Build the release artifact
 
 ```sh
