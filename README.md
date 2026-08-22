@@ -42,6 +42,12 @@ chargeable long-range Volt Lance, `Z` fires close-range Arc Scatter, and `R`
 emits a short-range Wingbreak Pulse that interrupts the shared capture. The
 temporary host validates attack identity, cooldown, range, and damage bounds.
 
+Build r13 adds a local-first **server-authority foundation**. An opt-in
+WebSocket route moves pairing, health, attack validation, kills, capture score,
+round victory, and respawn timing out of both browsers. The normal public URL
+still uses the same-device fallback because no internet backend has been
+provisioned or deployed.
+
 ## Build the release artifact
 
 ```sh
@@ -97,3 +103,20 @@ npm run verify:duel
 ```
 
 To try it manually, open the same served game URL in two tabs and choose **Stormscar 1v1 Lab** in both. A public-origin proof can be run with `node scripts/duel-harness.mjs --url <game-url>`. Remote internet matchmaking remains a separate backend milestone.
+
+## Server-authority proof
+
+The source workspace includes a dependency-free Node match server. It binds to
+loopback by default, requires a matching browser origin, and serves the exact
+release artifact beside `/match`, `/health`, and aggregate `/metrics` routes.
+Run the complete server plus two-browser proof with one command:
+
+```sh
+npm run build
+npm run verify:network
+```
+
+The verifier requires two clients to join one match while neither claims
+authority, exercises all three attack classes, completes a first-to-three
+round, and proves death plus respawn. This is local multi-process proof, not a
+deployed internet service or cross-device field test.

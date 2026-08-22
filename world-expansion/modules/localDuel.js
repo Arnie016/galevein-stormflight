@@ -1,10 +1,12 @@
 /**
- * Same-origin two-client duel transport for the static Galevein demo.
+ * Two-client duel transport for Galevein.
  *
  * BroadcastChannel makes this a genuine two-browser-client exchange without
  * pretending that GitHub Pages is an internet matchmaking server. The lowest
  * peer id is the temporary match authority for objective score, damage, kills,
- * and round state. Closing either tab ends the match.
+ * and round state. When an explicitly configured WebSocket endpoint is present,
+ * pairing and match authority move to the server while this local mode remains
+ * the safe production fallback.
  */
 
 const CHANNEL_NAME = 'galevein-local-duel-v2';
@@ -39,6 +41,8 @@ function safeState(state = {}) {
 export class LocalDuelSession {
   constructor(options = {}) {
     this.channelName = options.channelName ?? CHANNEL_NAME;
+    this.serverUrl = options.serverUrl || null;
+    this.networked = !!this.serverUrl;
     this.onDamage = options.onDamage ?? (() => {});
     this.onEvent = options.onEvent ?? (() => {});
     // A background browser tab can pause requestAnimationFrame while timers
@@ -70,6 +74,27 @@ export class LocalDuelSession {
 
   join() {
     if (this.channel) return this.snapshot();
+    if (this.networked) {
+      if (!globalThis.WebSocket) {
+        this.status = 'unsupported'; this.onEvent({ type: 'unsupported', transport: 'WebSocket' }); return this.snapshot();
+      }
+      try {
+        this.channel = new WebSocket(this.serverUrl);
+        this.status = 'connecting';
+        this.channel.onopen = () => { this.status = 'searching'; this._post({ type: 'QUEUE' }); };
+        this.channel.onmessage = (event) => { try { this._receiveServer(JSON.parse(event.data)); } catch {} };
+        this.channel.onclose = () => {
+          this.channel = null; this.status = 'disconnected'; this.opponentId = null; this.role = null; this.remote = null;
+          this.onEvent({ type: 'left', transport: 'WebSocket' });
+        };
+        this.channel.onerror = () => this.onEvent({ type: 'network-error', transport: 'WebSocket' });
+      } catch {
+        this.channel = null; this.status = 'unsupported'; this.onEvent({ type: 'unsupported', transport: 'WebSocket' });
+        return this.snapshot();
+      }
+      this._startHeartbeat();
+      return this.snapshot();
+    }
     if (!globalThis.BroadcastChannel) {
       this.status = 'unsupported';
       this.onEvent({ type: 'unsupported' });
@@ -80,17 +105,21 @@ export class LocalDuelSession {
     this.status = 'searching';
     this._post({ type: 'HELLO' });
     this.lastHello = now();
+    this._startHeartbeat();
+    return this.snapshot();
+  }
+
+  _startHeartbeat() {
     // Networking cannot depend on requestAnimationFrame: browsers pause the
     // hidden tab, but a two-tab duel necessarily leaves one client hidden.
     this.heartbeat = setInterval(() => {
       if (!this.channel) return;
-      if (this.status === 'searching') this._post({ type: 'HELLO' });
+      if (!this.networked && this.status === 'searching') this._post({ type: 'HELLO' });
       else if (this.status === 'matched') {
         this.local = safeState(this.getState?.() ?? this.local);
         this._post({ type: 'STATE', target: this.opponentId, state: this.local });
       }
     }, 500);
-    return this.snapshot();
   }
 
   leave() {
@@ -109,7 +138,38 @@ export class LocalDuelSession {
 
   _post(message) {
     if (!this.channel) return;
+    if (this.networked) {
+      if (this.channel.readyState === WebSocket.OPEN) this.channel.send(JSON.stringify({ ...message, seq: ++this.seq, at: now() }));
+      return;
+    }
     this.channel.postMessage({ ...message, from: this.peerId, seq: ++this.seq, at: now() });
+  }
+
+  _receiveServer(message) {
+    if (!message || typeof message !== 'object') return;
+    if (message.type === 'WELCOME') { this.peerId = message.peerId || this.peerId; return; }
+    if (message.type === 'SEARCHING') { this.status = 'searching'; return; }
+    if (message.type === 'MATCHED') {
+      this.peerId = message.peerId || this.peerId; this.opponentId = message.opponentId; this.role = message.role;
+      this.status = 'matched'; this.scores[this.peerId] ??= 0; this.scores[this.opponentId] ??= 0;
+      this.kills[this.peerId] ??= 0; this.kills[this.opponentId] ??= 0; this._applyMatch(message.match);
+      this.onEvent({ type: 'matched', role: this.role, opponentId: this.opponentId, transport: 'WebSocket' }); return;
+    }
+    if (message.type === 'LEFT') {
+      this.status = 'searching'; this.opponentId = null; this.role = null; this.remote = null;
+      this.onEvent({ type: 'left', transport: 'WebSocket' }); return;
+    }
+    if (message.type === 'STATE' && message.from === this.opponentId) { this.remote = safeState(message.state); this.lastRemoteAt = now(); return; }
+    if (message.type === 'DAMAGE') {
+      if (this.seenEvents.has(message.eventId)) return; this.seenEvents.add(message.eventId);
+      this.onDamage({ damage: message.damage, source: message.source, eventId: message.eventId, attackId: message.attackId, hp: message.hp }); return;
+    }
+    if (message.type === 'ATTACK_ACCEPTED') {
+      const attackId = ATTACK_CATALOG[message.attackId] ? message.attackId : 'volt-lance';
+      this.acceptedAttacks[attackId] = (this.acceptedAttacks[attackId] || 0) + 1;
+      this.lastAttack = { attackId, source: this.peerId, target: message.target, damage: Number(message.damage) || 0 }; return;
+    }
+    if (message.type === 'MATCH') this._applyMatch(message.match);
   }
 
   _pair(peerId) {
@@ -158,7 +218,7 @@ export class LocalDuelSession {
     if (message.type === 'DAMAGE') {
       if (this.seenEvents.has(message.eventId)) return;
       this.seenEvents.add(message.eventId);
-      if (message.target === this.peerId) this.onDamage({ damage: message.damage, source: message.source, eventId: message.eventId });
+      if (message.target === this.peerId) this.onDamage({ damage: message.damage, source: message.source, eventId: message.eventId, attackId: message.attackId });
       return;
     }
     if (message.type === 'DEATH' && this.role === 'host') {
@@ -205,13 +265,14 @@ export class LocalDuelSession {
     const spec = ATTACK_CATALOG[attackId] || ATTACK_CATALOG['volt-lance'];
     const message = { type: 'ATTACK', eventId, target: this.opponentId, attackId: spec.id,
       damage: Math.min(spec.maxDamage, Math.max(spec.minDamage, Number(damage) || 0)) };
-    if (this.role === 'host') return this._authorizeAttack({ ...message, from: this.peerId });
+    if (!this.networked && this.role === 'host') return this._authorizeAttack({ ...message, from: this.peerId });
     this._post(message);
     return true;
   }
 
   notifyDeath(killer) {
     if (this.status !== 'matched') return;
+    if (this.networked) return;
     if (this.role === 'host') this._awardKill(killer, this.peerId);
     else this._post({ type: 'DEATH', killer, target: this.opponentId });
   }
@@ -240,7 +301,7 @@ export class LocalDuelSession {
   }
 
   _hostObjectiveTick(dt) {
-    if (this.role !== 'host' || !this.remote || this.roundWinner) return;
+    if (this.networked || this.role !== 'host' || !this.remote || this.roundWinner) return;
     const occupants = [];
     if (!this.local.dead && this.local.insideObjective) occupants.push(this.peerId);
     if (!this.remote.dead && this.remote.insideObjective) occupants.push(this.opponentId);
@@ -266,7 +327,7 @@ export class LocalDuelSession {
     this.local = safeState(state);
     if (!this.channel) return this.snapshot();
     const t = now();
-    if (this.status === 'searching' && t - this.lastHello > 500) {
+    if (!this.networked && this.status === 'searching' && t - this.lastHello > 500) {
       this._post({ type: 'HELLO' });
       this.lastHello = t;
     }
@@ -292,7 +353,10 @@ export class LocalDuelSession {
     const localScore = this.scores[this.peerId] || 0;
     const remoteScore = this.opponentId ? this.scores[this.opponentId] || 0 : 0;
     return {
-      transport: 'BroadcastChannel', scope: 'same-origin same-device', authoritative: this.role === 'host',
+      transport: this.networked ? 'WebSocket' : 'BroadcastChannel',
+      scope: this.networked ? 'server-routed prototype' : 'same-origin same-device',
+      authoritative: !this.networked && this.role === 'host', serverAuthoritative: this.networked,
+      serverUrl: this.networked ? this.serverUrl : null,
       peerId: this.peerId, opponentId: this.opponentId, status: this.status, role: this.role,
       matched: this.status === 'matched', remote: this.remote ? { ...this.remote, position: this.remote.position.slice() } : null,
       localScore, remoteScore,

@@ -34,6 +34,7 @@ This checklist applies only to the generated `release/` artifact. It does not cl
 - Authored-opening proof: Wake Perch uses a fixed seed and launch pose, hides route clutter and distant set pieces until launch, preserves more than 35 m of route clearance, and presents one primary Story action.
 - Crownfall r11 proof: one 980 × 740 macro-landmass rises 560 units above the sea, exposes four named districts and four collision proxies, uses three LODs capped at 3,344 terrain triangles and five draw calls, clips submerged heightfield cells, and preserves 65.1 units of minimum clearance from the protected Story route. The final local Story/WebGPU harness passed 24/24 checks; the final Local 1v1 harness passed 7/7 checks, with no external requests or browser errors in either run.
 - Stormscar r12 regression proof: the post-combat-change Story/WebGPU harness passed 24/24 checks, including WebGPU first-frame submission and the forced WebGL fallback; it reported no external requests or browser errors.
+- Server foundation r13 proof: a dependency-free loopback WebSocket server paired exactly two browser clients while both reported `authoritative: false` and `serverAuthoritative: true`. The 11/11 client run and three server assertions recorded one accepted Volt Lance, Arc Scatter, and Wingbreak Pulse with zero rejects, three objective captures, one death, one respawn, and one converged first-to-three winner. The unchanged BroadcastChannel fallback passed 10/10 and the Story/WebGPU regression passed 24/24.
 - Current working-title web search did not reveal an exact game/product match, but that is not a trademark clearance or legal opinion.
 
 ## Release boundary
@@ -49,6 +50,10 @@ Crownfall fixes macro scale and navigational hierarchy, but its terrain
 materials and remaining distant silhouettes are still prototype-quality. It
 does not establish Fortnite-level art fidelity or a complete open-world RPG.
 
-The Stormscar 1v1 Lab is same-device/two-tab transport built on `BroadcastChannel`.
-It does not claim internet matchmaking, persistent accounts, anti-cheat,
-dedicated-server authority, latency compensation, or cross-device networking.
+The public Stormscar 1v1 Lab remains same-device/two-tab transport built on
+`BroadcastChannel`. The source workspace now contains a locally proven
+server-authoritative WebSocket path, but it has not been provisioned, deployed,
+or cross-device tested. Production internet matchmaking still needs TLS and
+reverse-proxy validation, an approved hosting and spend cap, authentication or
+anonymous-session abuse controls, regional latency tests, persistence policy,
+capacity/load testing, observability, and operational review.

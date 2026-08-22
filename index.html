@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-stormscar-r12">
+<meta name="galevein-build" content="stormflight-server-foundation-r13">
 <link rel="icon" href="data:,">
 <style>
   :root{ --purple:#70cbbb; --teal:#59f0d5; --amber:#ffc27a; --warn:#ff6b68;
@@ -1457,7 +1457,14 @@ DUEL_OBJECTIVE.add(duelCore);
 const duelLight=new THREE.PointLight(0x59f0d5,42,70,2); DUEL_OBJECTIVE.add(duelLight);
 const RIVAL={group:new THREE.Group(),model:null,mixer:null,flap:null,glide:null,loaded:false,target:new THREE.Vector3()};
 RIVAL.group.name='RivalGalevein'; RIVAL.group.visible=false; scene.add(RIVAL.group);
+const requestedDuelServer=new URLSearchParams(location.search).get('duelServer');
+const DUEL_SERVER_URL=(()=>{ if(!requestedDuelServer)return null; try{
+  const url=new URL(requestedDuelServer); const loopback=['127.0.0.1','localhost','[::1]'].includes(url.hostname);
+  const sameHostSecure=url.protocol==='wss:'&&url.hostname===location.hostname;
+  return (loopback||sameHostSecure)&&['ws:','wss:'].includes(url.protocol)?url.href:null;
+}catch{return null;} })();
 const localDuel=new LocalDuelSession({
+  serverUrl:DUEL_SERVER_URL,
   getState:()=>({position:D.group.position.toArray(),yaw:D.yaw,pitch:D.pitch,roll:D.roll,
     speed:D.speed,hp:S.hp,dead:S.duelDead,
     insideObjective:!S.duelDead&&D.group.position.distanceTo(DUEL_OBJECTIVE.position)<DUEL_CAPTURE_RADIUS}),
@@ -1880,7 +1887,7 @@ function updateLocalDuel(dt){
     :snap.status!=='matched'?'Open this exact URL in a second tab on this device.'
     :snap.captureOwner?`Stormheart hold ${Math.min(100,Math.round(snap.hold/snap.objective.holdSeconds*100))}% · break the rival lock`
     :'Enter the cyan crown alone and hold for 3 seconds.';
-  $('chapterLabel').textContent='STORMSCAR SHELF · LOCAL 1V1';
+  $('chapterLabel').textContent=`STORMSCAR SHELF · ${snap.serverAuthoritative?'SERVER':'LOCAL'} 1V1`;
   $('objText').textContent=snap.status==='matched'?'Claim the Stormheart · three attacks · first to 3':'Waiting for a rival in another tab';
   return snap;
 }
@@ -3254,7 +3261,7 @@ function hud(litNow){
   } else A.style.opacity=0;
   if(S.duelMode){
     const ds=localDuel.snapshot();
-    $('detPct').textContent=ds.matched?'RIVAL LINKED':'LOCAL SEARCH';
+    $('detPct').textContent=ds.matched?'RIVAL LINKED':ds.serverAuthoritative?'SERVER QUEUE':'LOCAL SEARCH';
     $('detPct').style.color=ds.matched?'#59f0d5':'#ffc27a';
     $('detFill').style.width=(ds.matched?'100':'35')+'%';
     $('beaconV').textContent=ds.localScore+'–'+ds.remoteScore;
@@ -3352,7 +3359,7 @@ function begin(opts={}){
       S.chapter=1; S.tutDone=true; for(const r of tutRings) r.visible=false; for(const r of rings) r.visible=false;
       for(const sl of searchlights){ sl.disabled=1e9; sl.lit=0; }
       localDuel.join(); DUEL_OBJECTIVE.visible=true; DUEL_ARENA.visible=true; $('duelHud').classList.add('on');
-      storyPop('Stormscar 1v1. Open this exact URL in a second tab, then use X, Z and R to control the crown.',7);
+      storyPop(DUEL_SERVER_URL?'Stormscar server queue. Match authority is outside this browser.':'Stormscar local 1v1. Open this exact URL in a second tab.',7);
     } else if(S.practiceMode){
       storyPop('Practice flight — three rings in the cove. No keeper hunt.',6);
     } else if(S.lobbyMode==='chapter' && opts.chapterIndex!=null){
@@ -3769,6 +3776,7 @@ window.SIM={
     rivalLoaded:RIVAL.loaded,rivalVisible:RIVAL.group.visible,rivalPosition:RIVAL.group.position.toArray(),
     playerVisible:D.group.visible,playerPosition:D.group.position.toArray()}),
   duelStage:(kind='faceoff')=>{
+    const serverMode=localDuel.snapshot().serverAuthoritative;
     S.started=true; S.done=false; S.duelMode=true; S.practiceMode=true; S.chapter=1; S.tutDone=true;
     menuEl.classList.add('hide','live'); $('hud').classList.add('on'); $('duelHud').classList.add('on');
     $('shutter').classList.remove('closed'); S.launching=false; $('storyline').textContent='';
@@ -3776,9 +3784,12 @@ window.SIM={
     const role=localDuel.role||kind;
     const positions=kind==='objective'
       ? {host:[-430,180,-250],challenger:[-385,180,-250]}
-      : {host:[-466,190,-250],challenger:[-394,190,-250]};
-    D.group.position.fromArray(positions[role]||positions.host); D.yaw=role==='host'?-Math.PI/2:Math.PI/2;
-    D.pitch=0;D.roll=0;D.speed=20;S.prevSpeed=20;S.duelDead=false;S.hp=S.hpMax;D.group.visible=true;
+      :kind==='proof'?{host:[-560,200,-250],challenger:[-385,180,-250]}
+      :{host:[-466,190,-250],challenger:[-394,190,-250]};
+    D.group.position.fromArray(positions[role]||positions.host);
+    D.yaw=kind==='proof'?(role==='host'?Math.PI/2:-Math.PI/2):(role==='host'?-Math.PI/2:Math.PI/2);
+    D.pitch=0;D.roll=0;D.speed=20;S.prevSpeed=20;
+    if(!serverMode){S.duelDead=false;S.hp=S.hpMax;} D.group.visible=!S.duelDead;
     return localDuel.snapshot();
   },
   duelHit:(damage=42,attackId='volt-lance')=>localDuel.reportHit(damage,attackId),
