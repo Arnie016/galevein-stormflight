@@ -2,6 +2,11 @@
 
 An original browser-game prototype about flying a Galevein through the Sable Reach: learn the cove, evade the keepers, collect the beacons, and escape through the Tempest Gate.
 
+The release contains two distinct play contracts:
+
+- **Story** is the authored solo route from Wake Perch through the floating Sable Reach.
+- **Local 1v1 Lab** links two tabs opened to the same origin on one device. The pair contests the Stormheart, exchanges flight state and combat damage, and respawns a downed dragon after three seconds. This is a real two-client prototype, but it is not internet matchmaking; GitHub Pages does not provide a multiplayer server.
+
 ## Play
 
 Serve this folder over HTTP; ES modules and the Draco-compressed creature will not load from `file://`.
@@ -61,3 +66,13 @@ The same assertions can target that public origin directly:
 ```sh
 node scripts/flight-harness.mjs --url https://arnie016.github.io/galevein-stormflight/index.html --out /tmp/galevein-live.json
 ```
+
+## Two-client duel harness
+
+The duel verifier opens two independent Chrome tabs, proves one temporary host and one challenger, checks remote-rig rendering, converged Stormheart score, combat death, and three-second respawn, then rejects external requests or browser errors:
+
+```sh
+npm run verify:duel
+```
+
+To try it manually, open the same served game URL in two tabs and choose **Local 1v1 Lab** in both. Remote internet matchmaking remains a separate backend milestone.

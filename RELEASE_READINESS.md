@@ -28,6 +28,7 @@ This checklist applies only to the generated `release/` artifact. It does not cl
 - Forced `?ocean=webgl` proof: the Poseidon canvas remained hidden and the legacy sea/sky remained visible, with no blank frame or crash.
 - Objective proof: Story, Practice, and Chapter launch contracts passed; beacon 12 produced `ESCAPED`; full detection produced `DETECTED`; reaching nightfall early produced `NIGHTFALL`.
 - Low-altitude proof: two seconds of open-water flight remained active at roughly 15 m altitude with the WebGPU ocean visible and no runtime fault.
+- Local duel proof: two independent same-origin tabs elected one temporary authority, rendered each other's Stormlance, converged one contested Stormheart capture, exchanged combat damage, entered a zero-health death state, and returned the downed client to flight after three seconds. The run made no external requests and produced no browser errors.
 - Authored-opening proof: Wake Perch uses a fixed seed and launch pose, hides route clutter and distant set pieces until launch, preserves more than 35 m of route clearance, and presents one primary Story action.
 - Current working-title web search did not reveal an exact game/product match, but that is not a trademark clearance or legal opinion.
 
@@ -39,3 +40,7 @@ The GitHub Pages artifact is a public technical preview, not a production or
 commercial release. A final human visual review is still required; the current
 procedural mid-flight architecture remains placeholder-quality, and a green
 harness or live URL does not establish store readiness or legal clearance.
+
+The Local 1v1 Lab is same-device/two-tab transport built on `BroadcastChannel`.
+It does not claim internet matchmaking, persistent accounts, anti-cheat,
+dedicated-server authority, latency compensation, or cross-device networking.

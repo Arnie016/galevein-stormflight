@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-wake-perch-r7">
+<meta name="galevein-build" content="stormflight-stormheart-r8">
 <link rel="icon" href="data:,">
 <style>
   :root{ --purple:#70cbbb; --teal:#59f0d5; --amber:#ffc27a; --warn:#ff6b68;
@@ -86,6 +86,14 @@
   #hudTR{ top:14px; right:14px; text-align:right; padding:6px 12px; }
   #hudTR .mini{ font-size:11px; letter-spacing:1px; color:#7d8cad; }
   #hudTR .mini b{ color:#dbe7fb; margin-left:7px; font-weight:600; }
+  #duelHud{ position:absolute; top:16px; left:50%; transform:translateX(-50%); min-width:min(86vw,430px);
+    display:none; padding:8px 14px; text-align:center; border-radius:9px; border:1px solid rgba(255,194,122,.5);
+    background:linear-gradient(180deg,rgba(12,23,29,.9),rgba(9,13,22,.82)); box-shadow:0 10px 34px rgba(0,0,0,.42); }
+  #duelHud.on{ display:block; }
+  #duelHud .duel-state{ font:700 10px var(--display); letter-spacing:.22em; color:#ffc27a; }
+  #duelHud .duel-score{ margin-top:4px; font:700 12px var(--mono); color:#e9f7f4; letter-spacing:.08em; }
+  #duelHud .duel-score b{ color:#59f0d5; }
+  #duelHud .duel-note{ margin-top:3px; font:10px var(--mono); color:#91a6bd; }
 
   #objTag{ top:16px; left:50%; transform:translateX(-50%); text-align:center; font-size:12px;
     letter-spacing:1.5px; color:#b9c8e6; padding:6px 16px; min-width:min(92vw,520px); }
@@ -500,6 +508,11 @@
     <div class="mini">FPS<b id="fpsV">–</b></div>
     <div class="mini">SCALES<b id="scalesV">0</b></div>
   </div>
+  <div id="duelHud" aria-live="polite">
+    <div class="duel-state" id="duelState">SEARCHING FOR A SECOND TAB</div>
+    <div class="duel-score"><b id="duelOwn">0</b> STORMHEART <span>·</span> <b id="duelRival">0</b> RIVAL <span>·</span> KILLS <b id="duelKills">0–0</b></div>
+    <div class="duel-note" id="duelNote">Open this exact URL in a second tab on this device.</div>
+  </div>
   <div class="panel" id="objTag">
     <div id="chapterLabel">Galevein · Stormflight</div>
     <span id="objText">reach the Tempest Gate — <b>12 beacons before nightfall</b></span>
@@ -578,6 +591,7 @@
         <div class="lobby-nodes" aria-label="Flight route">
           <button class="lobby-node" type="button" data-lobby-mode="story" aria-pressed="false"><b>CONTINUE THE STORY</b><i>Three cove rings · twelve-beacon escape · one clear ending</i></button>
           <button class="lobby-node" type="button" data-lobby-mode="practice" aria-pressed="false"><b>PRACTICE</b><i>Learn the cove without keeper pursuit</i></button>
+          <button class="lobby-node" type="button" data-lobby-mode="duel" aria-pressed="false"><b>LOCAL 1V1 LAB</b><i>Two tabs · contested Stormheart · damage, death and respawn</i></button>
           <button class="lobby-node" type="button" data-lobby-mode="chapter" aria-pressed="false"><b>CHECKPOINTS</b><i>Resume a chapter already reached</i></button>
         </div>
         <div id="flightLoadout">
@@ -663,6 +677,7 @@ import { LandmarkPath } from './world-expansion/modules/landmarkPath.js';
 import { gameStructure } from './world-expansion/modules/gameStructure.js';
 import { defaultRig, rigCatalog } from './world-expansion/modules/dragonRigs.js';
 import { LobbyHub, LobbyMarkers } from './world-expansion/modules/lobbyHub.js';
+import { LocalDuelSession } from './world-expansion/modules/localDuel.js';
 import { createPoseidonOceanLayer } from './world-expansion/modules/poseidonOceanLayer.js';
 
 const $ = id => document.getElementById(id);
@@ -1398,6 +1413,46 @@ const D={ group:new THREE.Group(), model:null, mixer:null, flap:null, glide:null
 D.group.position.copy(START); scene.add(D.group);
 const draco=new DRACOLoader().setDecoderPath('./vendor/draco/');
 const loader=new GLTFLoader(); loader.setDRACOLoader(draco);
+const DUEL_SPAWNS={ host:new THREE.Vector3(840,90,900), challenger:new THREE.Vector3(960,90,900) };
+const DUEL_OBJECTIVE=new THREE.Group(); DUEL_OBJECTIVE.name='StormheartDuelObjective';
+DUEL_OBJECTIVE.position.set(900,88,900); DUEL_OBJECTIVE.visible=false; scene.add(DUEL_OBJECTIVE);
+const duelCrownMat=new THREE.MeshStandardMaterial({color:0x173a3d,emissive:0x1e8f82,emissiveIntensity:.72,
+  metalness:.28,roughness:.5,transparent:true,opacity:.82});
+const duelCrown=new THREE.Mesh(new THREE.TorusGeometry(13,.32,7,48,Math.PI*1.45),duelCrownMat);
+duelCrown.rotation.set(.34,Math.PI/2,.62); DUEL_OBJECTIVE.add(duelCrown);
+const duelCrownInner=new THREE.Mesh(new THREE.TorusGeometry(8,.2,6,40,Math.PI*1.62),duelCrownMat.clone());
+duelCrownInner.rotation.set(-.4,Math.PI/2,-.85); DUEL_OBJECTIVE.add(duelCrownInner);
+const duelCore=new THREE.Mesh(new THREE.IcosahedronGeometry(2.8,1),new THREE.MeshPhysicalMaterial({
+  color:0x326b67,emissive:0x2dbfac,emissiveIntensity:.9,roughness:.34,metalness:.12,
+  transmission:.08,transparent:true,opacity:.82}));
+DUEL_OBJECTIVE.add(duelCore);
+const duelLight=new THREE.PointLight(0x59f0d5,42,70,2); DUEL_OBJECTIVE.add(duelLight);
+const RIVAL={group:new THREE.Group(),model:null,mixer:null,flap:null,glide:null,loaded:false,target:new THREE.Vector3()};
+RIVAL.group.name='RivalGalevein'; RIVAL.group.visible=false; scene.add(RIVAL.group);
+const localDuel=new LocalDuelSession({
+  onDamage:packet=>takeDuelDamage(packet),
+  onEvent:event=>{ if(event.type==='matched') popup('RIVAL LINKED'); if(event.type==='left'||event.type==='timeout') popup('RIVAL LINK LOST'); }
+});
+
+function loadRivalDragon(){
+  if(RIVAL.loaded||RIVAL.loading) return RIVAL.loading;
+  RIVAL.loading=new Promise((resolve,reject)=>loader.load(activeRig.asset,g=>{
+    const model=g.scene; model.scale.setScalar(activeRig.scale||9); model.rotation.y=Math.PI;
+    model.traverse(o=>{ if(!o.isMesh||!o.material)return;
+      paintStormlanceHide(o); const old=o.material;
+      o.material=new THREE.MeshPhysicalMaterial({name:'Rival_Stormlance_Hide',color:0xb88a82,vertexColors:true,
+        roughness:.63,metalness:.02,clearcoat:.2,clearcoatRoughness:.66,sheen:.3,
+        sheenRoughness:.8,sheenColor:new THREE.Color(0xef9c89),emissive:new THREE.Color(0x210908),
+        emissiveIntensity:.08,side:THREE.DoubleSide,fog:true}); old.dispose?.(); o.castShadow=true;
+    });
+    RIVAL.model=model; RIVAL.group.add(model); RIVAL.mixer=new THREE.AnimationMixer(model);
+    const flap=findClip(g.animations,activeRig.flapClip),glide=findClip(g.animations,activeRig.glideClip);
+    RIVAL.flap=flap?RIVAL.mixer.clipAction(flap):null; RIVAL.glide=glide?RIVAL.mixer.clipAction(glide):null;
+    RIVAL.flap?.play(); RIVAL.glide?.play(); RIVAL.flap?.setEffectiveWeight(.62); RIVAL.glide?.setEffectiveWeight(.38);
+    RIVAL.loaded=true; resolve(true);
+  },undefined,reject));
+  return RIVAL.loading;
+}
 // Landmarks are generated in code (see proceduralLandmarks.js). Palettes are baked into
 // vertex colours, so the whole feature runs on two materials and nightfall is two
 // uniform writes per frame instead of a loop over sixteen cloned materials.
@@ -1717,9 +1772,73 @@ const S={ t:0, flightT:0, started:false, done:false, detection:0, score:0, fpv:f
   chapter:0, tutDone:false, spiralFired:false, spiralMax:false, tier:0,
   dive:0, stormbreakFired:false,                    // stormbreak dive -> sonic boom
   turn:0, pTurn:0, pPitch:0, muted:false, impactCd:0, alertStage:0,
-  finishing:false, finishToken:0, lobbyMode:null, practiceMode:false };
+  finishing:false, finishToken:0, lobbyMode:null, practiceMode:false,
+  duelMode:false, duelDead:false, duelRespawnAt:0, duelLastKiller:null };
 const routeDifficulty=()=>THREE.MathUtils.clamp((S.score-1)/(rings.length-2),0,1);
 const chargeSeconds=()=>Math.max(.54,.9-upLv('gland')*.12);
+
+function duelSpawn(role=localDuel.role){
+  const spawn=DUEL_SPAWNS[role]||DUEL_SPAWNS.host;
+  D.group.position.copy(spawn); D.yaw=role==='host'?-Math.PI/2:Math.PI/2;
+  D.pitch=0; D.roll=0; D.speed=24; S.prevSpeed=24; S.hp=S.hpMax;
+  S.duelDead=false; S.duelRespawnAt=0; D.group.visible=true;
+}
+function takeDuelDamage(packet){
+  if(!S.duelMode||S.duelDead||S.done) return;
+  S.hp=Math.max(0,S.hp-(packet.damage||0)); S.hurt=1; S.shake=Math.max(S.shake,.72);
+  AU.play('crash',.5); popup('RIVAL HIT · '+Math.round(S.hp)+' HEALTH');
+  if(S.hp<=0){
+    S.duelDead=true; S.duelRespawnAt=S.t+3; S.duelLastKiller=packet.source||null;
+    D.group.visible=false; localDuel.notifyDeath(S.duelLastKiller);
+    popup('DOWNED · RESPAWNING IN 3');
+  }
+}
+function leaveDuel(){
+  localDuel.leave(); DUEL_OBJECTIVE.visible=false; RIVAL.group.visible=false;
+  $('duelHud').classList.remove('on'); $('objTag').style.display=''; D.group.visible=true;
+  S.duelMode=false; S.duelDead=false; S.duelRespawnAt=0; S.duelSpawned=false;
+}
+function updateLocalDuel(dt){
+  if(!S.duelMode){ DUEL_OBJECTIVE.visible=false; RIVAL.group.visible=false; return null; }
+  DUEL_OBJECTIVE.visible=true;
+  duelCrown.rotation.z+=dt*.42; duelCrown.rotation.x=.34+Math.sin(S.t*.45)*.14;
+  duelCrownInner.rotation.z-=dt*.31; duelCrownInner.rotation.x=-.4+Math.sin(S.t*.38)*.1;
+  duelCore.rotation.x+=dt*.7; duelCore.rotation.y-=dt*.9;
+  duelCrownMat.emissiveIntensity=.68+Math.sin(S.t*3.2)*.12;
+  duelLight.intensity=38+Math.sin(S.t*4)*9;
+  const inside=!S.duelDead&&D.group.position.distanceTo(DUEL_OBJECTIVE.position)<localDuel.objective.radius;
+  let snap=localDuel.update(dt,{position:D.group.position.toArray(),yaw:D.yaw,pitch:D.pitch,roll:D.roll,
+    speed:D.speed,hp:S.hp,dead:S.duelDead,insideObjective:inside});
+  if(snap.matched&&!S.duelSpawned){ S.duelSpawned=true; duelSpawn(snap.role); storyPop('Rival linked. Hold the Stormheart for three seconds. Plasma downs; flight returns.',6); }
+  if(S.duelDead&&S.t>=S.duelRespawnAt){ duelSpawn(snap.role); localDuel.update(0,{position:D.group.position.toArray(),yaw:D.yaw,
+    pitch:0,roll:0,speed:D.speed,hp:S.hp,dead:false,insideObjective:false}); popup('WINGS RETURNED'); }
+  if(snap.matched&&snap.remote){
+    loadRivalDragon().catch(err=>surfaceBootError('rival asset failed',err?.message||err));
+    if(RIVAL.loaded){
+      RIVAL.group.visible=!snap.remote.dead;
+      RIVAL.target.fromArray(snap.remote.position);
+      RIVAL.group.position.lerp(RIVAL.target,fdamp(12,dt));
+      RIVAL.group.rotation.set(0,snap.remote.yaw,0); RIVAL.group.rotateX(snap.remote.pitch*.75); RIVAL.group.rotateZ(-snap.remote.roll*.9);
+      if(RIVAL.model) RIVAL.model.rotation.x=-.85-snap.remote.pitch*.3;
+      if(RIVAL.flap&&RIVAL.glide){ const fw=snap.remote.speed>34?.78:.58; RIVAL.flap.setEffectiveWeight(fw); RIVAL.glide.setEffectiveWeight(1-fw); }
+      RIVAL.mixer?.update(dt);
+    }
+  } else RIVAL.group.visible=false;
+  snap=localDuel.snapshot();
+  const ownWon=snap.roundWinner===snap.peerId, rivalWon=snap.roundWinner===snap.opponentId;
+  $('duelHud').classList.add('on'); $('objTag').style.display='none';
+  $('duelState').textContent=snap.status==='matched'?(ownWon?'ROUND WON':rivalWon?'ROUND LOST':'STORMHEART CONTEST'):'SEARCHING FOR A SECOND TAB';
+  $('duelOwn').textContent=snap.localScore; $('duelRival').textContent=snap.remoteScore;
+  $('duelKills').textContent=snap.localKills+'–'+snap.remoteKills;
+  const respawn=S.duelDead?Math.max(0,S.duelRespawnAt-S.t):0;
+  $('duelNote').textContent=S.duelDead?`Wings return in ${respawn.toFixed(1)}s`
+    :snap.status!=='matched'?'Open this exact URL in a second tab on this device.'
+    :snap.captureOwner?`Stormheart hold ${Math.min(100,Math.round(snap.hold/snap.objective.holdSeconds*100))}% · break the rival lock`
+    :'Enter the cyan crown alone and hold for 3 seconds.';
+  $('chapterLabel').textContent='LOCAL 1V1 LAB · SAME DEVICE';
+  $('objText').textContent=snap.status==='matched'?'Claim the Stormheart · first to 3 captures':'Waiting for a rival in another tab';
+  return snap;
+}
 
 /* ---- plasma lightning (X): a jagged bolt from the mouth that shatters towers ---- */
 const bolts=[], BOLT_SEG=16;
@@ -1996,7 +2115,12 @@ function updateBolts(dt){
     b.m.material.opacity=Math.min(1,b.life*2); b.line.material.opacity=0.5+0.5*Math.random();
     fillBolt(b);
     let hit=false;
-    for(const sl of searchlights){ if(sl.destroyed) continue;
+    if(S.duelMode&&localDuel.snapshot().matched&&RIVAL.group.visible&&
+      b.m.position.distanceTo(RIVAL.group.position)<(12+(b.power||.35)*8)){
+      const damage=Math.round(18+(b.power||.35)*34);
+      if(localDuel.reportHit(damage)){ plasmaImpact(b.m.position,b.power||.35); popup('RIVAL STRUCK · '+damage); hit=true; }
+    }
+    for(const sl of searchlights){ if(hit||sl.destroyed) continue;
       if(b.m.position.distanceTo(sl.lampPos)< (18 + (b.power||0.3)*26)){   // charged = wider kill radius
         const dmg = b.power>0.55 ? 3 : 1.4;                         // charged shots hurt far more
         sl.hp-=dmg; sl.hbT=3.2; sl.disabled=Math.max(sl.disabled,2.2); sl.lit=0;
@@ -2774,9 +2898,11 @@ function tick(dt){
     if(D.mouth && D.mouth.scale.x>0.01){ D.mouth.scale.setScalar(0.001); D.mouthLt.intensity=0; S._chargeReady=false; }
   }
   updateFxPools(dt);
+  updateLocalDuel(dt);
   updateBolts(dt); updateShocks(dt); updateDebris(dt); updateBursts(dt); updateTowers(dt); updateTowerCombat(dt);
   updateEcho(dt); driveStormbreakDive(dt); driveSpiral(dt); updateStorm(dt); updateFlock(dt);
-  S.hurt=Math.max(0,S.hurt-dt*2); S.hp=Math.min(S.hpMax,S.hp+dt*1.5);   // slow regen between hits
+  S.hurt=Math.max(0,S.hurt-dt*2);
+  if(!S.duelDead) S.hp=Math.min(S.hpMax,S.hp+dt*1.5);   // slow regen between hits; never while downed
 
   // wind gusts (all directions) — calmed while you're deliberately skimming a cliff
   const gustK=S.grazing?0.2:1;
@@ -2913,8 +3039,8 @@ function tick(dt){
       AU.play('ring',0.6); shockwave(gm.position,0x2fd6a0); popup('GATE '+gateCount+' / 3');
       S.scales+=gateCount===3?2:1;
       S.detection=Math.max(0,S.detection-0.15); } }                       // the canyon hides you
-  driveTutorial(dt);
-  if(S.started && !S.done && S.tutDone && structure?.director?.chapter?.storyBeat==='thread_canyon'){
+  if(!S.duelMode) driveTutorial(dt);
+  if(!S.duelMode && S.started && !S.done && S.tutDone && structure?.director?.chapter?.storyBeat==='thread_canyon'){
     const haw=D.group.position.y-waveH(D.group.position.x,D.group.position.z,S.t);
     S.altitudePeak=Math.max(S.altitudePeak||0,haw);
     if(haw>=80 && !S.altitudeCollected){
@@ -2922,7 +3048,7 @@ function tick(dt){
       storyPop('Harbor stacks mapped from above — the serpent run reads clear.',4.5);
     }
   }
-  if(structure){
+  if(!S.duelMode&&structure){
     const hud=structure.tick({
       tutorialDone:tutRings.filter(r=>r.userData.hit).length,
       altitudePeak:S.altitudePeak||0,
@@ -2930,8 +3056,8 @@ function tick(dt){
       towerTarget:3
     });
     structure.applyHud(hud);
-  } else driveMissionsFallback();
-  checkSkillUnlocks();
+  } else if(!S.duelMode) driveMissionsFallback();
+  if(!S.duelMode) checkSkillUnlocks();
 
   /* ---- water splash when skimming ---- */
   S.splashT=(S.splashT||0)-dt;
@@ -2945,7 +3071,7 @@ function tick(dt){
       S.shake=Math.max(S.shake,0.12); } }
 
   /* ---- beacons (idle pulse + juicy pass) ---- */
-  for(const r of rings){ r.rotation.z+=dt*(r.userData.hit?.08:.18);
+  for(const r of rings){ if(S.duelMode) continue; r.rotation.z+=dt*(r.userData.hit?.08:.18);
     if(r.userData.pop>0){ r.userData.pop-=dt*2.6; r.scale.setScalar(1+Math.max(0,r.userData.pop)*.18); }
     if(r.userData.hit){ continue; }
     if(S.chapter===0) continue;
@@ -3042,7 +3168,7 @@ function hud(litNow){
   if(S.bookOpen && (S.bookT=(S.bookT||0)-1)<=0){ S.bookT=20; renderBook(); }
   $('duskV').textContent = TOD.day<0.35?'dusk' : TOD.day<0.7?'twilight' : TOD.day<0.99?'nightfall' : 'night';
   // next-beacon arrow projected to screen
-  const nb=S.chapter===0?tutRings.find(r=>!r.userData.hit):rings.find(r=>!r.userData.hit);
+  const nb=S.duelMode?DUEL_OBJECTIVE:(S.chapter===0?tutRings.find(r=>!r.userData.hit):rings.find(r=>!r.userData.hit));
   const A=$('arrow');
   if(nb){ const v=nb.position.clone().project(camera);
     if(v.z<1){ const sx=(v.x*.5+.5)*innerWidth, sy=(-v.y*.5+.5)*innerHeight;
@@ -3051,6 +3177,14 @@ function hud(litNow){
       A.style.transform='rotate('+Math.atan2(sy-my,sx-mx)+'rad)'; A.style.opacity=.9;
     } else A.style.opacity=0;
   } else A.style.opacity=0;
+  if(S.duelMode){
+    const ds=localDuel.snapshot();
+    $('detPct').textContent=ds.matched?'RIVAL LINKED':'LOCAL SEARCH';
+    $('detPct').style.color=ds.matched?'#59f0d5':'#ffc27a';
+    $('detFill').style.width=(ds.matched?'100':'35')+'%';
+    $('beaconV').textContent=ds.localScore+'–'+ds.remoteScore;
+    $('duskV').textContent='stormheart';
+  }
 }
 
 /* ---- endings ---- */
@@ -3068,6 +3202,7 @@ function showOver(kick,title,cls,sub){
 }
 function returnToHub(reason=''){
   clearAchievementUi();
+  if(S.duelMode) leaveDuel();
   $('over').classList.add('hide'); $('hud').classList.remove('on');
   menuEl.classList.remove('hide'); menuEl.classList.add('live','hub-open');
   $('lobbyHub').classList.add('on'); $('lobbyHub').classList.remove('hide');
@@ -3126,7 +3261,8 @@ function begin(opts={}){
   if(S.launching||S.started) return; S.launching=true;
   clearAchievementUi();
   S.lobbyMode=opts.mode||S.lobbyMode||'story';
-  S.practiceMode=!!opts.practice||S.lobbyMode==='practice';
+  S.duelMode=S.lobbyMode==='duel'; S.duelDead=false; S.duelSpawned=false;
+  S.practiceMode=!!opts.practice||S.lobbyMode==='practice'||S.duelMode;
   menuEl.classList.remove('hub-open');
   $('lobbyHub').classList.remove('on'); $('lobbyHub').classList.add('hide');
   startAudio(); triggerRipple();
@@ -3137,7 +3273,12 @@ function begin(opts={}){
     S.chapter=0; S.tutDone=false; S.altitudePeak=0; S.altitudeCollected=false;
     for(const r of tutRings){ r.userData.hit=false; r.material.opacity=.52; r.visible=true; }
     for(const r of rings) r.visible=false;
-    if(S.practiceMode){
+    if(S.duelMode){
+      S.chapter=1; S.tutDone=true; for(const r of tutRings) r.visible=false; for(const r of rings) r.visible=false;
+      for(const sl of searchlights){ sl.disabled=1e9; sl.lit=0; }
+      localDuel.join(); DUEL_OBJECTIVE.visible=true; $('duelHud').classList.add('on');
+      storyPop('Local 1v1 lab. Open this exact URL in a second tab to link a rival.',6);
+    } else if(S.practiceMode){
       storyPop('Practice flight — three rings in the cove. No keeper hunt.',6);
     } else if(S.lobbyMode==='chapter' && opts.chapterIndex!=null){
       simJumpChapter(Number(opts.chapterIndex));
@@ -3207,6 +3348,7 @@ const lobby=new LobbyHub({ rootEl:$('lobbyHub'), markers:lobbyMarkers,
     S.lobbyMode=mode;
     if(mode==='story') begin({mode:'story'});
     else if(mode==='practice') begin({mode:'practice', practice:true});
+    else if(mode==='duel') begin({mode:'duel'});
     else if(mode==='chapter') begin({mode:'chapter', chapterIndex:extra.chapterIndex??0});
   },
   onReturn:()=>{ stageRest(); }
@@ -3223,6 +3365,7 @@ $('againBtn').addEventListener('click',()=>{
   S.done=false; S.started=false; S.launching=false;
   const mode=S.lobbyMode||'story';
   if(mode==='practice') begin({mode:'practice', practice:true});
+  else if(mode==='duel') begin({mode:'duel'});
   else if(mode==='chapter') begin({mode:'chapter', chapterIndex:lobby.chapterPick});
   else begin({mode:'story'});
 });
@@ -3533,7 +3676,8 @@ window.SIM={
     routeVisible:rings.filter(r=>r.visible).length,cause:S.cause||'',
     scales:Math.floor(S.scales||0),hp:+S.hp.toFixed(1),hpMax:S.hpMax,day:+TOD.day.toFixed(3),finishing:S.finishing,
     charges:+S.charges.toFixed(2), chargeT:+(S.chargeT||0).toFixed(2),
-    bolts:bolts.length, disabled:searchlights.filter(s=>s.disabled>0).length}),
+    bolts:bolts.length, disabled:searchlights.filter(s=>s.disabled>0).length,
+    duel:S.duelMode?{dead:S.duelDead,respawnIn:+Math.max(0,S.duelRespawnAt-S.t).toFixed(2),...localDuel.snapshot()}:null}),
   start:()=>{ startAudio(); S.started=true; S.grace=3; menuEl.classList.add('hide','live');
     $('hud').classList.add('on'); },
   reset, setFpv:v=>{S.fpv=!!v}, key:(c,v)=>{key[c]=!!v}, shoot, begin,
@@ -3541,6 +3685,23 @@ window.SIM={
   jumpBeacon:simJumpBeacon, jumpChapter:simJumpChapter, jumpState:simJumpState,
   runSteps:simRunSteps, runUntil:simRunUntil, snapshot:simSnapshot,
   achievementUI:achievementUiSnapshot, clearAchievements:()=>{clearAchievementUi(true);return achievementUiSnapshot();},
+  duel:()=>localDuel.snapshot(),
+  duelScene:()=>({objectiveVisible:DUEL_OBJECTIVE.visible,objectivePosition:DUEL_OBJECTIVE.position.toArray(),
+    rivalLoaded:RIVAL.loaded,rivalVisible:RIVAL.group.visible,rivalPosition:RIVAL.group.position.toArray(),
+    playerVisible:D.group.visible,playerPosition:D.group.position.toArray()}),
+  duelStage:(kind='faceoff')=>{
+    S.started=true; S.done=false; S.duelMode=true; S.practiceMode=true; S.chapter=1; S.tutDone=true;
+    menuEl.classList.add('hide','live'); $('hud').classList.add('on'); $('duelHud').classList.add('on');
+    DUEL_OBJECTIVE.visible=true; for(const r of tutRings)r.visible=false; for(const r of rings)r.visible=false;
+    const role=localDuel.role||kind;
+    const positions=kind==='objective'
+      ? {host:[900,90,900],challenger:[950,90,900]}
+      : {host:[868,90,900],challenger:[932,90,900]};
+    D.group.position.fromArray(positions[role]||positions.host); D.yaw=role==='host'?-Math.PI/2:Math.PI/2;
+    D.pitch=0;D.roll=0;D.speed=20;S.prevSpeed=20;S.duelDead=false;S.hp=S.hpMax;D.group.visible=true;
+    return localDuel.snapshot();
+  },
+  duelHit:(damage=42)=>localDuel.reportHit(damage),
   previewUnlockToast:()=>{ clearAchievementUi(true);
     achievement('4 SKILLS MAPPED',SKILLS.filter(sk=>sk.unlockAt!=null).map(sk=>sk.name).join(' · '),'CODEX');
     return achievementUiSnapshot(); },
