@@ -2,7 +2,7 @@
 
 ## Stormlance creature
 
-`assets/galevein_stormlance.glb` was generated locally on 2026-08-13 from the project-owned parametric Blender source in `tools/original-creature/`. Its editable `.blend` source and build metrics are retained outside this public artifact in the project's production-evidence folder. The generator makes geometry and animation from code and does not import a third-party creature asset.
+`assets/galevein_stormlance.glb` is generated locally from the project-owned parametric Blender source in `tools/original-creature/`. Its editable `.blend` source and build metrics are retained outside this public artifact in the project's production-evidence folder. The generator makes geometry and animation from code and does not import a third-party creature asset.
 
 ## Audio
 

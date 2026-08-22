@@ -22,7 +22,7 @@ This checklist applies only to the generated `release/` artifact. It does not cl
 
 ## Validation completed
 
-- Stormlance GLB: Draco-compressed, one skin, 25-bone runtime contract, named `Flap` and `Glide` actions.
+- Stormlance v2 GLB: Draco-compressed, one skin, 25-bone runtime contract, named `Flap` and `Glide` actions. The clean-room generator reports 2,880 Blender vertices, 2,787 polygons, a 1.5325-unit wingspan, and a positive rider-seat gap after the v2 rebuild.
 - Local browser smoke: game booted, the Stormlance loaded, procedural landmarks built, no console problems, and no external requests.
 - Chrome 151 local WebGPU proof: Poseidon reached `webgpu-ready`, submitted its first frame, reported 18,807,596 bytes of renderer memory on medium, and hid the legacy sea/sky only after success.
 - Forced `?ocean=webgl` proof: the Poseidon canvas remained hidden and the legacy sea/sky remained visible, with no blank frame or crash.

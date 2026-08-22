@@ -47,7 +47,7 @@ then creates `release/` from an explicit allowlist. It does not include
 
 ## Prototype boundary
 
-This is a free, non-commercial prototype under a working title. It uses an original locally generated Stormlance Galevein, procedural landmarks, synthesized project audio, a documented CC0 menu track, vendored Three.js, and an MIT-licensed Poseidon spectral-ocean adaptation. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), [OCEAN_PROVENANCE.md](OCEAN_PROVENANCE.md), and [RELEASE_READINESS.md](RELEASE_READINESS.md).
+This is a free, non-commercial prototype under a working title. It uses an original locally generated Stormlance Galevein, procedural landmarks, synthesized project audio, a documented CC0 menu track, vendored Three.js, and an MIT-licensed Poseidon spectral-ocean adaptation. Stormlance v2 retains the 25-bone rig and Flap/Glide clips while adding a higher-density crescent membrane, broader torso and neck, split lightning crown, jaw keel, sensory barbs, and a clear rider-seat gap. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), [OCEAN_PROVENANCE.md](OCEAN_PROVENANCE.md), and [RELEASE_READINESS.md](RELEASE_READINESS.md).
 
 ## Flight harness
 

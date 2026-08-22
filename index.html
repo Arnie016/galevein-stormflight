@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-stormheart-r8">
+<meta name="galevein-build" content="stormflight-stormlance-r9">
 <link rel="icon" href="data:,">
 <style>
   :root{ --purple:#70cbbb; --teal:#59f0d5; --amber:#ffc27a; --warn:#ff6b68;
@@ -1488,7 +1488,7 @@ function findClip(animations, name){
   return THREE.AnimationClip.findByName(animations, name)
     || animations.find(c=>c.name===name||c.name.endsWith(name)||c.name.includes(name));
 }
-const STORMLANCE_SURFACE='stormlance-wet-hide-v1';
+const STORMLANCE_SURFACE='stormlance-wet-hide-v2';
 function paintStormlanceHide(mesh){
   const g=mesh.geometry, pos=g?.getAttribute('position'), normal=g?.getAttribute('normal');
   const joints=g?.getAttribute('skinIndex'), weights=g?.getAttribute('skinWeight');
@@ -1523,8 +1523,11 @@ function paintStormlanceHide(mesh){
     const ny=normal.getY(i);
     const underside=THREE.MathUtils.clamp((-ny-.08)*.34,0,.3);
     c.lerp(palette.ventral,underside);
-    // Large, stable tonal drift breaks the single-colour plastic read without a map.
-    const mineral=1+Math.sin(pos.getX(i)*19+pos.getY(i)*11-pos.getZ(i)*13)*.035;
+    // Two-frequency mineral drift reads as scale beds at gameplay distance while
+    // staying stable in motion and requiring no undocumented texture asset.
+    const mineral=1
+      +Math.sin(pos.getX(i)*37+pos.getY(i)*17-pos.getZ(i)*23)*.045
+      +Math.sin(pos.getX(i)*83-pos.getY(i)*29+pos.getZ(i)*41)*.018;
     c.multiplyScalar(mineral);
     colors[i*3]=c.r; colors[i*3+1]=c.g; colors[i*3+2]=c.b;
   }
@@ -1584,7 +1587,7 @@ function attachDragonAccessories(model){
     const legR=legL.clone(); legR.position.x=-.033; legR.rotation.z=-1.05;
     rider.add(torso,hood,legL,legR);
     chest.updateWorldMatrix(true,false);
-    const pw=new THREE.Vector3(0,.545,.03).applyMatrix4(model.matrixWorld);
+    const pw=new THREE.Vector3(0,.620,.03).applyMatrix4(model.matrixWorld);
     rider.position.copy(chest.worldToLocal(pw)); chest.add(rider);
   }
 }
@@ -3748,7 +3751,7 @@ window.SIM={
       patrolVisible:patrol.visible, markers:lobbyMarkers.snapshot(),
       defaultMode:lobby.snapshot().selection?.mode||null,
       primaryAction:document.querySelector('[data-lobby-launch]')?.textContent||'',
-      materialDirection:'bone-authored wet-hide vertex palette',
+      materialDirection:'stormlance-v2 split-crown wet-hide',
       palette:['basalt','weathered-bronze','warm-keeper-lamp','beacon-cyan']
     };
   },
