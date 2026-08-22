@@ -28,6 +28,15 @@ four-segment streamlines, rain shear, wind audio, WebGL cloud travel, and the
 WebGPU/TSL cloud layer reflected by the ocean. The fallback remains the
 production default whenever the WebGPU first-frame gate does not pass.
 
+Build r11 replaces the seven isolated cone mountains with **Crownfall Range**,
+a 980 × 740 authored macro-landmass rising 560 units above the sea. Crownfall
+uses three terrain LODs, a wet shoreline, animated surf, waterfalls, settlement
+lights, and four readable districts: Crownfall Summit for Story, Stormscar
+Shelf for a future PvP arena, Gale Cut as a flight pass, and The Undercroft as
+a future quest entrance. The protected Story route retains 65.1 units of
+measured minimum clearance. This is a map-scale and navigation pass; the
+terrain surface remains prototype art rather than a final realistic biome.
+
 ## Build the release artifact
 
 ```sh
@@ -57,7 +66,7 @@ This is a free, non-commercial prototype under a working title. It uses an origi
 
 ## Flight harness
 
-The development workspace includes a local preflight harness inspired by the supplied game-harness reference, adapted to this game rather than imported from it. It boots the exact static artifact in an isolated browser, verifies the one original creature and procedural world, proves that one deterministic wind field couples physics, weather, audio, and the WebGPU sky, proves the WebGPU ocean or fallback decision, exercises Story, Practice, and Chapter entry paths, and asserts the escape, detection, and nightfall outcomes.
+The development workspace includes a local preflight harness inspired by the supplied game-harness reference, adapted to this game rather than imported from it. It boots the exact static artifact in an isolated browser, verifies the one original creature and procedural world, checks Crownfall's scale, LOD budget, collision proxies, and protected-route clearance, proves that one deterministic wind field couples physics, weather, audio, and the WebGPU sky, proves the WebGPU ocean or fallback decision, exercises Story, Practice, and Chapter entry paths, and asserts the escape, detection, and nightfall outcomes.
 
 ```sh
 node scripts/flight-harness.mjs --root release --out /tmp/galevein-flight-harness.json
