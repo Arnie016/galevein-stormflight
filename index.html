@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-wake-perch-r3">
+<meta name="galevein-build" content="stormflight-wake-perch-r4">
 <link rel="icon" href="data:,">
 <style>
   :root{ --purple:#70cbbb; --teal:#59f0d5; --amber:#ffc27a; --warn:#ff6b68;
@@ -1341,19 +1341,79 @@ function findClip(animations, name){
   return THREE.AnimationClip.findByName(animations, name)
     || animations.find(c=>c.name===name||c.name.endsWith(name)||c.name.includes(name));
 }
+const STORMLANCE_SURFACE='stormlance-wet-hide-v1';
+function paintStormlanceHide(mesh){
+  const g=mesh.geometry, pos=g?.getAttribute('position'), normal=g?.getAttribute('normal');
+  const joints=g?.getAttribute('skinIndex'), weights=g?.getAttribute('skinWeight');
+  if(!pos||!normal||!joints||!weights) return null;
+  const colors=new Float32Array(pos.count*3);
+  const palette={
+    body:new THREE.Color(0x33434a), wing:new THREE.Color(0x245052),
+    tail:new THREE.Color(0x2b3a42), leg:new THREE.Color(0x27343a),
+    head:new THREE.Color(0x3b5056), ventral:new THREE.Color(0x829097),
+    wingtip:new THREE.Color(0x3f8177)
+  };
+  const counts={body:0,wing:0,tail:0,leg:0,head:0};
+  const c=new THREE.Color(), regionWeights=new Float32Array(5);
+  for(let i=0;i<pos.count;i++){
+    regionWeights.fill(0);
+    const js=[joints.getX(i),joints.getY(i),joints.getZ(i),joints.getW(i)];
+    const ws=[weights.getX(i),weights.getY(i),weights.getZ(i),weights.getW(i)];
+    let wingtipWeight=0;
+    for(let k=0;k<4;k++){
+      const j=js[k],w=ws[k];
+      if(j>=4&&j<=13){ regionWeights[1]+=w; if((j>=6&&j<=8)||(j>=11&&j<=13))wingtipWeight+=w; }
+      else if(j>=14&&j<=18) regionWeights[2]+=w;
+      else if(j>=19&&j<=24) regionWeights[3]+=w;
+      else if(j===2||j===3) regionWeights[4]+=w;
+      else regionWeights[0]+=w;
+    }
+    let region=0;
+    for(let r=1;r<5;r++)if(regionWeights[r]>regionWeights[region])region=r;
+    const name=['body','wing','tail','leg','head'][region]; counts[name]++;
+    c.copy(palette[name]);
+    if(name==='wing'&&wingtipWeight>.18) c.lerp(palette.wingtip,Math.min(.48,wingtipWeight*.48));
+    const ny=normal.getY(i);
+    const underside=THREE.MathUtils.clamp((-ny-.08)*.34,0,.3);
+    c.lerp(palette.ventral,underside);
+    // Large, stable tonal drift breaks the single-colour plastic read without a map.
+    const mineral=1+Math.sin(pos.getX(i)*19+pos.getY(i)*11-pos.getZ(i)*13)*.035;
+    c.multiplyScalar(mineral);
+    colors[i*3]=c.r; colors[i*3+1]=c.g; colors[i*3+2]=c.b;
+  }
+  g.setAttribute('color',new THREE.BufferAttribute(colors,3));
+  mesh.userData.surfaceProfile={id:STORMLANCE_SURFACE,vertices:pos.count,regions:counts};
+  return mesh.userData.surfaceProfile;
+}
 function applyDragonMaterials(model, rig){
   model.traverse(o=>{ if(!o.isMesh || !o.material) return;
-    const m=o.material;
-    if(m.map){ m.map.anisotropy=8; }
-    // Preserve texture value and surface variation instead of washing every mesh in
-    // purple emissive light. Untextured pieces share the storm-slate fallback.
-    m.color = new THREE.Color(m.map ? 0xe4e1d9 : 0x3d4b52);
-    m.roughness = m.map ? 0.76 : 0.86; m.metalness = 0.03;
-    m.emissive = new THREE.Color(0x071c1d);
-    if(m.map){ m.emissiveMap = m.map; m.emissiveIntensity = 0.045; }
-    else m.emissiveIntensity = 0.09;
-    m.needsUpdate = true; o.castShadow=true;
+    const previous=o.material;
+    paintStormlanceHide(o);
+    o.material=new THREE.MeshPhysicalMaterial({
+      name:'Stormlance_WetHide', color:0xffffff, vertexColors:true,
+      roughness:.68, metalness:.015, clearcoat:.16, clearcoatRoughness:.72,
+      sheen:.24, sheenRoughness:.86, sheenColor:new THREE.Color(0x4f948b),
+      emissive:new THREE.Color(0x061718), emissiveIntensity:.035,
+      side:THREE.DoubleSide, fog:true
+    });
+    previous.dispose?.();
+    o.castShadow=true;
   });
+}
+function stormlanceSurfaceSnapshot(){
+  const out={profile:STORMLANCE_SURFACE,meshes:0,surfaceMeshes:0,accessoryMeshes:0,
+    physicalMaterials:0,vertexColored:0,textures:0,
+    vertices:0,regions:{body:0,wing:0,tail:0,leg:0,head:0}};
+  D.model?.traverse(o=>{ if(!o.isMesh)return; out.meshes++;
+    const materials=Array.isArray(o.material)?o.material:[o.material];
+    for(const m of materials){ if(m?.isMeshPhysicalMaterial)out.physicalMaterials++;
+      for(const slot of ['map','normalMap','roughnessMap','metalnessMap','emissiveMap'])if(m?.[slot])out.textures++; }
+    if(o.geometry?.getAttribute('color'))out.vertexColored++;
+    const p=o.userData.surfaceProfile; if(p){ out.surfaceMeshes++; out.vertices+=p.vertices||0;
+      for(const key of Object.keys(out.regions))out.regions[key]+=p.regions?.[key]||0; }
+  });
+  out.accessoryMeshes=out.meshes-out.surfaceMeshes;
+  return out;
 }
 function attachDragonAccessories(model){
   D.mixer=new THREE.AnimationMixer(model);
@@ -3366,7 +3426,7 @@ window.SIM={
       patrolVisible:patrol.visible, markers:lobbyMarkers.snapshot(),
       defaultMode:lobby.snapshot().selection?.mode||null,
       primaryAction:document.querySelector('[data-lobby-launch]')?.textContent||'',
-      materialDirection:'texture-preserving storm-slate',
+      materialDirection:'bone-authored wet-hide vertex palette',
       palette:['basalt','weathered-bronze','warm-keeper-lamp','beacon-cyan']
     };
   },
@@ -3468,6 +3528,7 @@ window.SIM={
   chapterHud:()=>structure?.director?.lastHud??null,
   structureSnapshot:()=>structure?.snapshot()??null,
   rig:()=>({id:activeRig?.id,loreName:activeRig?.loreName}),
+  rigSurface:stormlanceSurfaceSnapshot,
   pickerRigs:()=>rigCatalog().map(r=>({id:r.id,loreName:r.loreName,epithet:r.epithet,default:!!r.default})),
   lobby:()=>lobby.snapshot(),
   selectLobby:(mode,opts={})=>{ lobby.select(mode,opts); return lobby.snapshot(); },

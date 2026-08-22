@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-22T08:34:49.664Z",
+  "generatedAt": "2026-08-22T08:40:46.548Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 206958,
-      "sha256": "5a27aa61a5adf14734669d76ae034b0adb83b7b8ba2cb6347730585499cf26b3"
+      "bytes": 210044,
+      "sha256": "d922a886523ee509438e708a6376d59aca01a50be8359d63c4e3e00c94f9b456"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
