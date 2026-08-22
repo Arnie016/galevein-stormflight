@@ -24,11 +24,12 @@ This checklist applies only to the generated `release/` artifact. It does not cl
 
 - Stormlance v2 GLB: Draco-compressed, one skin, 25-bone runtime contract, named `Flap` and `Glide` actions. The clean-room generator reports 2,880 Blender vertices, 2,787 polygons, a 1.5325-unit wingspan, and a positive rider-seat gap after the v2 rebuild.
 - Local browser smoke: game booted, the Stormlance loaded, procedural landmarks built, no console problems, and no external requests.
-- Chrome 151 local WebGPU proof: Poseidon reached `webgpu-ready`, submitted its first frame, reported 18,807,596 bytes of renderer memory on medium, and hid the legacy sea/sky only after success.
+- Chrome 151 local WebGPU proof: Poseidon reached `webgpu-ready`, submitted its first frame, reported 18,895,074 bytes of renderer memory on medium, and hid the legacy sea/sky only after success.
+- Shared-wind proof: a deterministic 45-degree prevailing field drives flight drift and roll, asymmetric wing flex, 110 four-segment streamlines, rain shear, audio, WebGL cloud travel, and the WebGPU/TSL cloud layer. The sampled strongest fixed-cycle gust reached 0.932 / 19.45 m/s; the matched WebGPU ocean pose measured 8.4 ms p50 and 32.5 ms p95 frame time over 900 samples.
 - Forced `?ocean=webgl` proof: the Poseidon canvas remained hidden and the legacy sea/sky remained visible, with no blank frame or crash.
 - Objective proof: Story, Practice, and Chapter launch contracts passed; beacon 12 produced `ESCAPED`; full detection produced `DETECTED`; reaching nightfall early produced `NIGHTFALL`.
 - Low-altitude proof: two seconds of open-water flight remained active at roughly 15 m altitude with the WebGPU ocean visible and no runtime fault.
-- Local duel proof: two independent same-origin tabs elected one temporary authority, rendered each other's Stormlance, converged one contested Stormheart capture, exchanged combat damage, entered a zero-health death state, and returned the downed client to flight after three seconds. The run made no external requests and produced no browser errors.
+- Local duel proof: two independent same-origin tabs elected one temporary authority, rendered each other's Stormlance, converged one contested Stormheart capture, exchanged combat damage, entered a zero-health death state, and returned the downed client to flight after three seconds. The heartbeat now samples live transforms even when a tab's render loop is suspended, and the respawn timer uses a monotonic real-time clock. The run made no external requests and produced no browser errors.
 - Authored-opening proof: Wake Perch uses a fixed seed and launch pose, hides route clutter and distant set pieces until launch, preserves more than 35 m of route clearance, and presents one primary Story action.
 - Current working-title web search did not reveal an exact game/product match, but that is not a trademark clearance or legal opinion.
 

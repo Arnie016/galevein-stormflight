@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-stormlance-r9">
+<meta name="galevein-build" content="stormflight-windfield-r10">
 <link rel="icon" href="data:,">
 <style>
   :root{ --purple:#70cbbb; --teal:#59f0d5; --amber:#ffc27a; --warn:#ff6b68;
@@ -679,6 +679,7 @@ import { defaultRig, rigCatalog } from './world-expansion/modules/dragonRigs.js'
 import { LobbyHub, LobbyMarkers } from './world-expansion/modules/lobbyHub.js';
 import { LocalDuelSession } from './world-expansion/modules/localDuel.js';
 import { createPoseidonOceanLayer } from './world-expansion/modules/poseidonOceanLayer.js';
+import { GaleveinWindField } from './world-expansion/modules/windField.js';
 
 const $ = id => document.getElementById(id);
 // Structural world variation is reproducible. Runtime VFX can still vary, but terrain,
@@ -690,6 +691,9 @@ function seededRandom(seed){ let state=seed>>>0; return ()=>{
   return ((n^(n>>>14))>>>0)/4294967296;
 }; }
 const worldRandom=seededRandom(WORLD_SEED);
+const windField=new GaleveinWindField({seed:WORLD_SEED});
+let CURRENT_WIND=windField.sample(0);
+let CURRENT_WIND_FORCES=windField.flightForces(CURRENT_WIND,Math.PI);
 const bootErrors=[];
 function surfaceBootError(kind, detail){
   const msg=`${kind}: ${detail}`;
@@ -819,10 +823,11 @@ const hemi = new THREE.HemisphereLight(0x8aa6c8,0x160d1c,.72); scene.add(hemi);
 
 /* ---- star + aurora + sun sky dome ---- */
 const sky = new THREE.Mesh(new THREE.SphereGeometry(2600,32,20), new THREE.ShaderMaterial({
-  side:THREE.BackSide, depthWrite:false, fog:false, uniforms:{uT:{value:0}, uDay},
+  side:THREE.BackSide, depthWrite:false, fog:false, uniforms:{uT:{value:0}, uDay,
+    uWind:{value:new THREE.Vector2(Math.SQRT1_2,Math.SQRT1_2)},uGust:{value:0}},
   vertexShader:`varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
   fragmentShader:`
-    uniform float uT; uniform float uDay; varying vec3 vP;
+    uniform float uT; uniform float uDay; uniform vec2 uWind; uniform float uGust; varying vec3 vP;
     float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
     float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
       return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.)),f.x),f.y); }
@@ -840,7 +845,8 @@ const sky = new THREE.Mesh(new THREE.SphereGeometry(2600,32,20), new THREE.Shade
       float horizon=exp(-max(d.y,0.)*9.5);
       col=mix(col,hazeC,horizon*(.34+.16*uDay));
       vec2 cp=d.xz/max(.12,d.y+.23);
-      float cloud=noise(cp*1.35+vec2(uT*.014,-uT*.009))*.68+noise(cp*3.1-vec2(uT*.022,uT*.006))*.32;
+      vec2 windFlow=uWind*uT*(.018+uGust*.025);
+      float cloud=noise(cp*1.35-windFlow)*.68+noise(cp*3.1-windFlow*1.74)*.32;
       cloud=smoothstep(.48,.78,cloud)*smoothstep(.03,.48,d.y)*(1.-smoothstep(.48,.82,d.y));
       vec3 cloudC=mix(vec3(.82,.49,.43),vec3(.12,.13,.28),uDay);
       col=mix(col,cloudC,cloud*(.36+.18*uDay));
@@ -1321,9 +1327,9 @@ scene.add(new THREE.LineSegments(rainGeo,new THREE.LineBasicMaterial({color:0x74
 const rainSeed=Array.from({length:RAIN_N},()=>[worldRandom(),worldRandom(),worldRandom()]);
 
 /* ---- WIND: long drifting streaks that show which way the gale is blowing ---- */
-const WIND_N=110, windBox=300;
+const WIND_N=110, WIND_SEGMENTS=4, windBox=300;
 const windGeo=new THREE.BufferGeometry();
-const wp=new Float32Array(WIND_N*6);
+const wp=new Float32Array(WIND_N*WIND_SEGMENTS*6);
 windGeo.setAttribute('position',new THREE.BufferAttribute(wp,3));
 const windLines=new THREE.LineSegments(windGeo,new THREE.LineBasicMaterial({color:0xbcd0e8,
   transparent:true, opacity:0.16, blending:THREE.AdditiveBlending, depthWrite:false, fog:false}));
@@ -1331,20 +1337,26 @@ windLines.frustumCulled=false; scene.add(windLines);
 const windSeed=Array.from({length:WIND_N},()=>[worldRandom(),worldRandom(),worldRandom()]);
 const WINDV=new THREE.Vector3();
 function updateWindLines(){
-  // gale direction swings slowly; streaks stretch along it and scroll past the camera
-  const wa=Math.sin(S.t*0.09)*0.9+2.1;
-  WINDV.set(Math.cos(wa),(-0.12+Math.sin(S.t*0.21)*0.1),Math.sin(wa)).normalize();
-  const c=camera.position, len=16+S.boost*26;
+  // Four connected segments turn each line into a swaying streamline. The same
+  // direction and gust scalar already moved the dragon and tilted the rain.
+  WINDV.fromArray(CURRENT_WIND.direction).normalize();
+  const c=camera.position, len=18+S.boost*30+CURRENT_WIND.gust*24;
   for(let i=0;i<WIND_N;i++){ const s=windSeed[i];
-    const t=((s[0]-S.t*(0.16+S.boost*0.25))%1+1)%1;
-    const x=c.x+(t-0.5)*windBox*WINDV.x + (s[1]-0.5)*windBox*0.8;
-    const y=c.y+(s[2]-0.5)*windBox*0.45 + (t-0.5)*windBox*WINDV.y;
-    const z=c.z+(t-0.5)*windBox*WINDV.z + (s[2]-0.5)*windBox*0.8;
-    wp[i*6]=x; wp[i*6+1]=y; wp[i*6+2]=z;
-    wp[i*6+3]=x-WINDV.x*len; wp[i*6+4]=y-WINDV.y*len; wp[i*6+5]=z-WINDV.z*len;
+    const t=((s[0]-S.t*(0.11+CURRENT_WIND.speed*.008+S.boost*.18))%1+1)%1;
+    const x=c.x+(t-.5)*windBox*WINDV.x+(s[1]-.5)*windBox*.8;
+    const y=c.y+(s[2]-.5)*windBox*.45+(t-.5)*windBox*WINDV.y;
+    const z=c.z+(t-.5)*windBox*WINDV.z+(s[2]-.5)*windBox*.8;
+    for(let seg=0;seg<WIND_SEGMENTS;seg++){
+      const a=seg/WIND_SEGMENTS,b=(seg+1)/WIND_SEGMENTS;
+      const swayA=Math.sin(S.t*(.8+CURRENT_WIND.gust*1.4)+i*2.17+a*4.2)*(1.2+CURRENT_WIND.gust*3.8);
+      const swayB=Math.sin(S.t*(.8+CURRENT_WIND.gust*1.4)+i*2.17+b*4.2)*(1.2+CURRENT_WIND.gust*3.8);
+      const base=(i*WIND_SEGMENTS+seg)*6;
+      wp[base]=x-WINDV.x*len*a+WINDV.z*swayA; wp[base+1]=y-WINDV.y*len*a+swayA*.18; wp[base+2]=z-WINDV.z*len*a-WINDV.x*swayA;
+      wp[base+3]=x-WINDV.x*len*b+WINDV.z*swayB; wp[base+4]=y-WINDV.y*len*b+swayB*.18; wp[base+5]=z-WINDV.z*len*b-WINDV.x*swayB;
+    }
   }
   windGeo.attributes.position.needsUpdate=true;
-  windLines.material.opacity=0.10+S.boost*0.22+(S.gustPow||0)*0.25;
+  windLines.material.opacity=0.08+S.boost*0.16+CURRENT_WIND.gust*0.34;
 }
 
 /* ---- speed-lines (warp streaks) that whoosh past when accelerating ---- */
@@ -1414,6 +1426,7 @@ D.group.position.copy(START); scene.add(D.group);
 const draco=new DRACOLoader().setDecoderPath('./vendor/draco/');
 const loader=new GLTFLoader(); loader.setDRACOLoader(draco);
 const DUEL_SPAWNS={ host:new THREE.Vector3(840,90,900), challenger:new THREE.Vector3(960,90,900) };
+const DUEL_CAPTURE_RADIUS=32;
 const DUEL_OBJECTIVE=new THREE.Group(); DUEL_OBJECTIVE.name='StormheartDuelObjective';
 DUEL_OBJECTIVE.position.set(900,88,900); DUEL_OBJECTIVE.visible=false; scene.add(DUEL_OBJECTIVE);
 const duelCrownMat=new THREE.MeshStandardMaterial({color:0x173a3d,emissive:0x1e8f82,emissiveIntensity:.72,
@@ -1430,6 +1443,9 @@ const duelLight=new THREE.PointLight(0x59f0d5,42,70,2); DUEL_OBJECTIVE.add(duelL
 const RIVAL={group:new THREE.Group(),model:null,mixer:null,flap:null,glide:null,loaded:false,target:new THREE.Vector3()};
 RIVAL.group.name='RivalGalevein'; RIVAL.group.visible=false; scene.add(RIVAL.group);
 const localDuel=new LocalDuelSession({
+  getState:()=>({position:D.group.position.toArray(),yaw:D.yaw,pitch:D.pitch,roll:D.roll,
+    speed:D.speed,hp:S.hp,dead:S.duelDead,
+    insideObjective:!S.duelDead&&D.group.position.distanceTo(DUEL_OBJECTIVE.position)<DUEL_CAPTURE_RADIUS}),
   onDamage:packet=>takeDuelDamage(packet),
   onEvent:event=>{ if(event.type==='matched') popup('RIVAL LINKED'); if(event.type==='left'||event.type==='timeout') popup('RIVAL LINK LOST'); }
 });
@@ -1662,7 +1678,7 @@ function collectBones(model){
   for(const n of ['membraneBody.R','membraneAB.R','membraneBC.R','membraneBody.L','membraneAB.L','membraneBC.L']){
     const b=by(n); if(b)D.bones.membranes.push(b); }
   const axis=()=>({value:0,velocity:0});
-  D.springs={turn:axis(),pitch:axis(),tail:axis(),neck:axis(),head:axis(),wing:axis(),
+  D.springs={turn:axis(),pitch:axis(),tail:axis(),neck:axis(),head:axis(),wing:axis(),wind:axis(),
     tension:axis(),launch:axis(),load:axis()};
   D.boneReport={ tail:D.bones.tail.filter(Boolean).length, neck:!!D.bones.neck, head:!!D.bones.head,
     chest:!!D.bones.chest, hips:!!D.bones.hips, wings:D.bones.wings.length,
@@ -1683,6 +1699,7 @@ function applyAlive(dt){
   springAxis(q.neck,-D.turn*.12-m.yawRate*.055,dt,2.4,.78);
   springAxis(q.head,-D.turn*.18+m.yawRate*.04,dt,3.1,.72);
   springAxis(q.wing,THREE.MathUtils.clamp((D.speed-26)/55,0,1),dt,1.8,.9);
+  springAxis(q.wind,CURRENT_WIND_FORCES.crosswind*(.2+CURRENT_WIND.gust*.8),dt,2.35,.76);
   springAxis(q.tension,THREE.MathUtils.clamp((m.gLoad-1)/2.6,0,1),dt,3.0,.8);
   springAxis(q.load,THREE.MathUtils.clamp(m.longAccel/32,-1,1),dt,2.2,.76);
   springAxis(q.launch,S.launching?(S.started?1:-1):0,dt,S.started?2.0:3.2,.72);
@@ -1705,17 +1722,17 @@ function applyAlive(dt){
   const brake=(key['KeyS']&&D.speed>16)?1:0;
   const sweep=-.08-q.wing.value*.28+brake*.24, cup=THREE.MathUtils.clamp(q.pitch.value,-1,1)*.16+effort*.12;
   for(const w of D.bones.shoulders){
-    const diff=-q.turn.value*w.side*.14;
+    const diff=-q.turn.value*w.side*.14+q.wind.value*w.side*.09;
     w.rotateOnWorldAxis(_AUP,(sweep*.34+diff)*g*w.side);
     w.rotateOnWorldAxis(_AFW,(cup+coil*.08)*g*w.side);
   }
   for(const w of D.bones.forearms){
-    const diff=-q.turn.value*w.side*.22;
+    const diff=-q.turn.value*w.side*.22+q.wind.value*w.side*.14;
     w.rotateOnWorldAxis(_AUP,(sweep*.72+diff)*g*w.side);
     w.rotateOnWorldAxis(_AFW,(cup*.72-brake*.12)*g*w.side);
   }
   for(const w of D.bones.wingTips){
-    const trail=-q.wing.velocity*.035-q.turn.velocity*w.side*.018;
+    const trail=-q.wing.velocity*.035-q.turn.velocity*w.side*.018+q.wind.velocity*w.side*.009;
     w.rotateOnWorldAxis(_AUP,(sweep*.42+trail)*g*w.side);
     w.rotateOnWorldAxis(_AFW,(effort*.075-brake*.08)*g*w.side);
   }
@@ -1786,12 +1803,13 @@ function duelSpawn(role=localDuel.role){
   D.pitch=0; D.roll=0; D.speed=24; S.prevSpeed=24; S.hp=S.hpMax;
   S.duelDead=false; S.duelRespawnAt=0; D.group.visible=true;
 }
+const duelClock=()=>performance.now()/1000;
 function takeDuelDamage(packet){
   if(!S.duelMode||S.duelDead||S.done) return;
   S.hp=Math.max(0,S.hp-(packet.damage||0)); S.hurt=1; S.shake=Math.max(S.shake,.72);
   AU.play('crash',.5); popup('RIVAL HIT · '+Math.round(S.hp)+' HEALTH');
   if(S.hp<=0){
-    S.duelDead=true; S.duelRespawnAt=S.t+3; S.duelLastKiller=packet.source||null;
+    S.duelDead=true; S.duelRespawnAt=duelClock()+3; S.duelLastKiller=packet.source||null;
     D.group.visible=false; localDuel.notifyDeath(S.duelLastKiller);
     popup('DOWNED · RESPAWNING IN 3');
   }
@@ -1813,7 +1831,7 @@ function updateLocalDuel(dt){
   let snap=localDuel.update(dt,{position:D.group.position.toArray(),yaw:D.yaw,pitch:D.pitch,roll:D.roll,
     speed:D.speed,hp:S.hp,dead:S.duelDead,insideObjective:inside});
   if(snap.matched&&!S.duelSpawned){ S.duelSpawned=true; duelSpawn(snap.role); storyPop('Rival linked. Hold the Stormheart for three seconds. Plasma downs; flight returns.',6); }
-  if(S.duelDead&&S.t>=S.duelRespawnAt){ duelSpawn(snap.role); localDuel.update(0,{position:D.group.position.toArray(),yaw:D.yaw,
+  if(S.duelDead&&duelClock()>=S.duelRespawnAt){ duelSpawn(snap.role); localDuel.update(0,{position:D.group.position.toArray(),yaw:D.yaw,
     pitch:0,roll:0,speed:D.speed,hp:S.hp,dead:false,insideObjective:false}); popup('WINGS RETURNED'); }
   if(snap.matched&&snap.remote){
     loadRivalDragon().catch(err=>surfaceBootError('rival asset failed',err?.message||err));
@@ -1833,7 +1851,7 @@ function updateLocalDuel(dt){
   $('duelState').textContent=snap.status==='matched'?(ownWon?'ROUND WON':rivalWon?'ROUND LOST':'STORMHEART CONTEST'):'SEARCHING FOR A SECOND TAB';
   $('duelOwn').textContent=snap.localScore; $('duelRival').textContent=snap.remoteScore;
   $('duelKills').textContent=snap.localKills+'–'+snap.remoteKills;
-  const respawn=S.duelDead?Math.max(0,S.duelRespawnAt-S.t):0;
+  const respawn=S.duelDead?Math.max(0,S.duelRespawnAt-duelClock()):0;
   $('duelNote').textContent=S.duelDead?`Wings return in ${respawn.toFixed(1)}s`
     :snap.status!=='matched'?'Open this exact URL in a second tab on this device.'
     :snap.captureOwner?`Stormheart hold ${Math.min(100,Math.round(snap.hold/snap.objective.holdSeconds*100))}% · break the rival lock`
@@ -2782,6 +2800,11 @@ function driveRogue(dt){
 function tick(dt){
   if((S.shopOpen||S.bookOpen)&&S.started&&!S.done) return;
   S.t+=dt; seaUniforms.uT.value=S.t; sky.material.uniforms.uT.value=S.t;
+  CURRENT_WIND=windField.sample(S.t,D.group.position.toArray());
+  CURRENT_WIND_FORCES=windField.flightForces(CURRENT_WIND,D.yaw,{grazing:!!S.grazing});
+  S.gustPow=CURRENT_WIND.gust; S.gustDir=CURRENT_WIND.heading;
+  sky.material.uniforms.uWind.value.set(CURRENT_WIND.direction[0],CURRENT_WIND.direction[2]).normalize();
+  sky.material.uniforms.uGust.value=CURRENT_WIND.gust;
   if(S.started&&!S.done) S.flightT+=dt;
   updateTempestGate(dt); driveTimeOfDay(dt); driveThreatTone(dt); driveRogue(dt);
   landmarkPath.root.visible=!!S.started;
@@ -2907,21 +2930,13 @@ function tick(dt){
   S.hurt=Math.max(0,S.hurt-dt*2);
   if(!S.duelDead) S.hp=Math.min(S.hpMax,S.hp+dt*1.5);   // slow regen between hits; never while downed
 
-  // wind gusts (all directions) — calmed while you're deliberately skimming a cliff
-  const gustK=S.grazing?0.2:1;
-  const gx=Math.sin(S.t*.37+1.7)+.6*Math.sin(S.t*.13), gz=Math.sin(S.t*.29+4.1)+.6*Math.sin(S.t*.17+2.);
-  p.x+=gx*1.1*dt*gustK; p.z+=gz*1.1*dt*gustK;      // gentler ambient drift: control stays yours
-  // SQUALLS: periodic hard gusts you can feel — they shove, roll the dragon, and howl
-  S.gustNext=(S.gustNext||6)-dt;
-  if(S.gustNext<=0){ S.gustNext=7+Math.random()*9; S.gustPow=1; S.gustDir=Math.random()*6.283;
-    AU.play('thunder',0.16); }
-  if(S.gustPow>0){ S.gustPow=Math.max(0,S.gustPow-dt*0.55);
-    const e=Math.sin(Math.min(1,S.gustPow)*Math.PI)*gustK;
-    p.x+=Math.cos(S.gustDir)*12*e*dt; p.z+=Math.sin(S.gustDir)*12*e*dt;
-    p.y+=Math.sin(S.t*3.1)*2.5*e*dt;
-    D.roll += Math.sin(S.gustDir-D.yaw)*0.45*e*dt;              // banked by the squall — you fight it
-    S.shake=Math.max(S.shake,e*0.3);
-  }
+  // Flight now consumes the exact field driving the rain, streamlines, audio,
+  // wing flex and WebGPU sky. The helper also applies the cliff-grazing calm.
+  p.x+=CURRENT_WIND_FORCES.driftPerSecond[0]*dt;
+  p.y+=CURRENT_WIND_FORCES.driftPerSecond[1]*dt;
+  p.z+=CURRENT_WIND_FORCES.driftPerSecond[2]*dt;
+  D.roll+=CURRENT_WIND_FORCES.rollPerSecond*dt;
+  S.shake=Math.max(S.shake,CURRENT_WIND.gust*.24);
 
   /* ---- collisions ---- */
   const wh=waveH(p.x,p.z,S.t);
@@ -3114,7 +3129,9 @@ function updateRain(){
   for(let i=0;i<RAIN_N;i++){ const s=rainSeed[i];
     const fall=((s[1]*400-S.t*95*(0.7+s[2]*.6))%rainBox+rainBox)%rainBox;
     const x=c.x+(s[0]-.5)*rainBox, z=c.z+(s[2]-.5)*rainBox, y=c.y+fall-rainBox/2;
-    rp[i*6]=x; rp[i*6+1]=y; rp[i*6+2]=z; rp[i*6+3]=x+.22; rp[i*6+4]=y-5.0; rp[i*6+5]=z;
+    const shear=1.2+CURRENT_WIND.speed*.10+CURRENT_WIND.gust*2.2;
+    rp[i*6]=x; rp[i*6+1]=y; rp[i*6+2]=z;
+    rp[i*6+3]=x+CURRENT_WIND.direction[0]*shear; rp[i*6+4]=y-5.0+CURRENT_WIND.direction[1]*shear; rp[i*6+5]=z+CURRENT_WIND.direction[2]*shear;
   }
   rainGeo.attributes.position.needsUpdate=true;
 }
@@ -3503,7 +3520,8 @@ function renderWorld(dt=1/60){
   poseidonOcean.syncAndRender({
     dt, day:TOD.day,
     position:camera.position.toArray(), quaternion:camera.quaternion.toArray(),
-    fov:camera.fov, aspect:camera.aspect, near:camera.near, far:camera.far
+    fov:camera.fov, aspect:camera.aspect, near:camera.near, far:camera.far,
+    wind:{direction:[CURRENT_WIND.direction[0],CURRENT_WIND.direction[2]],speed:CURRENT_WIND.speed,gust:CURRENT_WIND.gust,heading:CURRENT_WIND.heading}
   });
   cinematicDof.setFocusWorld(D.group.position);
   cinematicDof.render();
@@ -3680,7 +3698,7 @@ window.SIM={
     scales:Math.floor(S.scales||0),hp:+S.hp.toFixed(1),hpMax:S.hpMax,day:+TOD.day.toFixed(3),finishing:S.finishing,
     charges:+S.charges.toFixed(2), chargeT:+(S.chargeT||0).toFixed(2),
     bolts:bolts.length, disabled:searchlights.filter(s=>s.disabled>0).length,
-    duel:S.duelMode?{dead:S.duelDead,respawnIn:+Math.max(0,S.duelRespawnAt-S.t).toFixed(2),...localDuel.snapshot()}:null}),
+    duel:S.duelMode?{dead:S.duelDead,respawnIn:+Math.max(0,S.duelRespawnAt-duelClock()).toFixed(2),...localDuel.snapshot()}:null}),
   start:()=>{ startAudio(); S.started=true; S.grace=3; menuEl.classList.add('hide','live');
     $('hud').classList.add('on'); },
   reset, setFpv:v=>{S.fpv=!!v}, key:(c,v)=>{key[c]=!!v}, shoot, begin,
@@ -3840,6 +3858,19 @@ window.SIM={
     legacy:{skyVisible:sky.visible,seaVisible:sea.visible},
     worldCanvas:{width:renderer.domElement.width,height:renderer.domElement.height,
       clientWidth:renderer.domElement.clientWidth,clientHeight:renderer.domElement.clientHeight} }),
+  wind:()=>({
+    profile:CURRENT_WIND.profile,
+    headingDegrees:+CURRENT_WIND.headingDegrees.toFixed(2),
+    prevailingDegrees:CURRENT_WIND.prevailingDegrees,
+    speed:+CURRENT_WIND.speed.toFixed(2),gust:+CURRENT_WIND.gust.toFixed(3),
+    direction:CURRENT_WIND.direction.map(v=>+v.toFixed(4)),
+    forces:{driftPerSecond:CURRENT_WIND_FORCES.driftPerSecond.map(v=>+v.toFixed(3)),
+      rollPerSecond:+CURRENT_WIND_FORCES.rollPerSecond.toFixed(3),crosswind:+CURRENT_WIND_FORCES.crosswind.toFixed(3)},
+    visual:{streamlines:WIND_N,segmentsPerLine:WIND_SEGMENTS,rainCoupled:true,wingFlexCoupled:!!D.springs?.wind},
+    physicsCoupled:true,audioCoupled:true,
+    webgpu:poseidonOcean.snapshot().wind,
+    proof:windField.proof()
+  }),
   landmarkMetrics:()=>landmarkPath.getSnapshot(),
   objectiveVisibility:()=>{ const a=$('arrow'),r=a.getBoundingClientRect(); return {arrowOpacity:+getComputedStyle(a).opacity,
     arrowOnScreen:r.right>0&&r.left<innerWidth&&r.bottom>0&&r.top<innerHeight,

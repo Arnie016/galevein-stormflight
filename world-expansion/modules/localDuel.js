@@ -36,6 +36,10 @@ export class LocalDuelSession {
     this.channelName = options.channelName ?? CHANNEL_NAME;
     this.onDamage = options.onDamage ?? (() => {});
     this.onEvent = options.onEvent ?? (() => {});
+    // A background browser tab can pause requestAnimationFrame while timers
+    // continue. Pulling the live transform here prevents a heartbeat from
+    // repeatedly rebroadcasting an old objective position.
+    this.getState = typeof options.getState === 'function' ? options.getState : null;
     this.peerId = makeId();
     this.channel = null;
     this.status = 'idle';
@@ -73,7 +77,10 @@ export class LocalDuelSession {
     this.heartbeat = setInterval(() => {
       if (!this.channel) return;
       if (this.status === 'searching') this._post({ type: 'HELLO' });
-      else if (this.status === 'matched') this._post({ type: 'STATE', target: this.opponentId, state: this.local });
+      else if (this.status === 'matched') {
+        this.local = safeState(this.getState?.() ?? this.local);
+        this._post({ type: 'STATE', target: this.opponentId, state: this.local });
+      }
     }, 500);
     return this.snapshot();
   }

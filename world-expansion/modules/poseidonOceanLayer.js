@@ -26,7 +26,15 @@ export function createPoseidonOceanLayer({ canvas, onModeChange = () => {} }) {
     computeN: 0,
     quality: 'med',
     initMs: 0,
-    lastError: null
+    lastError: null,
+    wind: {
+      profile: 'galevein-shared-wind-v1',
+      skyProfile: 'webgpu-advected-clouds-v1',
+      prevailingDegrees: 45,
+      headingDegrees: 45,
+      speed: 10.5,
+      gust: 0
+    }
   };
   let renderer = null;
   let scene = null;
@@ -109,6 +117,10 @@ export function createPoseidonOceanLayer({ canvas, onModeChange = () => {} }) {
         foamScale: uniform(params.foamScale),
         detail: uniform(params.detailStrength),
         time: uniform(0),
+        day: uniform(0),
+        windDir: uniform(new Vector2(Math.SQRT1_2, Math.SQRT1_2)),
+        windSpeed: uniform(10.5),
+        gust: uniform(0),
         originXZ: uniform(new Vector2()),
         hazeWater: uniform(1 / 5200),
         hazeAir: uniform(1 / 3800),
@@ -175,12 +187,22 @@ export function createPoseidonOceanLayer({ canvas, onModeChange = () => {} }) {
     camera.updateProjectionMatrix();
 
     const day = clamp(frame.day || 0, 0, 1);
+    const wind = frame.wind || {};
+    const wx = Number(wind.direction?.[0] ?? Math.SQRT1_2);
+    const wz = Number(wind.direction?.[1] ?? Math.SQRT1_2);
+    const wl = Math.hypot(wx, wz) || 1;
+    const windSpeed = clamp(Number(wind.speed ?? 10.5), 0, 30);
+    const gust = clamp(Number(wind.gust ?? 0), 0, 1);
     shading.horizon.value.set(0x8b5871).lerp(new Color(0x15172f), day);
     shading.zenith.value.set(0x19284f).lerp(new Color(0x060a1b), day);
     shading.ambient.value.set(0x665b76).lerp(new Color(0x17284a), day);
     shading.sunColor.value.set(0xffc48a).lerp(new Color(0xaabfff), day).multiplyScalar(1.18 - day * 0.22);
     shading.sunDir.value.set(-0.62, 0.46 - day * 0.22, 0.34).normalize();
     shading.time.value = elapsed;
+    shading.day.value = day;
+    shading.windDir.value.set(wx / wl, wz / wl);
+    shading.windSpeed.value = windSpeed;
+    shading.gust.value = gust;
     shading.hazeAir.value = 1 / (3800 - day * 900);
     shading.hazeWater.value = 1 / (5200 - day * 900);
 
@@ -189,6 +211,14 @@ export function createPoseidonOceanLayer({ canvas, onModeChange = () => {} }) {
     const oz = Math.round(camera.position.z / innerSpacing) * innerSpacing;
     oceanMesh.position.set(ox, 0, oz);
     shading.originXZ.value.set(ox, oz);
+    state.wind = {
+      profile: 'galevein-shared-wind-v1',
+      skyProfile: 'webgpu-advected-clouds-v1',
+      prevailingDegrees: 45,
+      headingDegrees: ((Number(wind.heading ?? Math.PI / 4) * 180 / Math.PI) % 360 + 360) % 360,
+      speed: windSpeed,
+      gust
+    };
     skyDome.position.copy(camera.position);
     renderer.render(scene, camera);
     state.frames += 1;

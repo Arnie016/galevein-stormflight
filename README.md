@@ -22,6 +22,12 @@ spectral Poseidon ocean. Unsupported browsers and the low tier keep the
 original WebGL ocean automatically; `?ocean=webgl` is the deterministic
 fallback check.
 
+Build r10 adds one deterministic 45-degree prevailing wind field. Its gust
+cycle now drives dragon drift and roll, asymmetric wing flex, swaying
+four-segment streamlines, rain shear, wind audio, WebGL cloud travel, and the
+WebGPU/TSL cloud layer reflected by the ocean. The fallback remains the
+production default whenever the WebGPU first-frame gate does not pass.
+
 ## Build the release artifact
 
 ```sh
@@ -51,7 +57,7 @@ This is a free, non-commercial prototype under a working title. It uses an origi
 
 ## Flight harness
 
-The development workspace includes a local preflight harness inspired by the supplied game-harness reference, adapted to this game rather than imported from it. It boots the exact static artifact in an isolated browser, verifies the one original creature and procedural world, proves the WebGPU ocean or fallback decision, exercises Story, Practice, and Chapter entry paths, and asserts the escape, detection, and nightfall outcomes.
+The development workspace includes a local preflight harness inspired by the supplied game-harness reference, adapted to this game rather than imported from it. It boots the exact static artifact in an isolated browser, verifies the one original creature and procedural world, proves that one deterministic wind field couples physics, weather, audio, and the WebGPU sky, proves the WebGPU ocean or fallback decision, exercises Story, Practice, and Chapter entry paths, and asserts the escape, detection, and nightfall outcomes.
 
 ```sh
 node scripts/flight-harness.mjs --root release --out /tmp/galevein-flight-harness.json

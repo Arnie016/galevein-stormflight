@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-22T09:56:00.147Z",
+  "generatedAt": "2026-08-22T10:39:49.863Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 230831,
-      "sha256": "1b4d4d62bc9d5a9fe69c388ad6ecae82bc5289b16df2e6549a9894a3ebbb7f3a"
+      "bytes": 233188,
+      "sha256": "524835a6b8bdc65523780d9e39d2d54c138b499d835c995d12f1eb81af810474"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -85,13 +85,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 3950,
-      "sha256": "b7cc2e51dc0eb0bfc3cbd8085202ae1fd86100864c3384dfa99413e217527314"
+      "bytes": 4411,
+      "sha256": "43d62921e4f6f16815bea1a90aab3dfc28d27bb4134d1edadefe33d369f446bc"
     },
     {
       "path": "RELEASE_READINESS.md",
-      "bytes": 3811,
-      "sha256": "4342a50ee07d52033d912be6f7dbc81c2dd1ae0076e190ca0b8c77acb8570ad2"
+      "bytes": 4331,
+      "sha256": "497df2b5e74c96c6f0101ac6dbe86487cace9ad123423f10dff9c9834767a6e4"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -235,8 +235,8 @@
     },
     {
       "path": "world-expansion/modules/galeveinPoseidonSky.js",
-      "bytes": 1439,
-      "sha256": "98ffb291b333ca5056512bf5f30d842acddf0cf7e8b9c459a93440aeae9239fe"
+      "bytes": 2845,
+      "sha256": "cce49f990795423dfeb4d7cd899f376a09b4f5c3b2a088e7b06ea76e9e6e6c10"
     },
     {
       "path": "world-expansion/modules/gameStructure.js",
@@ -260,18 +260,23 @@
     },
     {
       "path": "world-expansion/modules/localDuel.js",
-      "bytes": 9949,
-      "sha256": "bb283b17ba983c7fbad04516079a7a53a8d4df2d04292f53a00d75f7c051160b"
+      "bytes": 10330,
+      "sha256": "a35d572d618fe6dd151281aef709b76a64e4fe36eb3f5b02b49e8129a30ab182"
     },
     {
       "path": "world-expansion/modules/poseidonOceanLayer.js",
-      "bytes": 8860,
-      "sha256": "7de8dffa3f2eb597640db176812aa8365908fb355198f53de998409ee58da389"
+      "bytes": 9947,
+      "sha256": "1674b6133e9bd90a8308b0d3d60de2850007e29ec879b88b2b723a960ae0c6ff"
     },
     {
       "path": "world-expansion/modules/proceduralLandmarks.js",
       "bytes": 60303,
       "sha256": "e8cf3aea822677d2f9c80400fb678097b209dc218422a0fb08c61859cddd0423"
+    },
+    {
+      "path": "world-expansion/modules/windField.js",
+      "bytes": 4190,
+      "sha256": "0757d0cd3904a254505db4f8bd0190e3775500a554370686da183a4dac543314"
     }
   ]
 }
