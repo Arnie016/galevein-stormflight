@@ -77,6 +77,13 @@ function terrainGeometry(xSegments, zSegments) {
   for (let z = 0; z < zSegments; z += 1) {
     for (let x = 0; x < xSegments; x += 1) {
       const a = z * columns + x, b = a + 1, c = a + columns, d = c + 1;
+      const ay = positions[a * 3 + 1], by = positions[b * 3 + 1];
+      const cy = positions[c * 3 + 1], dy = positions[d * 3 + 1];
+      // Do not render the submerged rectangular heightfield skirt. The ocean
+      // is a separate WebGPU canvas, so even below-water triangles can read as
+      // a square platform through reflections. Retain only shoreline-crossing
+      // and dry cells, yielding the actual irregular island silhouette.
+      if (Math.max(ay, by, cy, dy) < -2) continue;
       if ((x + z) % 2) indices.push(a, c, b, b, c, d);
       else indices.push(a, c, d, a, d, b);
     }
@@ -87,6 +94,72 @@ function terrainGeometry(xSegments, zSegments) {
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
+  return geometry;
+}
+
+function coastlineSamples(segments = 160) {
+  const points = [];
+  for (let index = 0; index <= segments; index += 1) {
+    const angle = index / segments * Math.PI * 2;
+    const dx = Math.cos(angle), dz = Math.sin(angle);
+    let coastRadius = .35;
+    for (let step = 1; step <= 80; step += 1) {
+      const radius = .35 + step / 80 * .78;
+      if (terrainHeight(dx * radius, dz * radius) > 1.5) coastRadius = radius;
+    }
+    const pulse = deterministicNoise(dx * 1.7, dz * 1.7) * .004;
+    points.push({ dx, dz, radius: coastRadius + pulse });
+  }
+  return points;
+}
+
+function shorelineGeometry(points) {
+  const positions = new Float32Array(points.length * 2 * 3);
+  const indices = [];
+  points.forEach(({ dx, dz, radius }, index) => {
+    const inner = Math.max(.25, radius - .010);
+    const outer = radius + .016;
+    const base = index * 6;
+    positions[base] = dx * inner * FOOTPRINT.width * .5;
+    positions[base + 1] = 1.4;
+    positions[base + 2] = dz * inner * FOOTPRINT.depth * .5;
+    positions[base + 3] = dx * outer * FOOTPRINT.width * .5;
+    positions[base + 4] = 1.15;
+    positions[base + 5] = dz * outer * FOOTPRINT.depth * .5;
+    if (index < points.length - 1) {
+      const a = index * 2, b = a + 1, c = a + 2, d = a + 3;
+      indices.push(a, c, b, b, c, d);
+    }
+  });
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function cliffGeometry(points) {
+  const positions = new Float32Array(points.length * 2 * 3);
+  const indices = [];
+  points.forEach(({ dx, dz, radius }, index) => {
+    const nx = dx * radius, nz = dz * radius;
+    const top = Math.max(2.5, terrainHeight(nx, nz));
+    const base = index * 6;
+    positions[base] = nx * FOOTPRINT.width * .5;
+    positions[base + 1] = top;
+    positions[base + 2] = nz * FOOTPRINT.depth * .5;
+    positions[base + 3] = positions[base];
+    positions[base + 4] = -58;
+    positions[base + 5] = positions[base + 2];
+    if (index < points.length - 1) {
+      const a = index * 2, b = a + 1, c = a + 2, d = a + 3;
+      indices.push(a, b, c, c, b, d);
+    }
+  });
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
   return geometry;
 }
 
@@ -116,9 +189,9 @@ export class CrownfallRange {
     this.lod = new THREE.LOD();
     this.lod.name = 'Crownfall_TerrainLOD';
     this.lodLevels = [
-      { distance: 0, segments: [48, 36] },
-      { distance: 900, segments: [28, 20] },
-      { distance: 1650, segments: [16, 12] }
+      { distance: 0, segments: [64, 48] },
+      { distance: 900, segments: [32, 24] },
+      { distance: 1650, segments: [20, 15] }
     ].map((spec, index) => {
       const geometry = terrainGeometry(...spec.segments);
       const mesh = new THREE.Mesh(geometry, this.terrainMaterial);
@@ -130,25 +203,23 @@ export class CrownfallRange {
     });
     this.root.add(this.lod);
 
-    const wetMaterial = new THREE.MeshStandardMaterial({
-      color: 0x18262c, roughness: .36, metalness: .08, transparent: true, opacity: .86, fog: true
+    const coast = coastlineSamples();
+    this.cliffMaterial = new THREE.MeshStandardMaterial({
+      color: 0x263940, roughness: .96, metalness: .01, fog: true,
+      emissive: 0x0a1114, emissiveIntensity: .10, flatShading: true
     });
-    this.wetApron = new THREE.Mesh(new THREE.RingGeometry(.982, 1.006, 96), wetMaterial);
-    this.wetApron.name = 'Crownfall_WetApron';
-    this.wetApron.rotation.x = -Math.PI / 2;
-    this.wetApron.scale.set(FOOTPRINT.width * .5, FOOTPRINT.depth * .5, 1);
-    this.wetApron.position.y = .35;
-    this.root.add(this.wetApron);
+    this.cliffs = new THREE.Mesh(cliffGeometry(coast), this.cliffMaterial);
+    this.cliffs.name = 'Crownfall_SubmergedCliffSkirt';
+    this.cliffs.castShadow = true;
+    this.cliffs.receiveShadow = true;
+    this.root.add(this.cliffs);
 
     this.foamMaterial = new THREE.MeshBasicMaterial({
-      color: 0xb9d7dc, transparent: true, opacity: .22, depthWrite: false,
+      color: 0xb9d7dc, transparent: true, opacity: .18, depthWrite: false,
       blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: true
     });
-    this.foam = new THREE.Mesh(new THREE.RingGeometry(.992, 1.012, 112), this.foamMaterial);
-    this.foam.name = 'Crownfall_SurfLine';
-    this.foam.rotation.x = -Math.PI / 2;
-    this.foam.scale.set(FOOTPRINT.width * .5, FOOTPRINT.depth * .5, 1);
-    this.foam.position.y = 1.2;
+    this.foam = new THREE.Mesh(shorelineGeometry(coast), this.foamMaterial);
+    this.foam.name = 'Crownfall_IrregularSurfContour';
     this.root.add(this.foam);
 
     const falls = [[.69, -.31, 6], [.73, .02, 4], [.64, .37, 5]];
@@ -210,8 +281,8 @@ export class CrownfallRange {
   getCollisionProxies() { return this.proxies.map((proxy) => ({ ...proxy })); }
 
   update(time = 0, day = 0) {
-    this.foamMaterial.opacity = .18 + Math.sin(time * .72) * .045 + (1 - day) * .03;
-    this.foam.scale.set(FOOTPRINT.width * .5 * (1 + Math.sin(time * .44) * .006), FOOTPRINT.depth * .5 * (1 + Math.sin(time * .44) * .006), 1);
+    this.foamMaterial.opacity = .14 + Math.sin(time * .72) * .035 + (1 - day) * .025;
+    this.foam.position.y = Math.sin(time * .58) * .22;
     this.waterfalls.material.opacity = .24 + Math.sin(time * 1.15) * .055;
     this.shelfLights.material.color.setHSL(.095, .82, .62 + (1 - day) * .08);
   }
@@ -231,7 +302,7 @@ export class CrownfallRange {
       collisionProxies: this.proxies.length,
       routeLaneRadius: LANE_RADIUS,
       minRouteClearance: this.routeClearance == null ? null : +this.routeClearance.toFixed(1),
-      waterline: 'wet-apron-plus-animated-surf',
+      waterline: 'irregular-contour-animated-surf',
       navigationHierarchy: ['Crownfall macro landmark', 'four named districts', 'twelve-beacon route']
     };
   }
@@ -240,7 +311,7 @@ export class CrownfallRange {
     this.scene.remove(this.root);
     for (const level of this.lod.levels) level.object.geometry.dispose();
     this.terrainMaterial.dispose();
-    this.wetApron.geometry.dispose(); this.wetApron.material.dispose();
+    this.cliffs.geometry.dispose(); this.cliffMaterial.dispose();
     this.foam.geometry.dispose(); this.foamMaterial.dispose();
     this.waterfalls.geometry.dispose(); this.waterfalls.material.dispose();
     this.shelfLights.geometry.dispose(); this.shelfLights.material.dispose();
