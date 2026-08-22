@@ -87,6 +87,39 @@ function ridgeGeometry(width, height, depth) {
   return geometry;
 }
 
+// A single continuous, bevelled stone arch. The previous implementation arranged
+// rotated boxes around a semicircle; at gameplay distance the gaps between those boxes
+// read as broken floating debris. This profile keeps the real void while making the
+// load path continuous and architectural.
+function archRingGeometry(span, band, depth, segments, bevelEnabled = true) {
+  const outer = span / 2;
+  const inner = Math.max(outer - band, outer * .58);
+  const shape = new THREE.Shape();
+  shape.moveTo(-outer, 0);
+  for (let i = 0; i <= segments; i += 1) {
+    const angle = Math.PI - Math.PI * (i / segments);
+    shape.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
+  }
+  for (let i = 0; i <= segments; i += 1) {
+    const angle = Math.PI * (i / segments);
+    shape.lineTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
+  }
+  shape.closePath();
+  const bevel = Math.min(1.15, band * .16);
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth,
+    steps: 1,
+    curveSegments: segments,
+    bevelEnabled,
+    bevelSegments: 1,
+    bevelSize: bevel,
+    bevelThickness: bevel
+  });
+  geometry.translate(0, 0, -depth / 2);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
 function triangleCount(geometry) {
   const index = geometry.index;
   return Math.floor((index ? index.count : geometry.attributes.position.count) / 3);
@@ -114,9 +147,22 @@ function mergeParts(parts) {
     normals.set(part.flat.attributes.normal.array, offset * 3);
     for (let i = 0; i < count; i += 1) {
       const at = (offset + i) * 3;
-      colors[at] = part.color.r;
-      colors[at + 1] = part.color.g;
-      colors[at + 2] = part.color.b;
+      const sourceAt = i * 3;
+      const x = part.flat.attributes.position.array[sourceAt];
+      const y = part.flat.attributes.position.array[sourceAt + 1];
+      const z = part.flat.attributes.position.array[sourceAt + 2];
+      const ny = part.flat.attributes.normal.array[sourceAt + 1];
+      // Stable large-scale mineral variation, salt-darkened waterline and paler upper
+      // faces. This is baked into the vertex colours already used by the material, so
+      // it adds surface history without another texture, shader, draw call or request.
+      const mineral = Math.sin(x * .083 + z * .127 + y * .037) * .045
+        + Math.sin(x * .021 - z * .041) * .035;
+      const waterStain = y < 10 ? -.13 * (1 - Math.max(0, y) / 10) : 0;
+      const skyWear = ny > .55 ? .055 : 0;
+      const weather = Math.max(.72, Math.min(1.1, 1 + mineral + waterStain + skyWear));
+      colors[at] = part.color.r * weather;
+      colors[at + 1] = part.color.g * weather;
+      colors[at + 2] = part.color.b * weather;
     }
     offset += count;
     if (part.flat !== part.source) part.flat.dispose();
@@ -204,20 +250,16 @@ class SiteBuilder {
   // A genuine pierced arch built from voussoir blocks around a semicircle. The hole is
   // the point: sky through a structure is the strongest built-ness cue available.
   arch(span, thickness, depth, voussoirs, origin = [0, 0, 0], shade = .94) {
-    const radius = span / 2;
-    const step = Math.PI / voussoirs;
-    for (let i = 0; i < voussoirs; i += 1) {
-      const angle = step * (i + .5);
-      // Just over the arc pitch: enough that blocks meet, not enough that their corners
-      // stick out of the extrados and turn the ring into a pile of rubble.
-      const blockWidth = radius * step * 1.1;
-      this.rock(
-        this.box(blockWidth, thickness, depth),
-        [origin[0] - Math.cos(angle) * radius, origin[1] + Math.sin(angle) * radius, origin[2]],
-        [0, 0, angle - Math.PI / 2],
-        null,
-        shade * (i % 2 ? 1.09 : .93)
-      );
+    const band = Math.max(thickness * 1.4, span * .045);
+    // Far LOD keeps the continuous silhouette but drops bevel and half the curve
+    // subdivisions; the band is only a few pixels wide there.
+    const segments = this.far ? 4 : Math.max(6, voussoirs);
+    this.rock(archRingGeometry(span, band, depth, segments, !this.far), origin, null, null, shade);
+    // A restrained bronze keystone catches the warm route light without turning the
+    // entire monument into another glowing objective marker.
+    if (this.near) {
+      this.metal(this.box(band * .72, band * 1.18, depth * 1.04),
+        [origin[0], origin[1] + span / 2, origin[2]], null, null, 1.14);
     }
     return this;
   }
@@ -826,7 +868,9 @@ export const LANDMARK_SITES = Object.freeze([
   { id: 'keeper-arcade', archetype: 'viaduct', position: [-150, 4, 35], yaw: 1.08, scale: .46, palette: palette(0x283945, 0x705b43, 0x59f0d5), seed: 811 },
   { id: 'drowned-gate', archetype: 'seagate', position: [285, 6, -105], yaw: -0.234, scale: .68, palette: palette(0x2c404b, 0x725e47, 0x59f0d5), seed: 9044 },
   { id: 'cinder-harbor', archetype: 'harbor', position: [545, 2, -305], yaw: 0.62, scale: .72, palette: palette(0x3b3633, 0x7d5d42, 0xffc27a), seed: 2266 },
-  { id: 'salt-arcade', archetype: 'viaduct', position: [612, 4, -552], yaw: -0.34, scale: .68, palette: palette(0x343c42, 0x746149, 0xffc27a), seed: 7710 },
+  // Kept on the east shoulder of the cinder route: it should frame the ring line, not
+  // sit behind a beacon and read as a randomly spawned wall.
+  { id: 'salt-arcade', archetype: 'viaduct', position: [660, 4, -570], yaw: 0.18, scale: .50, palette: palette(0x343c42, 0x746149, 0xffc27a), seed: 7710 },
   { id: 'bone-sentinel', archetype: 'ribhall', position: [67, 4, -673], yaw: 1.36, scale: .74, palette: palette(0x465159, 0x78664f, 0x59f0d5), seed: 4488 },
   { id: 'gale-spire', archetype: 'beacon', position: [-155, 8, -587], yaw: 0.22, scale: .68, palette: palette(0x2a3d48, 0x715e47, 0x59f0d5), seed: 6301 },
   { id: 'keeper-works', archetype: 'harbor', position: [-525, 2, -216], yaw: -0.86, scale: .70, palette: palette(0x2c3d45, 0x725f48, 0xffc27a), seed: 1555 },
@@ -985,7 +1029,7 @@ export function validateRouteClearance(proxies, route, { hardMargin = 6, softMar
 export function createLandmarkMaterials() {
   const stone = new THREE.MeshStandardMaterial({
     name: 'Galevein_LandmarkStone',
-    vertexColors: true, flatShading: true, roughness: .76, metalness: .07,
+    vertexColors: true, flatShading: true, roughness: .86, metalness: .04,
     emissive: new THREE.Color(0x1b1830), emissiveIntensity: .05, fog: true
   });
   const signal = new THREE.MeshBasicMaterial({

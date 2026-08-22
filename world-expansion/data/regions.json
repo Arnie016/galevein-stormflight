@@ -79,7 +79,7 @@
       "storyBeats": ["thread_canyon", "rescue_clue", "collect_altitude"],
       "allowedLandmarkArchetypes": ["harbor", "viaduct", "seagate"],
       "allowedLandmarkIds": ["cinder-harbor", "salt-arcade"],
-      "landmarkScaleRange": [0.68, 0.72],
+      "landmarkScaleRange": [0.50, 0.72],
       "skyPreset": {
         "id": "serpent_storm",
         "fogDensity": 0.00088,

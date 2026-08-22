@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-22T08:18:29.978Z",
+  "generatedAt": "2026-08-22T08:34:49.664Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -66,7 +66,7 @@
     {
       "path": "index.html",
       "bytes": 206958,
-      "sha256": "01d67e6f1655122707a1a094356833da006a586c138ee3273052ee33852f6f3c"
+      "sha256": "5a27aa61a5adf14734669d76ae034b0adb83b7b8ba2cb6347730585499cf26b3"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -216,7 +216,7 @@
     {
       "path": "world-expansion/data/regions.json",
       "bytes": 5887,
-      "sha256": "54e47ff1cea87f3351cd26d6005659746609ab1100220e9329c70eef653d9cd2"
+      "sha256": "fd0479b6495088b65e90329260728f90d25229b7f0bd8c6361b3d98890f0d971"
     },
     {
       "path": "world-expansion/modules/chapterDirector.js",
@@ -265,8 +265,8 @@
     },
     {
       "path": "world-expansion/modules/proceduralLandmarks.js",
-      "bytes": 57990,
-      "sha256": "1c599d4a7372e03084eebe1cc9682d454eb5d1c8cfe99b5881799f9edd8e2cae"
+      "bytes": 60303,
+      "sha256": "e8cf3aea822677d2f9c80400fb678097b209dc218422a0fb08c61859cddd0423"
     }
   ]
 }
