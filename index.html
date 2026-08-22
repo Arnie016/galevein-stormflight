@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-crownfall-r11">
+<meta name="galevein-build" content="stormflight-stormscar-r12">
 <link rel="icon" href="data:,">
 <style>
   :root{ --purple:#70cbbb; --teal:#59f0d5; --amber:#ffc27a; --warn:#ff6b68;
@@ -94,6 +94,12 @@
   #duelHud .duel-score{ margin-top:4px; font:700 12px var(--mono); color:#e9f7f4; letter-spacing:.08em; }
   #duelHud .duel-score b{ color:#59f0d5; }
   #duelHud .duel-note{ margin-top:3px; font:10px var(--mono); color:#91a6bd; }
+  #duelHud .duel-attacks{ display:flex; justify-content:center; gap:6px; margin-top:6px; }
+  #duelHud .duel-attack{ min-width:96px; padding:4px 6px; border-radius:6px; border:1px solid rgba(89,240,213,.18);
+    background:rgba(7,18,24,.6); font:700 8px var(--mono); letter-spacing:.06em; color:#8da6b1; }
+  #duelHud .duel-attack b{ color:#f3d59c; margin-right:4px; }
+  #duelHud .duel-attack i{ display:block; margin-top:2px; color:#59f0d5; font-style:normal; letter-spacing:.12em; }
+  #duelHud .duel-attack.cooling i{ color:#ff9b74; }
 
   #objTag{ top:16px; left:50%; transform:translateX(-50%); text-align:center; font-size:12px;
     letter-spacing:1.5px; color:#b9c8e6; padding:6px 16px; min-width:min(92vw,520px); }
@@ -512,6 +518,11 @@
     <div class="duel-state" id="duelState">SEARCHING FOR A SECOND TAB</div>
     <div class="duel-score"><b id="duelOwn">0</b> STORMHEART <span>·</span> <b id="duelRival">0</b> RIVAL <span>·</span> KILLS <b id="duelKills">0–0</b></div>
     <div class="duel-note" id="duelNote">Open this exact URL in a second tab on this device.</div>
+    <div class="duel-attacks" aria-label="Combat deck">
+      <span class="duel-attack" id="atkLance"><b>X</b>VOLT LANCE<i>CHARGE</i></span>
+      <span class="duel-attack" id="atkScatter"><b>Z</b>ARC SCATTER<i>READY</i></span>
+      <span class="duel-attack" id="atkPulse"><b>R</b>WINGBREAK<i>READY</i></span>
+    </div>
   </div>
   <div class="panel" id="objTag">
     <div id="chapterLabel">Galevein · Stormflight</div>
@@ -562,7 +573,7 @@
     <div class="ach-n" id="achName">—</div><div class="ach-d" id="achDesc">—</div>
     <div class="ach-key" id="achKey">—</div></div></div>
   <div id="chargeHud"><div id="chargeRing"><i></i></div><div id="chargeTxt">SPIT</div></div>
-  <div id="ctrlhint"><b>W/S</b> speed · <b>↑↓</b> climb/dive · <b>A/D</b> turn · <b>SPACE</b> flap · <b>X</b> charge plasma · <b>C</b> echo · <b>F</b> flock · <b>hold A/D</b> spiral →ULTRA · <b>↓ then ↑</b> stormbreak dive · <b>Q/E</b> look · <b>V</b> view · <b>TAB</b> codex · <b>B</b> forge · <b>M</b> mute</div>
+  <div id="ctrlhint"><b>W/S</b> speed · <b>↑↓</b> climb/dive · <b>A/D</b> turn · <b>SPACE</b> flap · <b>X</b> volt lance · <b>Z</b> arc scatter · <b>R</b> wingbreak · <b>C</b> echo · <b>F</b> flock · <b>V</b> view · <b>M</b> mute</div>
 </div>
 
 <div class="screen" id="menu">
@@ -591,7 +602,7 @@
         <div class="lobby-nodes" aria-label="Flight route">
           <button class="lobby-node" type="button" data-lobby-mode="story" aria-pressed="false"><b>CONTINUE THE STORY</b><i>Three cove rings · twelve-beacon escape · one clear ending</i></button>
           <button class="lobby-node" type="button" data-lobby-mode="practice" aria-pressed="false"><b>PRACTICE</b><i>Learn the cove without keeper pursuit</i></button>
-          <button class="lobby-node" type="button" data-lobby-mode="duel" aria-pressed="false"><b>LOCAL 1V1 LAB</b><i>Two tabs · contested Stormheart · damage, death and respawn</i></button>
+          <button class="lobby-node" type="button" data-lobby-mode="duel" aria-pressed="false"><b>STORMSCAR 1V1 LAB</b><i>Two tabs · three attacks · contested Stormheart · respawn</i></button>
           <button class="lobby-node" type="button" data-lobby-mode="chapter" aria-pressed="false"><b>CHECKPOINTS</b><i>Resume a chapter already reached</i></button>
         </div>
         <div id="flightLoadout">
@@ -1413,10 +1424,26 @@ const D={ group:new THREE.Group(), model:null, mixer:null, flap:null, glide:null
 D.group.position.copy(START); scene.add(D.group);
 const draco=new DRACOLoader().setDecoderPath('./vendor/draco/');
 const loader=new GLTFLoader(); loader.setDRACOLoader(draco);
-const DUEL_SPAWNS={ host:new THREE.Vector3(840,90,900), challenger:new THREE.Vector3(960,90,900) };
-const DUEL_CAPTURE_RADIUS=32;
+const DUEL_SPAWNS={ host:new THREE.Vector3(-500,190,-250), challenger:new THREE.Vector3(-360,190,-250) };
+const DUEL_CAPTURE_RADIUS=34;
+const DUEL_ARENA=new THREE.Group(); DUEL_ARENA.name='StormscarShelfArena';
+DUEL_ARENA.position.set(-430,158,-250); DUEL_ARENA.visible=false; scene.add(DUEL_ARENA);
+const arenaRockMat=new THREE.MeshStandardMaterial({color:0x263a3e,emissive:0x091719,emissiveIntensity:.12,
+  roughness:.94,metalness:.02,flatShading:true});
+const arenaMetalMat=new THREE.MeshStandardMaterial({color:0x577371,emissive:0x183f3c,emissiveIntensity:.35,
+  roughness:.52,metalness:.32});
+const arenaShelf=new THREE.Mesh(new THREE.CylinderGeometry(58,72,10,28,2),arenaRockMat);
+arenaShelf.name='Stormscar_BattleShelf'; arenaShelf.scale.z=.72; arenaShelf.receiveShadow=true; DUEL_ARENA.add(arenaShelf);
+const arenaRim=new THREE.Mesh(new THREE.TorusGeometry(54,1.25,7,64),arenaMetalMat);
+arenaRim.name='Stormscar_Rim'; arenaRim.rotation.x=Math.PI/2; arenaRim.position.y=6; arenaRim.scale.z=.72; DUEL_ARENA.add(arenaRim);
+const arenaPylons=new THREE.InstancedMesh(new THREE.CylinderGeometry(1.0,2.0,18,7),arenaMetalMat,4);
+arenaPylons.name='Stormscar_WindPylons';
+const arenaDummy=new THREE.Object3D();
+for(let i=0;i<4;i++){ const a=Math.PI*.25+i/4*Math.PI*2; arenaDummy.position.set(Math.cos(a)*54,13,Math.sin(a)*39);
+  arenaDummy.rotation.y=-a; arenaDummy.updateMatrix(); arenaPylons.setMatrixAt(i,arenaDummy.matrix); }
+arenaPylons.instanceMatrix.needsUpdate=true; DUEL_ARENA.add(arenaPylons);
 const DUEL_OBJECTIVE=new THREE.Group(); DUEL_OBJECTIVE.name='StormheartDuelObjective';
-DUEL_OBJECTIVE.position.set(900,88,900); DUEL_OBJECTIVE.visible=false; scene.add(DUEL_OBJECTIVE);
+DUEL_OBJECTIVE.position.set(-430,178,-250); DUEL_OBJECTIVE.visible=false; scene.add(DUEL_OBJECTIVE);
 const duelCrownMat=new THREE.MeshStandardMaterial({color:0x173a3d,emissive:0x1e8f82,emissiveIntensity:.72,
   metalness:.28,roughness:.5,transparent:true,opacity:.82});
 const duelCrown=new THREE.Mesh(new THREE.TorusGeometry(13,.32,7,48,Math.PI*1.45),duelCrownMat);
@@ -1755,6 +1782,8 @@ addEventListener('keydown',e=>{
         const pp=D.group.position; for(const sx of [-1,1]) smallBurst(pp.x+sx*7,pp.y-3,pp.z,0xbcd0e8); } }
     e.preventDefault(); }
   if(e.code==='KeyX' && !e.repeat){ if(S.started&&!S.done && S.charges>=1 && S.chargeT<0) S.chargeT=0; e.preventDefault(); }
+  if(e.code==='KeyZ' && !e.repeat){ arcScatter(); e.preventDefault(); }
+  if(e.code==='KeyR' && !e.repeat){ wingbreakPulse(); e.preventDefault(); }
   if(e.code==='KeyV') S.fpv=!S.fpv;
   if(e.code==='KeyM' && !e.repeat) setMuted(!S.muted);
   if(e.code==='KeyC' && !e.repeat) echoPulse();
@@ -1772,7 +1801,7 @@ addEventListener('keyup',e=>{ key[e.code]=false;
 const S={ t:0, flightT:0, started:false, done:false, detection:0, score:0, fpv:false, shake:0, flapCd:0,
   camYaw:0, camPitch:0, nextThunder:5, cause:'', shootCd:0, flash:0,
   boost:0, accel:0, prevSpeed:26, boomed:false,
-  charges:3, chargeT:-1,                          // plasma pool + hold-to-charge timer (-1 = idle)
+  charges:3, chargeT:-1, scatterCd:0, pulseCd:0, // three-attack duel deck
   nightfall:210, dayHold:30, grace:0, keepersWoke:false,
   hp:100, hpMax:100, hurt:0,                        // the dragon can be shot down
   echoCd:0, echoR:0, echoOn:false, lift:0, beatCd:0, poison:0, spiral:0,
@@ -1795,7 +1824,8 @@ const duelClock=()=>performance.now()/1000;
 function takeDuelDamage(packet){
   if(!S.duelMode||S.duelDead||S.done) return;
   S.hp=Math.max(0,S.hp-(packet.damage||0)); S.hurt=1; S.shake=Math.max(S.shake,.72);
-  AU.play('crash',.5); popup('RIVAL HIT · '+Math.round(S.hp)+' HEALTH');
+  const attackLabel=packet.attackId==='arc-scatter'?'ARC SCATTER':packet.attackId==='wingbreak-pulse'?'WINGBREAK':'VOLT LANCE';
+  AU.play('crash',.5); popup(attackLabel+' · '+Math.round(S.hp)+' HEALTH');
   if(S.hp<=0){
     S.duelDead=true; S.duelRespawnAt=duelClock()+3; S.duelLastKiller=packet.source||null;
     D.group.visible=false; localDuel.notifyDeath(S.duelLastKiller);
@@ -1803,13 +1833,14 @@ function takeDuelDamage(packet){
   }
 }
 function leaveDuel(){
-  localDuel.leave(); DUEL_OBJECTIVE.visible=false; RIVAL.group.visible=false;
+  localDuel.leave(); DUEL_OBJECTIVE.visible=false; DUEL_ARENA.visible=false; RIVAL.group.visible=false;
   $('duelHud').classList.remove('on'); $('objTag').style.display=''; D.group.visible=true;
   S.duelMode=false; S.duelDead=false; S.duelRespawnAt=0; S.duelSpawned=false;
 }
 function updateLocalDuel(dt){
-  if(!S.duelMode){ DUEL_OBJECTIVE.visible=false; RIVAL.group.visible=false; return null; }
-  DUEL_OBJECTIVE.visible=true;
+  if(!S.duelMode){ DUEL_OBJECTIVE.visible=false; DUEL_ARENA.visible=false; RIVAL.group.visible=false; return null; }
+  DUEL_OBJECTIVE.visible=true; DUEL_ARENA.visible=true;
+  DUEL_ARENA.rotation.y=Math.sin(S.t*.12)*.025;
   duelCrown.rotation.z+=dt*.42; duelCrown.rotation.x=.34+Math.sin(S.t*.45)*.14;
   duelCrownInner.rotation.z-=dt*.31; duelCrownInner.rotation.x=-.4+Math.sin(S.t*.38)*.1;
   duelCore.rotation.x+=dt*.7; duelCore.rotation.y-=dt*.9;
@@ -1818,7 +1849,7 @@ function updateLocalDuel(dt){
   const inside=!S.duelDead&&D.group.position.distanceTo(DUEL_OBJECTIVE.position)<localDuel.objective.radius;
   let snap=localDuel.update(dt,{position:D.group.position.toArray(),yaw:D.yaw,pitch:D.pitch,roll:D.roll,
     speed:D.speed,hp:S.hp,dead:S.duelDead,insideObjective:inside});
-  if(snap.matched&&!S.duelSpawned){ S.duelSpawned=true; duelSpawn(snap.role); storyPop('Rival linked. Hold the Stormheart for three seconds. Plasma downs; flight returns.',6); }
+  if(snap.matched&&!S.duelSpawned){ S.duelSpawned=true; duelSpawn(snap.role); storyPop('Rival linked over Stormscar Shelf. X precision, Z spread, R breaks the objective hold.',7); }
   if(S.duelDead&&duelClock()>=S.duelRespawnAt){ duelSpawn(snap.role); localDuel.update(0,{position:D.group.position.toArray(),yaw:D.yaw,
     pitch:0,roll:0,speed:D.speed,hp:S.hp,dead:false,insideObjective:false}); popup('WINGS RETURNED'); }
   if(snap.matched&&snap.remote){
@@ -1839,13 +1870,18 @@ function updateLocalDuel(dt){
   $('duelState').textContent=snap.status==='matched'?(ownWon?'ROUND WON':rivalWon?'ROUND LOST':'STORMHEART CONTEST'):'SEARCHING FOR A SECOND TAB';
   $('duelOwn').textContent=snap.localScore; $('duelRival').textContent=snap.remoteScore;
   $('duelKills').textContent=snap.localKills+'–'+snap.remoteKills;
+  const setAttackChip=(id,cooldown,label)=>{ const chip=$(id); const cooling=Math.max(0,cooldown);
+    chip.classList.toggle('cooling',cooling>0); chip.querySelector('i').textContent=cooling>0?cooling.toFixed(1)+'S':label; };
+  setAttackChip('atkLance',S.shootCd,'CHARGE');
+  setAttackChip('atkScatter',S.scatterCd,'READY');
+  setAttackChip('atkPulse',S.pulseCd,'READY');
   const respawn=S.duelDead?Math.max(0,S.duelRespawnAt-duelClock()):0;
   $('duelNote').textContent=S.duelDead?`Wings return in ${respawn.toFixed(1)}s`
     :snap.status!=='matched'?'Open this exact URL in a second tab on this device.'
     :snap.captureOwner?`Stormheart hold ${Math.min(100,Math.round(snap.hold/snap.objective.holdSeconds*100))}% · break the rival lock`
     :'Enter the cyan crown alone and hold for 3 seconds.';
-  $('chapterLabel').textContent='LOCAL 1V1 LAB · SAME DEVICE';
-  $('objText').textContent=snap.status==='matched'?'Claim the Stormheart · first to 3 captures':'Waiting for a rival in another tab';
+  $('chapterLabel').textContent='STORMSCAR SHELF · LOCAL 1V1';
+  $('objText').textContent=snap.status==='matched'?'Claim the Stormheart · three attacks · first to 3':'Waiting for a rival in another tab';
   return snap;
 }
 
@@ -1973,28 +2009,35 @@ function updateChargeHum(cp, on){
     if(FX.humBp) FX.humBp.frequency.setTargetAtTime(280+cp*900, t, 0.05);
   }catch(e){}
 }
-function shoot(power=0.35){
-  if(S.shootCd>0 || !D.model || S.charges<1) return; S.shootCd=0.4; S.charges-=1;
+function shoot(power=0.35,attackId='volt-lance',options={}){
+  const cost=options.cost??1;
+  if(S.shootCd>0 || !D.model || S.charges<cost || S.duelDead) return false;
+  S.shootCd=options.cooldown??0.4; S.charges-=cost;
   power=Math.min(1.25,power+upLv('gland')*.07);
   S.tier = power>0.85 ? 2 : (power>0.45 ? 1 : 0);
-  if(S.tier===2){ popup('ARC BURST'); S.shootCd=0.65; }
+  if(S.tier===2&&attackId==='volt-lance'){ popup('VOLT LANCE · OVERCHARGED'); S.shootCd=0.65; }
   if(S.superCharge){ power=1.25; S.superCharge=0; popup('STORMFIRE'); }
   updateChargeHum(0,false);
   const head=FX._mp; (D.mouth||D.headNode||D.group).getWorldPosition(head);
   const dir=FX._dir.set(-Math.sin(D.yaw),Math.sin(D.pitch)*0.95,-Math.cos(D.yaw)).normalize();
+  if(options.yawOffset) dir.applyAxisAngle(new THREE.Vector3(0,1,0),options.yawOffset);
   const R=0.9+power*2.2;
   const m=new THREE.Mesh(FX.ballGeo, FX.ballMat.clone());
-  m.scale.setScalar(R);
+  const scatter=attackId==='arc-scatter';
+  if(scatter){ m.material.color.setHex(0x79ffe0); m.scale.set(R*1.55,R*.72,R*1.9); }
+  else m.scale.setScalar(R);
   const halo=new THREE.Mesh(FX.haloGeo, FX.haloMat.clone());
-  halo.scale.setScalar(R); m.add(halo); m.position.copy(head).addScaledVector(dir,3);
-  const lt=new THREE.PointLight(0xc07bff,300+power*760,160+power*180,2); m.add(lt);
+  if(scatter){ halo.material.color.setHex(0x42e6be); halo.scale.set(R*1.35,R*.64,R*1.7); }
+  else halo.scale.setScalar(R);
+  m.add(halo); m.position.copy(head).addScaledVector(dir,3);
+  const lt=new THREE.PointLight(scatter?0x59f0d5:0xc07bff,300+power*760,160+power*180,2); m.add(lt);
   const N=BOLT_SEG, lgeo=new THREE.BufferGeometry();
   lgeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N*3), 3));
-  const line=new THREE.Line(lgeo, new THREE.LineBasicMaterial({color:0xe0ccff, transparent:true,
+  const line=new THREE.Line(lgeo, new THREE.LineBasicMaterial({color:scatter?0x8dffe8:0xe0ccff, transparent:true,
     opacity:0.95, blending:THREE.AdditiveBlending, depthWrite:false}));
   line.frustumCulled=false; scene.add(m); scene.add(line);
-  bolts.push({ m, lt, line, lgeo, origin:head.clone(), vel:dir.clone().multiplyScalar(220+power*150),
-    life:2.4, power, jag:6+power*10 });
+  bolts.push({ m, lt, line, lgeo, origin:head.clone(), vel:dir.clone().multiplyScalar(scatter?185:220+power*150),
+    life:scatter?.82:2.4, power, attackId, jag:scatter?14:6+power*10 });
   if(D.glow) D.glow.intensity=70+power*90;
   if(D.mouth){ D.mouth.scale.setScalar(0.001); D.mouthLt.intensity=0; }
   const mz=m.position;
@@ -2019,6 +2062,29 @@ function shoot(power=0.35){
   if(power>0.8) S.shake=Math.max(S.shake,0.5);
   D.recoil=0.4+power*0.6; S.shake=Math.max(S.shake,0.2+power*0.35);
   moon.intensity=Math.max(moon.intensity, 1.2+power*1.4);
+  return true;
+}
+function arcScatter(){
+  if(!S.duelMode||!S.started||S.done||S.duelDead||S.scatterCd>0) return false;
+  if(!localDuel.snapshot().matched){ popup('ARC SCATTER · WAITING FOR RIVAL'); return false; }
+  const fired=shoot(.24,'arc-scatter',{cost:.75,cooldown:.28});
+  if(fired){ S.scatterCd=2.2; popup('ARC SCATTER'); S.shake=Math.max(S.shake,.34); }
+  return fired;
+}
+function wingbreakPulse(){
+  if(!S.duelMode||!S.started||S.done||S.duelDead||S.pulseCd>0) return false;
+  const snap=localDuel.snapshot();
+  if(!snap.matched){ popup('WINGBREAK · WAITING FOR RIVAL'); return false; }
+  S.pulseCd=4.2;
+  shockwave(D.group.position.clone(),0x59f0d5);
+  const shell=new THREE.Mesh(new THREE.SphereGeometry(8,14,10),new THREE.MeshBasicMaterial({
+    color:0x59f0d5,wireframe:true,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));
+  shell.position.copy(D.group.position); scene.add(shell); shocks.push({m:shell,life:.65,dur:.65});
+  const inRange=RIVAL.group.visible&&D.group.position.distanceTo(RIVAL.group.position)<=82;
+  const hit=inRange&&localDuel.reportHit(24,'wingbreak-pulse');
+  popup(hit?'WINGBREAK · OBJECTIVE LOCK BROKEN':'WINGBREAK · RIVAL OUT OF RANGE');
+  S.shake=Math.max(S.shake,.48); AU.play('thunder',.42);
+  return !!hit;
 }
 initFxPools();
 const _b0=new THREE.Vector3(), _b1=new THREE.Vector3(), _bp=new THREE.Vector3(), _perp=new THREE.Vector3();
@@ -2125,9 +2191,10 @@ function updateBolts(dt){
     fillBolt(b);
     let hit=false;
     if(S.duelMode&&localDuel.snapshot().matched&&RIVAL.group.visible&&
-      b.m.position.distanceTo(RIVAL.group.position)<(12+(b.power||.35)*8)){
-      const damage=Math.round(18+(b.power||.35)*34);
-      if(localDuel.reportHit(damage)){ plasmaImpact(b.m.position,b.power||.35); popup('RIVAL STRUCK · '+damage); hit=true; }
+      b.m.position.distanceTo(RIVAL.group.position)<(b.attackId==='arc-scatter'?30:12+(b.power||.35)*8)){
+      const damage=b.attackId==='arc-scatter'?22:Math.round(18+(b.power||.35)*34);
+      if(localDuel.reportHit(damage,b.attackId||'volt-lance')){ plasmaImpact(b.m.position,b.power||.35);
+        popup((b.attackId==='arc-scatter'?'ARC SCATTER':'VOLT LANCE')+' · '+damage); hit=true; }
     }
     for(const sl of searchlights){ if(hit||sl.destroyed) continue;
       if(b.m.position.distanceTo(sl.lampPos)< (18 + (b.power||0.3)*26)){   // charged = wider kill radius
@@ -2147,7 +2214,7 @@ function updateBolts(dt){
       if(land){ plasmaImpact(bp,b.power||0.35); hit=true; }
     }
     if(hit) b.life=0;
-    if(b.life<=0){ b.m.geometry.dispose(); scene.remove(b.m); scene.remove(b.line); b.lgeo.dispose();
+    if(b.life<=0){ scene.remove(b.m); scene.remove(b.line); b.m.material.dispose(); b.lgeo.dispose();
       if(b.arc){ scene.remove(b.arc); b.arc.geometry.dispose(); b.arc.material.dispose(); }
       bolts.splice(i,1); }
   }
@@ -2879,7 +2946,7 @@ function tick(dt){
   p.y = Math.min(p.y, 240);
 
   if(input.flap && S.flapCd<=0){ AU.play('flap',0.45); S.flapCd=0.42; }
-  S.flapCd-=dt; S.shootCd-=dt;
+  S.flapCd-=dt; S.shootCd=Math.max(0,S.shootCd-dt); S.scatterCd=Math.max(0,S.scatterCd-dt); S.pulseCd=Math.max(0,S.pulseCd-dt);
   // plasma pool: one charge back every 4s; holding X winds up a bigger bolt
   S.charges=Math.min(3,S.charges+dt/(4.6-upLv('gland')*0.5));
   if(S.chargeT>=0){ S.chargeT+=dt; const cp=Math.min(1,S.chargeT/chargeSeconds());
@@ -3284,8 +3351,8 @@ function begin(opts={}){
     if(S.duelMode){
       S.chapter=1; S.tutDone=true; for(const r of tutRings) r.visible=false; for(const r of rings) r.visible=false;
       for(const sl of searchlights){ sl.disabled=1e9; sl.lit=0; }
-      localDuel.join(); DUEL_OBJECTIVE.visible=true; $('duelHud').classList.add('on');
-      storyPop('Local 1v1 lab. Open this exact URL in a second tab to link a rival.',6);
+      localDuel.join(); DUEL_OBJECTIVE.visible=true; DUEL_ARENA.visible=true; $('duelHud').classList.add('on');
+      storyPop('Stormscar 1v1. Open this exact URL in a second tab, then use X, Z and R to control the crown.',7);
     } else if(S.practiceMode){
       storyPop('Practice flight — three rings in the cove. No keeper hunt.',6);
     } else if(S.lobbyMode==='chapter' && opts.chapterIndex!=null){
@@ -3312,7 +3379,7 @@ function reset(){
   startAudio(); D.group.position.set(REST.x,REST.y+6,REST.z); D.yaw=Math.PI; D.pitch=0.18; D.roll=0; D.speed=30; input.flap=false;
   S.done=false; S.flightT=0; S.detection=0; S.score=0; S.shake=0; S.fpv=false; S.nextThunder=S.t+5; S.shootCd=0;
   S.finishing=false; S.finishToken++; GATE.open=0; S.impactCd=0; S.alertStage=0;
-  S.boost=0; S.accel=0; S.prevSpeed=30; S.boomed=false; S.charges=3; S.chargeT=-1; S.grace=3; S.launching=true;
+  S.boost=0; S.accel=0; S.prevSpeed=30; S.boomed=false; S.charges=3; S.chargeT=-1; S.scatterCd=0; S.pulseCd=0; S.grace=3; S.launching=true;
   TOD.day=0.0; S.keepersWoke=false; ROG.amp=0; ROG.life=0; ROG.next=6; uRA.value=0;
   if(D.model) D.model.scale.setScalar(9);
   if(D.glide) D.glide.timeScale=1;
@@ -3686,6 +3753,7 @@ window.SIM={
     routeVisible:rings.filter(r=>r.visible).length,cause:S.cause||'',
     scales:Math.floor(S.scales||0),hp:+S.hp.toFixed(1),hpMax:S.hpMax,day:+TOD.day.toFixed(3),finishing:S.finishing,
     charges:+S.charges.toFixed(2), chargeT:+(S.chargeT||0).toFixed(2),
+    attackCooldowns:{scatter:+S.scatterCd.toFixed(2),pulse:+S.pulseCd.toFixed(2)},
     bolts:bolts.length, disabled:searchlights.filter(s=>s.disabled>0).length,
     duel:S.duelMode?{dead:S.duelDead,respawnIn:+Math.max(0,S.duelRespawnAt-duelClock()).toFixed(2),...localDuel.snapshot()}:null}),
   start:()=>{ startAudio(); S.started=true; S.grace=3; menuEl.classList.add('hide','live');
@@ -3697,21 +3765,24 @@ window.SIM={
   achievementUI:achievementUiSnapshot, clearAchievements:()=>{clearAchievementUi(true);return achievementUiSnapshot();},
   duel:()=>localDuel.snapshot(),
   duelScene:()=>({objectiveVisible:DUEL_OBJECTIVE.visible,objectivePosition:DUEL_OBJECTIVE.position.toArray(),
+    arenaVisible:DUEL_ARENA.visible,arenaPosition:DUEL_ARENA.position.toArray(),arenaName:DUEL_ARENA.name,
     rivalLoaded:RIVAL.loaded,rivalVisible:RIVAL.group.visible,rivalPosition:RIVAL.group.position.toArray(),
     playerVisible:D.group.visible,playerPosition:D.group.position.toArray()}),
   duelStage:(kind='faceoff')=>{
     S.started=true; S.done=false; S.duelMode=true; S.practiceMode=true; S.chapter=1; S.tutDone=true;
     menuEl.classList.add('hide','live'); $('hud').classList.add('on'); $('duelHud').classList.add('on');
-    DUEL_OBJECTIVE.visible=true; for(const r of tutRings)r.visible=false; for(const r of rings)r.visible=false;
+    $('shutter').classList.remove('closed'); S.launching=false; $('storyline').textContent='';
+    DUEL_OBJECTIVE.visible=true; DUEL_ARENA.visible=true; for(const r of tutRings)r.visible=false; for(const r of rings)r.visible=false;
     const role=localDuel.role||kind;
     const positions=kind==='objective'
-      ? {host:[900,90,900],challenger:[950,90,900]}
-      : {host:[868,90,900],challenger:[932,90,900]};
+      ? {host:[-430,180,-250],challenger:[-385,180,-250]}
+      : {host:[-466,190,-250],challenger:[-394,190,-250]};
     D.group.position.fromArray(positions[role]||positions.host); D.yaw=role==='host'?-Math.PI/2:Math.PI/2;
     D.pitch=0;D.roll=0;D.speed=20;S.prevSpeed=20;S.duelDead=false;S.hp=S.hpMax;D.group.visible=true;
     return localDuel.snapshot();
   },
-  duelHit:(damage=42)=>localDuel.reportHit(damage),
+  duelHit:(damage=42,attackId='volt-lance')=>localDuel.reportHit(damage,attackId),
+  duelAttack:(attackId)=>attackId==='arc-scatter'?arcScatter():attackId==='wingbreak-pulse'?wingbreakPulse():shoot(.7,'volt-lance'),
   previewUnlockToast:()=>{ clearAchievementUi(true);
     achievement('4 SKILLS MAPPED',SKILLS.filter(sk=>sk.unlockAt!=null).map(sk=>sk.name).join(' · '),'CODEX');
     return achievementUiSnapshot(); },

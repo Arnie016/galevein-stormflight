@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-22T12:44:44.127Z",
+  "generatedAt": "2026-08-22T13:10:13.023Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 233728,
-      "sha256": "a5f13bf416426e8a57bdde14490b9958d97b5dfbc06372b43f0733f7ff50ef77"
+      "bytes": 239271,
+      "sha256": "a87d8e3128b0b2b2da4d4b1e0ca97299b2ec49f59fbcffa1658cb7d0c2e789bd"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -85,13 +85,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 5113,
-      "sha256": "685d4f9bd69853f163b3bf83d5c1a785e205a1cb4d0494aab346998f2ad9d8ae"
+      "bytes": 5659,
+      "sha256": "4642406c241bd632a1be111e1c086ee81285c459542e12f0d1353012253fcaea"
     },
     {
       "path": "RELEASE_READINESS.md",
-      "bytes": 5129,
-      "sha256": "dbef641883d6f4fe9980ee0238dc8aa008ee780b81fb0f2817aefdb005942ebe"
+      "bytes": 5406,
+      "sha256": "8aedc2790e727784f24d3d4b1fe569441cea30058091535a38ba3f5decf43d47"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -230,8 +230,8 @@
     },
     {
       "path": "world-expansion/modules/crownfallRange.js",
-      "bytes": 13904,
-      "sha256": "bf261885fe0d7bd170a2c2dc34bc69b6678fa1de94504c9189a252a47c2c1675"
+      "bytes": 13897,
+      "sha256": "5bd9a3abdf699c2566c66f8107dccfc0240b725b99232beb4eb916bb606f7fb2"
     },
     {
       "path": "world-expansion/modules/dragonRigs.js",
@@ -260,13 +260,13 @@
     },
     {
       "path": "world-expansion/modules/lobbyHub.js",
-      "bytes": 9306,
-      "sha256": "86e2f5d51751814f0e45f922d5b4d81221950b972b1242d09296762042cf0314"
+      "bytes": 9320,
+      "sha256": "8ff12e1ef10523a73aff2c6640e36d0d4f5e36a13aacdc944ae14c77a1292384"
     },
     {
       "path": "world-expansion/modules/localDuel.js",
-      "bytes": 10330,
-      "sha256": "a35d572d618fe6dd151281aef709b76a64e4fe36eb3f5b02b49e8129a30ab182"
+      "bytes": 12461,
+      "sha256": "bd8cb1c3903067c0efc58d17673d6087d5599a681ca3829a91f76b5910f572a2"
     },
     {
       "path": "world-expansion/modules/poseidonOceanLayer.js",

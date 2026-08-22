@@ -7,7 +7,7 @@ const LANE_RADIUS = 22;
 
 const DISTRICTS = Object.freeze([
   { id: 'crownfall-summit', name: 'Crownfall Summit', role: 'story landmark', position: [-990, 468, -270] },
-  { id: 'stormscar-shelf', name: 'Stormscar Shelf', role: 'future PvP arena', position: [-640, 188, -190] },
+  { id: 'stormscar-shelf', name: 'Stormscar Shelf', role: 'PvP arena', position: [-430, 178, -250] },
   { id: 'gale-cut', name: 'Gale Cut', role: 'flight pass', position: [-470, 72, -210] },
   { id: 'undercroft', name: 'The Undercroft', role: 'future quest entrance', position: [-530, 48, -390] }
 ]);

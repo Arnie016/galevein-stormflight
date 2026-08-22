@@ -5,7 +5,7 @@ An original browser-game prototype about flying a Galevein through the Sable Rea
 The release contains two distinct play contracts:
 
 - **Story** is the authored solo route from Wake Perch through the floating Sable Reach.
-- **Local 1v1 Lab** links two tabs opened to the same origin on one device. The pair contests the Stormheart, exchanges flight state and combat damage, and respawns a downed dragon after three seconds. This is a real two-client prototype, but it is not internet matchmaking; GitHub Pages does not provide a multiplayer server.
+- **Stormscar 1v1 Lab** links two tabs opened to the same origin on one device. The pair contests the Stormheart with three distinct attacks, exchanges flight state and authority-validated combat damage, and respawns a downed dragon after three seconds. This is a real two-client prototype, but it is not internet matchmaking; GitHub Pages does not provide a multiplayer server.
 
 ## Play
 
@@ -32,10 +32,15 @@ Build r11 replaces the seven isolated cone mountains with **Crownfall Range**,
 a 980 × 740 authored macro-landmass rising 560 units above the sea. Crownfall
 uses three terrain LODs, a wet shoreline, animated surf, waterfalls, settlement
 lights, and four readable districts: Crownfall Summit for Story, Stormscar
-Shelf for a future PvP arena, Gale Cut as a flight pass, and The Undercroft as
+Shelf as a PvP arena, Gale Cut as a flight pass, and The Undercroft as
 a future quest entrance. The protected Story route retains 65.1 units of
 measured minimum clearance. This is a map-scale and navigation pass; the
 terrain surface remains prototype art rather than a final realistic biome.
+
+Build r12 activates **Stormscar Shelf** as the 1v1 combat arena. `X` fires a
+chargeable long-range Volt Lance, `Z` fires close-range Arc Scatter, and `R`
+emits a short-range Wingbreak Pulse that interrupts the shared capture. The
+temporary host validates attack identity, cooldown, range, and damage bounds.
 
 ## Build the release artifact
 
@@ -54,6 +59,7 @@ then creates `release/` from an explicit allowlist. It does not include
 - Arrow keys or `A` / `D`: climb, dive, bank, turn
 - `Space`: flap for lift
 - Hold/release `X`: charge plasma
+- `Z`: Arc Scatter; `R`: Wingbreak Pulse (Stormscar 1v1)
 - `C`: echo pulse; `F`: call the flock
 - Hold/release `A` or `D`: spiral into Ultra speed
 - Dive then pull up: Stormbreak Dive
@@ -84,10 +90,10 @@ node scripts/flight-harness.mjs --url https://arnie016.github.io/galevein-stormf
 
 ## Two-client duel harness
 
-The duel verifier opens two independent Chrome tabs, proves one temporary host and one challenger, checks remote-rig rendering, converged Stormheart score, combat death, and three-second respawn, then rejects external requests or browser errors:
+The duel verifier opens two independent Chrome tabs, proves one temporary host and one challenger, checks the Stormscar arena and three authority-validated attack classes, converged Stormheart score, combat death, and three-second respawn, then rejects external requests or browser errors:
 
 ```sh
 npm run verify:duel
 ```
 
-To try it manually, open the same served game URL in two tabs and choose **Local 1v1 Lab** in both. Remote internet matchmaking remains a separate backend milestone.
+To try it manually, open the same served game URL in two tabs and choose **Stormscar 1v1 Lab** in both. A public-origin proof can be run with `node scripts/duel-harness.mjs --url <game-url>`. Remote internet matchmaking remains a separate backend milestone.

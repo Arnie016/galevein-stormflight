@@ -7,8 +7,13 @@
  * and round state. Closing either tab ends the match.
  */
 
-const CHANNEL_NAME = 'galevein-local-duel-v1';
-const OBJECTIVE = Object.freeze({ position: [900, 88, 900], radius: 32, holdSeconds: 3, scoreToWin: 3 });
+const CHANNEL_NAME = 'galevein-local-duel-v2';
+const OBJECTIVE = Object.freeze({ position: [-430, 178, -250], radius: 34, holdSeconds: 3, scoreToWin: 3 });
+const ATTACK_CATALOG = Object.freeze({
+  'volt-lance': Object.freeze({ id: 'volt-lance', label: 'Volt Lance', role: 'precision', minDamage: 18, maxDamage: 60, cooldownMs: 350, range: 520 }),
+  'arc-scatter': Object.freeze({ id: 'arc-scatter', label: 'Arc Scatter', role: 'close spread', minDamage: 18, maxDamage: 28, cooldownMs: 900, range: 220 }),
+  'wingbreak-pulse': Object.freeze({ id: 'wingbreak-pulse', label: 'Wingbreak Pulse', role: 'objective interrupt', minDamage: 20, maxDamage: 26, cooldownMs: 3200, range: 82 })
+});
 const now = () => performance.now();
 
 function makeId() {
@@ -57,6 +62,9 @@ export class LocalDuelSession {
     this.kills = {};
     this.roundWinner = null;
     this.seenEvents = new Set();
+    this.lastAttackAt = {};
+    this.acceptedAttacks = { 'volt-lance': 0, 'arc-scatter': 0, 'wingbreak-pulse': 0 };
+    this.lastAttack = null;
     this.objective = OBJECTIVE;
   }
 
@@ -163,19 +171,42 @@ export class LocalDuelSession {
   _authorizeAttack(message) {
     const eventId = String(message.eventId || '');
     if (!eventId || this.seenEvents.has(eventId) || message.target !== this.opponentId && message.target !== this.peerId) return;
+    const attackId = ATTACK_CATALOG[message.attackId] ? message.attackId : 'volt-lance';
+    const spec = ATTACK_CATALOG[attackId];
+    const attackAt = now();
+    const cooldownKey = `${message.from}:${attackId}`;
+    if (attackAt - (this.lastAttackAt[cooldownKey] || 0) < spec.cooldownMs) return false;
+    const source = message.from === this.peerId ? this.local : this.remote;
+    const target = message.target === this.peerId ? this.local : this.remote;
+    if (!source || !target || Math.hypot(
+      source.position[0] - target.position[0],
+      source.position[1] - target.position[1],
+      source.position[2] - target.position[2]
+    ) > spec.range) return false;
     this.seenEvents.add(eventId);
-    const damage = Math.min(60, Math.max(6, Number(message.damage) || 0));
-    const packet = { type: 'DAMAGE', eventId, target: message.target, source: message.from, damage };
+    this.lastAttackAt[cooldownKey] = attackAt;
+    this.acceptedAttacks[attackId] = (this.acceptedAttacks[attackId] || 0) + 1;
+    this.lastAttack = { attackId, source: message.from, target: message.target, damage: Math.min(spec.maxDamage, Math.max(spec.minDamage, Number(message.damage) || 0)) };
+    const damage = this.lastAttack.damage;
+    const packet = { type: 'DAMAGE', eventId, target: message.target, source: message.from, damage, attackId };
     this._post(packet);
     if (packet.target === this.peerId) this.onDamage(packet);
+    if (attackId === 'wingbreak-pulse') {
+      this.captureOwner = null;
+      this.hold = 0;
+      this._broadcastMatch();
+    }
+    return true;
   }
 
-  reportHit(damage) {
+  reportHit(damage, attackId = 'volt-lance') {
     if (this.status !== 'matched' || !this.opponentId || this.roundWinner) return false;
     const eventId = `${this.peerId}:${Date.now().toString(36)}:${this.seq + 1}`;
-    const message = { type: 'ATTACK', eventId, target: this.opponentId, damage: Math.min(60, Math.max(6, Number(damage) || 0)) };
-    if (this.role === 'host') this._authorizeAttack({ ...message, from: this.peerId });
-    else this._post(message);
+    const spec = ATTACK_CATALOG[attackId] || ATTACK_CATALOG['volt-lance'];
+    const message = { type: 'ATTACK', eventId, target: this.opponentId, attackId: spec.id,
+      damage: Math.min(spec.maxDamage, Math.max(spec.minDamage, Number(damage) || 0)) };
+    if (this.role === 'host') return this._authorizeAttack({ ...message, from: this.peerId });
+    this._post(message);
     return true;
   }
 
@@ -269,6 +300,9 @@ export class LocalDuelSession {
       remoteKills: this.opponentId ? this.kills[this.opponentId] || 0 : 0,
       hold: +this.hold.toFixed(2), captureOwner: this.captureOwner,
       roundWinner: this.roundWinner,
+      attackCatalog: Object.values(ATTACK_CATALOG).map((attack) => ({ ...attack })),
+      acceptedAttacks: { ...this.acceptedAttacks },
+      lastAttack: this.lastAttack ? { ...this.lastAttack } : null,
       objective: { ...this.objective, position: this.objective.position.slice() }
     };
   }

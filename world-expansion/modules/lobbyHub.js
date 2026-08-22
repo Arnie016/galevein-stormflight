@@ -16,8 +16,8 @@ export const LOBBY_MODES = Object.freeze({
     contract: 'Fly the cove route · 3 rings · no keeper hunt'
   },
   duel: {
-    id: 'duel', label: 'Local 1v1 Lab', sub: 'Two tabs · contested Stormheart · combat and respawn',
-    contract: 'Open this game in a second tab · first to 3 Stormheart captures'
+    id: 'duel', label: 'Stormscar 1v1 Lab', sub: 'Two tabs · three attacks · contested Stormheart',
+    contract: 'Fight above Stormscar Shelf · X precision · Z spread · R objective break'
   },
   chapter: {
     id: 'chapter', label: 'Chapter Select', sub: 'Jump to a saved chapter checkpoint',
@@ -235,7 +235,7 @@ export class LobbyHub {
       launch.disabled = !selected;
       launch.textContent = selected?.mode === 'story'
         ? 'LAUNCH FROM WAKE PERCH'
-        : (selected?.mode === 'duel' ? 'ENTER THE 1V1 LAB'
+        : (selected?.mode === 'duel' ? 'ENTER STORMSCAR SHELF'
         : (selected ? 'FLY THIS ROUTE' : 'CHOOSE A ROUTE'));
     }
   }

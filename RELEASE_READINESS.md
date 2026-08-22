@@ -30,9 +30,10 @@ This checklist applies only to the generated `release/` artifact. It does not cl
 - Forced `?ocean=webgl` proof: the Poseidon canvas remained hidden and the legacy sea/sky remained visible, with no blank frame or crash.
 - Objective proof: Story, Practice, and Chapter launch contracts passed; beacon 12 produced `ESCAPED`; full detection produced `DETECTED`; reaching nightfall early produced `NIGHTFALL`.
 - Low-altitude proof: two seconds of open-water flight remained active at roughly 15 m altitude with the WebGPU ocean visible and no runtime fault.
-- Local duel proof: two independent same-origin tabs elected one temporary authority, rendered each other's Stormlance, converged one contested Stormheart capture, exchanged combat damage, entered a zero-health death state, and returned the downed client to flight after three seconds. The heartbeat now samples live transforms even when a tab's render loop is suspended, and the respawn timer uses a monotonic real-time clock. The run made no external requests and produced no browser errors.
+- Stormscar r12 local duel proof: two independent same-origin tabs elected one temporary authority, rendered each other's Stormlance over the authored Shelf arena, exposed Volt Lance, Arc Scatter, and Wingbreak Pulse, and accepted bounded damage only after host validation of attack identity, cooldown, range, and damage. The clients converged one contested Stormheart capture, entered a zero-health death state, and returned the downed client to flight after three seconds. The 9/9 run made no external requests and produced no browser errors.
 - Authored-opening proof: Wake Perch uses a fixed seed and launch pose, hides route clutter and distant set pieces until launch, preserves more than 35 m of route clearance, and presents one primary Story action.
 - Crownfall r11 proof: one 980 × 740 macro-landmass rises 560 units above the sea, exposes four named districts and four collision proxies, uses three LODs capped at 3,344 terrain triangles and five draw calls, clips submerged heightfield cells, and preserves 65.1 units of minimum clearance from the protected Story route. The final local Story/WebGPU harness passed 24/24 checks; the final Local 1v1 harness passed 7/7 checks, with no external requests or browser errors in either run.
+- Stormscar r12 regression proof: the post-combat-change Story/WebGPU harness passed 24/24 checks, including WebGPU first-frame submission and the forced WebGL fallback; it reported no external requests or browser errors.
 - Current working-title web search did not reveal an exact game/product match, but that is not a trademark clearance or legal opinion.
 
 ## Release boundary
@@ -48,6 +49,6 @@ Crownfall fixes macro scale and navigational hierarchy, but its terrain
 materials and remaining distant silhouettes are still prototype-quality. It
 does not establish Fortnite-level art fidelity or a complete open-world RPG.
 
-The Local 1v1 Lab is same-device/two-tab transport built on `BroadcastChannel`.
+The Stormscar 1v1 Lab is same-device/two-tab transport built on `BroadcastChannel`.
 It does not claim internet matchmaking, persistent accounts, anti-cheat,
 dedicated-server authority, latency compensation, or cross-device networking.
