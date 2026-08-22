@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-wake-perch-r5">
+<meta name="galevein-build" content="stormflight-wake-perch-r6">
 <link rel="icon" href="data:,">
 <style>
   :root{ --purple:#70cbbb; --teal:#59f0d5; --amber:#ffc27a; --warn:#ff6b68;
@@ -1099,21 +1099,103 @@ for(const [ix,iz,ir,ih] of [[240,-180,9,14],[330,-300,11,17],[60,-300,8,12],[-18
   [260,300,10,15],[380,140,8,12],[-60,420,9,13],[180,-480,10,16],[520,-180,9,14]]) rock(ix,iz,ir,ih);
 
 /* ================= FAR REGIONS: the world beyond the lighthouse ================= */
-const charMat=new THREE.MeshStandardMaterial({color:0x17120e,roughness:.95,flatShading:true});
-const woodMat=new THREE.MeshStandardMaterial({color:0x2e2118,roughness:.9,flatShading:true});
-// THE DROWNED VILLAGE — burned longhouses half-sunk in the shallows. Nobody says what happened here.
-function longhouse(x,z,ry,burned){
-  const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=ry;
-  const base=new THREE.Mesh(new THREE.BoxGeometry(16,7,8), burned?charMat:woodMat); base.position.y=2.4; g.add(base);
-  const roof=new THREE.Mesh(new THREE.CylinderGeometry(0.5,6.4,16,3,1), burned?charMat:woodMat);
-  roof.rotation.z=Math.PI/2; roof.rotation.y=Math.PI/2; roof.position.y=8; roof.scale.z=0.72; g.add(roof);
-  if(burned){ roof.scale.y=0.5+worldRandom()*0.4; roof.rotation.x=(worldRandom()-0.5)*0.5; }
-  scene.add(g); colliders.push({x,z,r:9,top:14}); return g;
+// THE DROWNED VILLAGE — four hearths share one crescent shoal; only one still burns.
+// Repeated parts are instanced so the place reads as one authored settlement without
+// turning a small story landmark into a pile of draw calls.
+const DROWNED_VILLAGE_HOUSES=Object.freeze([
+  {id:'ash-west',x:455,z:-447,yaw:.18,state:'charred'},
+  {id:'ash-south',x:475,z:-470,yaw:-.08,state:'charred'},
+  {id:'ash-channel',x:498,z:-457,yaw:.30,state:'charred'},
+  {id:'spared-hearth',x:521,z:-437,yaw:-.20,state:'spared'}
+]);
+const drownedVillageRoot=new THREE.Group();
+drownedVillageRoot.name='drowned-village-crescent'; scene.add(drownedVillageRoot);
+const villageWetStoneMat=new THREE.MeshStandardMaterial({color:0x283238,roughness:.94,metalness:.02,flatShading:true});
+const villageTimberMat=new THREE.MeshStandardMaterial({color:0x3b3731,roughness:.92,metalness:.01,flatShading:true});
+const villageAshMat=new THREE.MeshStandardMaterial({color:0x25282a,roughness:.98,metalness:0,flatShading:true});
+const villageRoofMat=new THREE.MeshStandardMaterial({color:0x4b554f,roughness:.86,metalness:.035,flatShading:true});
+const villageEmberMat=new THREE.MeshBasicMaterial({color:0xffb45f,toneMapped:true});
+const villageDummy=new THREE.Object3D();
+function villagePoint(h,lx,lz){
+  const c=Math.cos(h.yaw),s=Math.sin(h.yaw);
+  return [h.x+c*lx+s*lz,h.z-s*lx+c*lz];
 }
-longhouse(470,-430,0.4,true); longhouse(505,-455,1.2,true); longhouse(445,-470,2.2,true);
-longhouse(530,-425,2.8,false);                                  // one stands untouched. why?
-const lastTorch=new THREE.PointLight(0xff9a3c, 300, 120, 2); lastTorch.position.set(530,16,-425); scene.add(lastTorch);
-rock(480,-445,26,18); rock(520,-490,14,12);
+function setVillageInstance(mesh,index,x,y,z,sx=1,sy=1,sz=1,rx=0,ry=0,rz=0){
+  villageDummy.position.set(x,y,z); villageDummy.scale.set(sx,sy,sz); villageDummy.rotation.set(rx,ry,rz);
+  villageDummy.updateMatrix(); mesh.setMatrixAt(index,villageDummy.matrix);
+}
+function finishVillageInstances(mesh){
+  mesh.instanceMatrix.needsUpdate=true; mesh.computeBoundingSphere(); mesh.castShadow=true; mesh.receiveShadow=true;
+  drownedVillageRoot.add(mesh); return mesh;
+}
+const villageShoal=new THREE.Mesh(new THREE.IcosahedronGeometry(38,2),villageWetStoneMat);
+villageShoal.name='shared-crescent-shoal'; villageShoal.position.set(487,-3.7,-454); villageShoal.scale.set(1,.13,.65);
+villageShoal.rotation.y=-.12; villageShoal.receiveShadow=true; drownedVillageRoot.add(villageShoal);
+
+const villageFoundations=new THREE.InstancedMesh(new THREE.BoxGeometry(18,1.8,10),villageTimberMat,4);
+const villageStilts=new THREE.InstancedMesh(new THREE.CylinderGeometry(.42,.62,7,6),villageTimberMat,16);
+let stiltIndex=0;
+for(let i=0;i<DROWNED_VILLAGE_HOUSES.length;i++){
+  const h=DROWNED_VILLAGE_HOUSES[i];
+  setVillageInstance(villageFoundations,i,h.x,2,h.z,1,1,1,0,h.yaw,0);
+  for(const [lx,lz] of [[-7,-3],[-7,3],[7,-3],[7,3]]){
+    const [x,z]=villagePoint(h,lx,lz); setVillageInstance(villageStilts,stiltIndex++,x,-.7,z,1,1,1,0,h.yaw,0);
+  }
+  colliders.push({x:h.x,z:h.z,r:h.state==='spared'?10:8,top:h.state==='spared'?14:11,village:true,id:h.id});
+}
+finishVillageInstances(villageFoundations); finishVillageInstances(villageStilts);
+
+const burned=DROWNED_VILLAGE_HOUSES.filter(h=>h.state==='charred');
+const villagePosts=new THREE.InstancedMesh(new THREE.CylinderGeometry(.46,.66,8,6),villageAshMat,burned.length*6);
+const villageRafters=new THREE.InstancedMesh(new THREE.BoxGeometry(16,.65,.75),villageAshMat,burned.length*2);
+const postHeights=[7.8,6.2,8.5,5.6,7.2,6.6]; let postIndex=0,rafterIndex=0;
+for(let hi=0;hi<burned.length;hi++){
+  const h=burned[hi];
+  for(let pi=0;pi<6;pi++){
+    const lx=[-7,-7,0,0,7,7][pi],lz=[-3,3,-3,3,-3,3][pi],height=postHeights[(pi+hi*2)%postHeights.length];
+    const [x,z]=villagePoint(h,lx,lz); setVillageInstance(villagePosts,postIndex++,x,2.2+height*.5,z,1,height/8,1,0,h.yaw,(pi%2?-.03:.04));
+  }
+  for(const [lz,tilt] of [[-3,.11],[3,-.08]]){
+    const [x,z]=villagePoint(h,0,lz); setVillageInstance(villageRafters,rafterIndex++,x,8.4-hi*.35,z,1,1,1,0,h.yaw,tilt);
+  }
+}
+finishVillageInstances(villagePosts); finishVillageInstances(villageRafters);
+
+const spared=DROWNED_VILLAGE_HOUSES.find(h=>h.state==='spared');
+const sparedWalls=new THREE.Mesh(new THREE.BoxGeometry(17,6.6,9),villageTimberMat);
+sparedWalls.name='spared-longhouse'; sparedWalls.position.set(spared.x,5.6,spared.z); sparedWalls.rotation.y=spared.yaw;
+sparedWalls.castShadow=true; sparedWalls.receiveShadow=true; drownedVillageRoot.add(sparedWalls);
+const sparedRoof=new THREE.InstancedMesh(new THREE.BoxGeometry(18,.7,5.4),villageRoofMat,2);
+for(let i=0;i<2;i++){
+  const side=i?1:-1,[x,z]=villagePoint(spared,0,side*2.25);
+  setVillageInstance(sparedRoof,i,x,9.45,z,1,1,1,side*.52,spared.yaw,0);
+}
+finishVillageInstances(sparedRoof);
+
+const jettyPlanks=new THREE.InstancedMesh(new THREE.BoxGeometry(4.8,.48,3.1),villageTimberMat,10);
+for(let i=0;i<10;i++) setVillageInstance(jettyPlanks,i,520+Math.sin(i*.7)*.18,2.1,-446-i*3.25,1,1,1,0,-.03,(i%3-1)*.012);
+finishVillageInstances(jettyPlanks);
+const mooringPosts=new THREE.InstancedMesh(new THREE.CylinderGeometry(.38,.52,7,6),villageTimberMat,4);
+for(let i=0;i<4;i++) setVillageInstance(mooringPosts,i,520+(i%2?3.2:-3.2),3.5,-450-Math.floor(i/2)*24,1,1,1,0,0,0);
+finishVillageInstances(mooringPosts);
+
+const lastHearth=new THREE.Mesh(new THREE.OctahedronGeometry(.9,0),villageEmberMat);
+lastHearth.name='last-hearth'; lastHearth.position.set(spared.x,10.2,spared.z); drownedVillageRoot.add(lastHearth);
+const lastTorch=new THREE.PointLight(0xffa34c,420,105,2); lastTorch.position.copy(lastHearth.position); drownedVillageRoot.add(lastTorch);
+function drownedVillageSnapshot(){
+  const villageColliders=colliders.filter(c=>c.village),beacon={x:520,y:64,z:-470};
+  const minHorizontalClearance=Math.min(...villageColliders.map(c=>Math.hypot(beacon.x-c.x,beacon.z-c.z)-c.r));
+  const maxTop=Math.max(...villageColliders.map(c=>c.top));
+  const renderables=drownedVillageRoot.children.filter(object=>object.isMesh);
+  const triangles=renderables.reduce((sum,object)=>{
+    const geometry=object.geometry,base=(geometry.index?.count||geometry.attributes.position.count)/3;
+    return sum+base*(object.isInstancedMesh?object.count:1);
+  },0);
+  return {contract:'drowned-hearth-crescent-v1',houses:DROWNED_VILLAGE_HOUSES.length,charred:burned.length,spared:1,
+    hearths:1,sharedShoal:true,jettyPlanks:jettyPlanks.count,drawCalls:renderables.length,triangles:Math.round(triangles),
+    externalAssets:0,beacon:[beacon.x,beacon.y,beacon.z],minHorizontalClearance:+minHorizontalClearance.toFixed(1),
+    verticalClearance:+(beacon.y-maxTop).toFixed(1),positions:DROWNED_VILLAGE_HOUSES.map(h=>[h.id,h.x,h.z,h.yaw,h.state])};
+}
 // THE BONE ARCHES — the ribs of something vast, bleached over the sea
 const boneMat=new THREE.MeshStandardMaterial({color:0xcfc8ba,roughness:.85,flatShading:true});
 for(let i=0;i<5;i++){
@@ -3418,6 +3500,7 @@ window.SIM={
   jumpBeacon:simJumpBeacon, jumpChapter:simJumpChapter, jumpState:simJumpState,
   runSteps:simRunSteps, runUntil:simRunUntil, snapshot:simSnapshot,
   route:()=>route.map((p,i)=>({beacon:i+1,x:p[0],y:p[1],z:p[2]})),
+  drownedVillage:drownedVillageSnapshot,
   objectiveStyle:()=>({
     ...BEACON_STYLE,
     routePreserved:route.length===12 && route[0][0]===520 && route[0][1]===58 && route[0][2]===340,
