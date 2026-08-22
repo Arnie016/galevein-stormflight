@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-wake-perch-r4">
+<meta name="galevein-build" content="stormflight-wake-perch-r5">
 <link rel="icon" href="data:,">
 <style>
   :root{ --purple:#70cbbb; --teal:#59f0d5; --amber:#ffc27a; --warn:#ff6b68;
@@ -1259,17 +1259,28 @@ const streaks=new THREE.LineSegments(streakGeo, new THREE.LineBasicMaterial({col
 streaks.frustumCulled=false; scene.add(streaks);
 const streakSeed=Array.from({length:STREAK_N},()=>[worldRandom(),worldRandom(),worldRandom()]);
 
-/* ---- beacons (waypoint rings) : a winding route ---- */
-const rings=[]; const RING_R=13; const N_RINGS=12;
-const ringBase=new THREE.MeshStandardMaterial({ color:0x3b2a18, emissive:0xffc27a, emissiveIntensity:2.7, fog:false });
-const ringDone=new THREE.MeshStandardMaterial({ color:0x0f2e26, emissive:0x2fd6a0, emissiveIntensity:1.4, fog:false });
+/* ---- storm vanes (waypoint beacons) : a winding route ---- */
+const BEACON_STYLE=Object.freeze({
+  profile:'storm-vane-v1', mainRadius:10.5, mainTube:.42, mainHitRadius:15,
+  mainMinOpacity:.28, mainMaxOpacity:.64, doneOpacity:.2,
+  tutorialRadius:9, tutorialTube:.38, tutorialHitRadius:13, tutorialMaxOpacity:.7
+});
+const rings=[]; const RING_R=BEACON_STYLE.mainRadius; const N_RINGS=12;
+const ringBase=new THREE.MeshBasicMaterial({
+  color:0xe1a765, transparent:true, opacity:.42, depthWrite:false,
+  side:THREE.DoubleSide, fog:true, toneMapped:true
+});
+const ringDone=new THREE.MeshBasicMaterial({
+  color:0x4d9e88, transparent:true, opacity:BEACON_STYLE.doneOpacity,
+  depthWrite:false, side:THREE.DoubleSide, fog:true, toneMapped:true
+});
 const route=[[520,58,340],[400,68,180],[260,68,20],[-60,72,-150],            // authored cove exit + canyon turn
   [140,60,-260],[420,70,-380],[520,64,-470],                                  // out to the Drowned Village
   [180,80,-560],[-320,90,-420],[-560,96,240],                                 // under the Bone Arches
   [-260,110,560],[0,120,780]];                                                // north to the Tempest Gate
 for(let i=0;i<N_RINGS;i++){
   const [x,y,z]=route[i];
-  const m=new THREE.Mesh(new THREE.TorusGeometry(RING_R,1.3,10,40), ringBase.clone());
+  const m=new THREE.Mesh(new THREE.TorusGeometry(RING_R,BEACON_STYLE.mainTube,8,48), ringBase.clone());
   m.position.set(x,y,z);
   const nx = route[(i+1)%N_RINGS][0], nz=route[(i+1)%N_RINGS][2];
   m.lookAt(new THREE.Vector3(nx,y,nz)); m.userData.hit=false; m.visible=false;
@@ -1931,8 +1942,8 @@ function updateBolts(dt){
 /* ---- beacon shockwave + popup juice ---- */
 const shocks=[];
 function shockwave(pos,color){
-  const m=new THREE.Mesh(new THREE.TorusGeometry(RING_R,0.9,8,36),
-    new THREE.MeshBasicMaterial({color, transparent:true, opacity:0.95, blending:THREE.AdditiveBlending, depthWrite:false}));
+  const m=new THREE.Mesh(new THREE.TorusGeometry(RING_R,.34,8,36),
+    new THREE.MeshBasicMaterial({color, transparent:true, opacity:.62, blending:THREE.AdditiveBlending, depthWrite:false}));
   m.position.copy(pos); m.quaternion.copy(camera.quaternion); scene.add(m); shocks.push({m,life:0.6});
 }
 function updateShocks(dt){
@@ -2053,11 +2064,14 @@ function addViolence(v){
 /* ---- the flight is choreographed: three sworn tasks, told as story beats ---- */
 /* ---- CHAPTER I: the tutorial cove — three low practice rings between the home cliffs ---- */
 const tutRings=[];
-const tutMat=new THREE.MeshStandardMaterial({color:0x123a30, emissive:0x7fe6c6, emissiveIntensity:2.4});
+const tutMat=new THREE.MeshBasicMaterial({
+  color:0x78c9b5, transparent:true, opacity:.52, depthWrite:false,
+  side:THREE.DoubleSide, fog:true, toneMapped:true
+});
 const TUTORIAL_ROUTE=[[700,40,315],[660,48,370],[600,52,410]];
 for(let i=0;i<TUTORIAL_ROUTE.length;i++){
   const [tx,ty,tz]=TUTORIAL_ROUTE[i];
-  const m=new THREE.Mesh(new THREE.TorusGeometry(12,1.1,10,34), tutMat.clone());
+  const m=new THREE.Mesh(new THREE.TorusGeometry(BEACON_STYLE.tutorialRadius,BEACON_STYLE.tutorialTube,8,42), tutMat.clone());
   m.position.set(tx,ty,tz);
   const next=TUTORIAL_ROUTE[i+1]||route[0]; m.lookAt(next[0],ty,next[2]); m.userData.hit=false;
   tutRings.push(m); scene.add(m);
@@ -2065,10 +2079,10 @@ for(let i=0;i<TUTORIAL_ROUTE.length;i++){
 function driveTutorial(dt){
   if(S.chapter!==0) return;
   const p=D.group.position;
-  for(const r of tutRings){ r.rotation.z+=dt*0.6;
+  for(const r of tutRings){ r.rotation.z+=dt*.22;
     if(r.userData.hit) continue;
-    r.material.emissiveIntensity=2.2+Math.sin(S.t*4)*0.8;
-    if(p.distanceTo(r.position)<13){ r.userData.hit=true; r.material.emissiveIntensity=0.5;
+    r.material.opacity=.48+Math.sin(S.t*2.2+r.position.z*.02)*.08;
+    if(p.distanceTo(r.position)<BEACON_STYLE.tutorialHitRadius){ r.userData.hit=true; r.material.opacity=.18;
       AU.play('ring',0.6); shockwave(r.position,0x7fe6c6); S.scales=(S.scales||0)+1;
       const left=tutRings.filter(t=>!t.userData.hit).length;
       popup(left? 'GOOD · '+left+' MORE' : 'YOU CAN FLY');
@@ -2485,7 +2499,6 @@ function driveTimeOfDay(dt){
   horizonDirector.fogDensity=.00058+.00032*d+.00010*THREE.MathUtils.smoothstep(d,.78,1);
   scene.fog.density=horizonDirector.fogDensity;
   renderer.toneMappingExposure=1.62-.12*d + dayW*.14;
-  for(const r of rings)if(!r.userData.hit)r.material.emissiveIntensity=3.15+d*1.75;
   landmarkPath.setNightfall(d,S.t);
   horizonDirector.masses.material.emissiveIntensity=.08+.16*d;
   // music beds are owned by driveThreatTone (alert / hub / night), not TOD alone
@@ -2813,12 +2826,15 @@ function tick(dt){
       S.shake=Math.max(S.shake,0.12); } }
 
   /* ---- beacons (idle pulse + juicy pass) ---- */
-  for(const r of rings){ r.rotation.z+=dt*(r.userData.hit?0.25:0.6);
-    if(r.userData.pop>0){ r.userData.pop-=dt*2.6; r.scale.setScalar(1+Math.max(0,r.userData.pop)*0.4); }
+  for(const r of rings){ r.rotation.z+=dt*(r.userData.hit?.08:.18);
+    if(r.userData.pop>0){ r.userData.pop-=dt*2.6; r.scale.setScalar(1+Math.max(0,r.userData.pop)*.18); }
     if(r.userData.hit){ continue; }
     if(S.chapter===0) continue;
-    r.material.emissiveIntensity=2.6+Math.sin(S.t*3+r.position.x*0.1)*0.9;   // breathe
-    if(p.distanceTo(r.position)<RING_R+2){
+    const proximity=1-THREE.MathUtils.clamp((p.distanceTo(r.position)-BEACON_STYLE.mainHitRadius)/220,0,1);
+    r.material.opacity=THREE.MathUtils.clamp(
+      BEACON_STYLE.mainMinOpacity+proximity*.27+Math.sin(S.t*2+r.position.x*.03)*.045,
+      BEACON_STYLE.mainMinOpacity,BEACON_STYLE.mainMaxOpacity);             // quiet near-field breathe
+    if(p.distanceTo(r.position)<BEACON_STYLE.mainHitRadius){
       r.userData.hit=true; r.userData.pop=1; r.material=ringDone; S.score++;
       const clean=S.detection<.18, rewards=[2,2,3,2,3,2,3,3,4,3,4,5];
       const earned=rewards[S.score-1]+(clean?1:0);
@@ -2998,7 +3014,7 @@ function begin(opts={}){
   setTimeout(()=>{
     S.started=true; S.flightT=0; S.grace=3; TOD.day=0.0; S.keepersWoke=false; S.hp=S.hpMax; S.hurt=0;
     S.chapter=0; S.tutDone=false; S.altitudePeak=0; S.altitudeCollected=false;
-    for(const r of tutRings){ r.userData.hit=false; r.material.emissiveIntensity=2.4; r.visible=true; }
+    for(const r of tutRings){ r.userData.hit=false; r.material.opacity=.52; r.visible=true; }
     for(const r of rings) r.visible=false;
     if(S.practiceMode){
       storyPop('Practice flight — three rings in the cove. No keeper hunt.',6);
@@ -3046,7 +3062,7 @@ function reset(){
   S.bookLost=false; S.violence=0; S.violenceWarned=false; S.bookOpen=false; $('book').classList.remove('on');
   S.shopOpen=false; $('shop').classList.remove('on'); S.scales=0;
   S.chapter=0; S.tutDone=false; S.altitudePeak=0; S.altitudeCollected=false;
-  for(const r of tutRings){ r.userData.hit=false; r.material.emissiveIntensity=2.4; r.visible=true; }
+  for(const r of tutRings){ r.userData.hit=false; r.material.opacity=.52; r.visible=true; }
   for(const r of rings) r.visible=false;
   for(const u of UPGRADES){ UP[u.id]=0; } S.hpMax=100; S.hp=100; for(const sk of SKILLS) sk._had=false;
   S.strikeT=0; S.strikeNext=12; S.superCharge=0; teleMark.visible=false;
@@ -3316,7 +3332,7 @@ function simJumpChapter(n){
   structure?.reset();
   if(chapter===0){
     S.chapter=0; S.tutDone=false; S.altitudePeak=0; S.altitudeCollected=false; S.score=0;
-    for(const r of tutRings){ r.userData.hit=false; r.material.emissiveIntensity=2.4; r.visible=true; }
+    for(const r of tutRings){ r.userData.hit=false; r.material.opacity=.52; r.visible=true; }
     for(const r of rings){ r.visible=false; r.userData.hit=false; }
     D.group.position.set(REST.x,REST.y+6,REST.z); D.yaw=2.83; D.pitch=0.22; D.roll=0; D.speed=28;
     S.gustNext=999; S.gustPow=0; input.flap=false;
@@ -3402,6 +3418,23 @@ window.SIM={
   jumpBeacon:simJumpBeacon, jumpChapter:simJumpChapter, jumpState:simJumpState,
   runSteps:simRunSteps, runUntil:simRunUntil, snapshot:simSnapshot,
   route:()=>route.map((p,i)=>({beacon:i+1,x:p[0],y:p[1],z:p[2]})),
+  objectiveStyle:()=>({
+    ...BEACON_STYLE,
+    routePreserved:route.length===12 && route[0][0]===520 && route[0][1]===58 && route[0][2]===340,
+    mainGeometry:{
+      radius:rings[0]?.geometry?.parameters?.radius??null,
+      tube:rings[0]?.geometry?.parameters?.tube??null,
+      radialSegments:rings[0]?.geometry?.parameters?.radialSegments??null,
+      tubularSegments:rings[0]?.geometry?.parameters?.tubularSegments??null
+    },
+    tutorialGeometry:{
+      radius:tutRings[0]?.geometry?.parameters?.radius??null,
+      tube:tutRings[0]?.geometry?.parameters?.tube??null
+    },
+    material:ringBase.type,
+    depthWrite:ringBase.depthWrite,
+    transparent:ringBase.transparent
+  }),
   openingScene:()=>{
     const openingIds=new Set(['wake-arch']);
     const openingProxies=colliders.filter(c=>c.landmark&&openingIds.has(String(c.landmark).split('-').slice(0,-1).join('-')));
