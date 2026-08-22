@@ -54,8 +54,10 @@ node scripts/flight-harness.mjs --root release --out /tmp/galevein-flight-harnes
 
 By default it is loopback-only and never publishes or changes game assets. `--preflight-shot`, `--shot`, and `--fallback-shot` are optional visual checkpoints.
 
-After deployment, the same assertions can target the public origin directly:
+The current public technical preview is available at
+[arnie016.github.io/galevein-stormflight](https://arnie016.github.io/galevein-stormflight/).
+The same assertions can target that public origin directly:
 
 ```sh
-node scripts/flight-harness.mjs --url https://example.invalid/index.html --out /tmp/galevein-live.json
+node scripts/flight-harness.mjs --url https://arnie016.github.io/galevein-stormflight/index.html --out /tmp/galevein-live.json
 ```

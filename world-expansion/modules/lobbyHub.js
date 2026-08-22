@@ -23,7 +23,13 @@ export const LOBBY_MODES = Object.freeze({
 
 const CHAPTER_NAMES = ['First Flight', 'Home Waters', 'Serpent Run', 'The Long Night', 'Tempest Gate'];
 
-/** Three instanced pillars + platform disc — +2 draw calls, no per-frame alloc. */
+/**
+ * Authored Wake Perch lobby landmark.
+ *
+ * This is deliberately a place in the world, not three abstract mode-select pillars.
+ * The basalt stack, bronze mooring deck and keeper lamps give the resting dragon a
+ * readable home silhouette while all route selection remains in accessible DOM UI.
+ */
 export class LobbyMarkers {
   /**
    * @param {THREE.Scene} scene
@@ -33,43 +39,56 @@ export class LobbyMarkers {
     this.scene = scene;
     this.anchor = anchor;
     this.root = new THREE.Group();
-    this.root.name = 'LobbyHubMarkers';
+    this.root.name = 'WakePerch';
     this.root.userData.visualOnly = true;
+    this.root.userData.authoredScene = 'wake-perch-v1';
 
-    const platform = new THREE.Mesh(
-      new THREE.CylinderGeometry(58, 62, 1.8, 24),
-      new THREE.MeshStandardMaterial({
-        color: 0x141c2c, emissive: 0x1e2840, emissiveIntensity: 0.35, roughness: 0.92, metalness: 0.08
-      })
-    );
-    platform.position.y = -6;
-    this.root.add(platform);
-
-    const pillarGeo = new THREE.CylinderGeometry(2.8, 3.6, 24, 8);
-    const pillarMat = new THREE.MeshStandardMaterial({
-      color: 0x222a3c, emissive: 0x6a4cff, emissiveIntensity: 1.1, roughness: 0.75, metalness: 0.12
+    this.basalt = new THREE.MeshStandardMaterial({
+      color: 0x17212b, emissive: 0x07131a, emissiveIntensity: 0.12,
+      roughness: 0.96, metalness: 0.02, flatShading: true
     });
-    this.pillars = new THREE.InstancedMesh(pillarGeo, pillarMat, 3);
-    this.pillars.name = 'LobbyPillars';
-    this.root.add(this.pillars);
-
-    this.capGeo = new THREE.CylinderGeometry(4.2, 3.2, 2.4, 8);
-    this.capMat = new THREE.MeshStandardMaterial({
-      color: 0x283048, emissive: 0x9a5cff, emissiveIntensity: 1.6, roughness: 0.6, metalness: 0.2
+    this.bronze = new THREE.MeshStandardMaterial({
+      color: 0x70583d, emissive: 0x171006, emissiveIntensity: 0.08,
+      roughness: 0.76, metalness: 0.22
     });
-    this.caps = [
-      new THREE.Mesh(this.capGeo, this.capMat.clone()),
-      new THREE.Mesh(this.capGeo, this.capMat.clone()),
-      new THREE.Mesh(this.capGeo, this.capMat.clone())
-    ];
-    for (const cap of this.caps) this.root.add(cap);
+    this.lampMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffd6a0, emissive: 0xffb867, emissiveIntensity: 2.1,
+      roughness: 0.42, metalness: 0.06
+    });
+
+    const stack = new THREE.Mesh(new THREE.CylinderGeometry(18, 28, 40, 12, 3), this.basalt);
+    stack.name = 'WakePerch_BasaltStack';
+    stack.position.y = -26;
+    stack.scale.z = 0.82;
+    this.root.add(stack);
+
+    const crown = new THREE.Mesh(new THREE.CylinderGeometry(21, 18, 4.5, 12), this.basalt);
+    crown.name = 'WakePerch_Crown';
+    crown.position.y = -5;
+    crown.scale.z = 0.82;
+    this.root.add(crown);
+
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(28, 1.8, 12), this.bronze);
+    deck.name = 'WakePerch_MooringDeck';
+    deck.position.set(0, -2.2, 30);
+    this.root.add(deck);
+
+    const postGeo = new THREE.CylinderGeometry(0.7, 0.9, 9, 8);
+    this.posts = new THREE.InstancedMesh(postGeo, this.bronze, 4);
+    this.posts.name = 'WakePerch_LampPosts';
+    this.root.add(this.posts);
+
+    const lampGeo = new THREE.OctahedronGeometry(1.45, 0);
+    this.lamps = new THREE.InstancedMesh(lampGeo, this.lampMaterial, 4);
+    this.lamps.name = 'WakePerch_Lamps';
+    this.root.add(this.lamps);
 
     this.offsets = [
-      new THREE.Vector3(-36, 10, 32),
-      new THREE.Vector3(36, 10, 32),
-      new THREE.Vector3(0, 10, -38)
+      new THREE.Vector3(-14, 2.2, 20),
+      new THREE.Vector3(14, 2.2, 20),
+      new THREE.Vector3(-18, 2.2, -9),
+      new THREE.Vector3(18, 2.2, -9)
     ];
-    this.emissive = [0x9a5cff, 0x38e6d0, 0xffbe6a];
     this.matrix = new THREE.Matrix4();
     this.position = new THREE.Vector3();
     this.quaternion = new THREE.Quaternion();
@@ -81,21 +100,19 @@ export class LobbyMarkers {
   }
 
   _applyInstances(t) {
-    for (let i = 0; i < 3; i++) {
-      const bob = Math.sin(t * 1.4 + i * 2.1) * 1.2;
+    for (let i = 0; i < this.offsets.length; i++) {
       this.position.copy(this.offsets[i]);
-      this.position.y += bob;
       this.matrix.compose(this.position, this.quaternion, this.scale);
-      this.pillars.setMatrixAt(i, this.matrix);
-      this.caps[i].position.copy(this.offsets[i]);
-      this.caps[i].position.y = 22 + bob;
-      const pulse = 0.85 + 0.15 * Math.sin(t * 2.2 + i);
-      this.caps[i].material.emissive.setHex(this.emissive[i]);
-      this.caps[i].material.emissiveIntensity = 1.4 * pulse;
+      this.posts.setMatrixAt(i, this.matrix);
+      this.position.y += 5.8;
+      this.scale.setScalar(1 + 0.035 * Math.sin(t * 1.15 + i * 0.7));
+      this.matrix.compose(this.position, this.quaternion, this.scale);
+      this.lamps.setMatrixAt(i, this.matrix);
+      this.scale.setScalar(1);
     }
-    this.pillars.instanceMatrix.needsUpdate = true;
-    const pillarPulse = 0.9 + 0.1 * Math.sin(t * 1.8);
-    this.pillars.material.emissiveIntensity = 0.9 * pillarPulse;
+    this.posts.instanceMatrix.needsUpdate = true;
+    this.lamps.instanceMatrix.needsUpdate = true;
+    this.lampMaterial.emissiveIntensity = 2.0 + 0.16 * Math.sin(t * 1.15);
   }
 
   setVisible(show) {
@@ -113,7 +130,16 @@ export class LobbyMarkers {
   }
 
   snapshot() {
-    return { visible: this._visible, drawCalls: 2, instances: 3 };
+    return {
+      visible: this._visible,
+      scene: 'wake-perch-v1',
+      authored: true,
+      deterministic: true,
+      drawCalls: 5,
+      lamps: 4,
+      anchor: this.root.position.toArray().map((value) => +value.toFixed(1)),
+      palette: ['basalt', 'weathered-bronze', 'warm-keeper-lamp']
+    };
   }
 }
 
@@ -151,7 +177,7 @@ export class LobbyHub {
     if (back) back.addEventListener('click', (e) => { e.stopPropagation(); this._toggleChapterPanel(false); });
     const launch = this.root.querySelector('[data-lobby-launch]');
     if (launch) launch.addEventListener('click', (e) => { e.stopPropagation(); this.launch(); });
-    this._renderSelection();
+    this.select('story');
   }
 
   _toggleChapterPanel(show) {
@@ -203,7 +229,9 @@ export class LobbyHub {
     }
     if (launch) {
       launch.disabled = !selected;
-      launch.textContent = selected ? 'FLY THIS JOURNEY' : 'CHOOSE A ROUTE';
+      launch.textContent = selected?.mode === 'story'
+        ? 'LAUNCH FROM WAKE PERCH'
+        : (selected ? 'FLY THIS ROUTE' : 'CHOOSE A ROUTE');
     }
   }
 

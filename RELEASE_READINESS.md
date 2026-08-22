@@ -1,4 +1,4 @@
-# Release readiness — 2026-08-20
+# Release readiness — 2026-08-22
 
 ## Scope
 
@@ -28,11 +28,14 @@ This checklist applies only to the generated `release/` artifact. It does not cl
 - Forced `?ocean=webgl` proof: the Poseidon canvas remained hidden and the legacy sea/sky remained visible, with no blank frame or crash.
 - Objective proof: Story, Practice, and Chapter launch contracts passed; beacon 12 produced `ESCAPED`; full detection produced `DETECTED`; reaching nightfall early produced `NIGHTFALL`.
 - Low-altitude proof: two seconds of open-water flight remained active at roughly 15 m altitude with the WebGPU ocean visible and no runtime fault.
+- Authored-opening proof: Wake Perch uses a fixed seed and launch pose, hides route clutter and distant set pieces until launch, preserves more than 35 m of route clearance, and presents one primary Story action.
 - Current working-title web search did not reveal an exact game/product match, but that is not a trademark clearance or legal opinion.
 
 ## Release boundary
 
 This is a free, non-commercial prototype using the working title **Galevein: Stormflight**. A paid launch, title/trademark filing, storefront campaign, or commercial asset claim requires a new build-hash ledger and appropriate professional review.
 
-The public artifact still requires a final human visual review and an explicit
-deployment action. A green local harness is not a live publication.
+The GitHub Pages artifact is a public technical preview, not a production or
+commercial release. A final human visual review is still required; the current
+procedural mid-flight architecture remains placeholder-quality, and a green
+harness or live URL does not establish store readiness or legal clearance.

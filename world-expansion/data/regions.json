@@ -8,18 +8,18 @@
       "name": "Wake Cove",
       "theme": "Tutorial shelter — cliff stacks, calm shallows, first trust between rider and Galevein",
       "bounds": {
-        "minX": -140,
-        "maxX": 220,
+        "minX": 420,
+        "maxX": 780,
         "minZ": 160,
         "maxZ": 420,
-        "center": [56, 0, 31],
+        "center": [650, 0, 320],
         "radius": 180
       },
       "narrative": "A Galevein rests in the lee of the home stacks. Three low rings teach weight and beat before the open sea takes you seriously.",
       "storyBeats": ["bond_dragon", "learn_flight"],
-      "allowedLandmarkArchetypes": ["viaduct"],
-      "allowedLandmarkIds": ["wake-arch", "tide-viaduct"],
-      "landmarkScaleRange": [0.85, 1.0],
+      "allowedLandmarkArchetypes": ["seagate"],
+      "allowedLandmarkIds": ["wake-arch"],
+      "landmarkScaleRange": [0.50, 0.62],
       "skyPreset": {
         "id": "cove_dawn",
         "fogDensity": 0.00062,
@@ -29,7 +29,7 @@
         "silhouetteHeightMul": 0.72,
         "hueShift": 0.04,
         "emissivePulse": 0.10,
-        "palette": ["#1a2838", "#2a4a52", "#86f0e2"]
+        "palette": ["#17232d", "#304550", "#59f0d5"]
       },
       "ambientLine": "She answers you in the cove. Out past the stacks, the keepers are lighting their lamps."
     },
@@ -39,7 +39,7 @@
       "theme": "Inner archipelago — patrol lights, modular ruins, echo-friendly rain",
       "bounds": {
         "minX": -280,
-        "maxX": 320,
+        "maxX": 520,
         "minZ": -80,
         "maxZ": 320,
         "center": [20, 0, 120],
@@ -48,8 +48,8 @@
       "narrative": "Home waters under keeper watch. Beacons thread between tide viaducts and the storm spire — rebuild confidence before the canyon tightens.",
       "storyBeats": ["rebuild_trust", "echo_training"],
       "allowedLandmarkArchetypes": ["viaduct", "beacon", "seagate"],
-      "allowedLandmarkIds": ["storm-spire", "keeper-arcade", "drowned-gate"],
-      "landmarkScaleRange": [0.58, 1.12],
+      "allowedLandmarkIds": ["tide-viaduct", "storm-spire", "keeper-arcade", "drowned-gate"],
+      "landmarkScaleRange": [0.46, 0.68],
       "skyPreset": {
         "id": "shallows_dusk",
         "fogDensity": 0.00074,
@@ -59,7 +59,7 @@
         "silhouetteHeightMul": 0.88,
         "hueShift": 0.02,
         "emissivePulse": 0.12,
-        "palette": ["#1b2234", "#3a4068", "#9fc6ff"]
+        "palette": ["#18252f", "#2c404b", "#59f0d5"]
       },
       "ambientLine": "Echo through the rain. The first lights are still slow — use that."
     },
@@ -79,7 +79,7 @@
       "storyBeats": ["thread_canyon", "rescue_clue", "collect_altitude"],
       "allowedLandmarkArchetypes": ["harbor", "viaduct", "seagate"],
       "allowedLandmarkIds": ["cinder-harbor", "salt-arcade"],
-      "landmarkScaleRange": [0.92, 1.12],
+      "landmarkScaleRange": [0.68, 0.72],
       "skyPreset": {
         "id": "serpent_storm",
         "fogDensity": 0.00088,
@@ -89,7 +89,7 @@
         "silhouetteHeightMul": 1.0,
         "hueShift": -0.03,
         "emissivePulse": 0.16,
-        "palette": ["#241820", "#5b3f39", "#ffb27a"]
+        "palette": ["#211f20", "#3b3633", "#ffc27a"]
       },
       "ambientLine": "Char on the water. Four hearths — and only one was spared."
     },
@@ -109,7 +109,7 @@
       "storyBeats": ["cross_bone_arches", "destroy_tower", "survive_long_night"],
       "allowedLandmarkArchetypes": ["ribhall", "beacon", "harbor"],
       "allowedLandmarkIds": ["bone-sentinel", "gale-spire", "keeper-works"],
-      "landmarkScaleRange": [0.94, 1.08],
+      "landmarkScaleRange": [0.68, 0.74],
       "skyPreset": {
         "id": "rib_twilight",
         "fogDensity": 0.00096,
@@ -119,7 +119,7 @@
         "silhouetteHeightMul": 1.12,
         "hueShift": 0.06,
         "emissivePulse": 0.14,
-        "palette": ["#1a1824", "#424a70", "#dcbcff"]
+        "palette": ["#17242d", "#3b4c55", "#59f0d5"]
       },
       "ambientLine": "Ribs like sea-stacks. The keepers turn faster now — break their lock or fall."
     },
@@ -139,7 +139,7 @@
       "storyBeats": ["reach_aurora", "nightfall_escape"],
       "allowedLandmarkArchetypes": ["seagate", "ribhall"],
       "allowedLandmarkIds": ["rib-vault", "aurora-crown"],
-      "landmarkScaleRange": [1.0, 1.18],
+      "landmarkScaleRange": [0.72, 0.78],
       "skyPreset": {
         "id": "aurora_night",
         "fogDensity": 0.00104,
@@ -149,7 +149,7 @@
         "silhouetteHeightMul": 1.28,
         "hueShift": 0.10,
         "emissivePulse": 0.20,
-        "palette": ["#0f1a28", "#3f6664", "#7dffc8"]
+        "palette": ["#10202a", "#34505a", "#75ffe3"]
       },
       "ambientLine": "The aurora pours in like a tide. Home — or whatever waits on the other side."
     }

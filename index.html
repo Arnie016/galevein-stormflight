@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-poseidon-r1">
+<meta name="galevein-build" content="stormflight-wake-perch-r2">
 <link rel="icon" href="data:,">
 <style>
-  :root{ --purple:#a463ff; --teal:#38e6d0; --warn:#ff5a7a;
-    --sc1:rgba(150,100,255,.13); --sc2:rgba(56,230,208,.05);
+  :root{ --purple:#70cbbb; --teal:#59f0d5; --amber:#ffc27a; --warn:#ff6b68;
+    --sc1:rgba(89,240,213,.11); --sc2:rgba(255,194,122,.045);
     --px:0px; --py:0px;
     --display:'Cinzel', 'Palatino', serif; --body:'Cormorant Garamond', Georgia, serif;
     --mono:ui-monospace, "SF Mono", Menlo, monospace; }
@@ -363,33 +363,36 @@
     box-shadow:0 0 18px rgba(150,100,255,.35); }
   #rigPicker .rig:disabled{ opacity:.35; cursor:default; }
 
-  /* lobby hub nodes */
-  #lobbyHub{ position:absolute; inset:0; z-index:4; display:flex; align-items:center; justify-content:center;
-    pointer-events:none; opacity:0; transition:opacity .5s; }
+  /* Wake Perch route board: one primary journey, two quieter utility routes. */
+  #lobbyHub{ position:absolute; inset:0; z-index:4; display:flex; align-items:center; justify-content:flex-start;
+    padding-left:clamp(24px,6vw,96px); box-sizing:border-box; pointer-events:none; opacity:0; transition:opacity .5s; }
   #lobbyHub.on{ opacity:1; pointer-events:auto; }
-  #lobbyHub .lobby-hub-kicker{ position:absolute; top:12%; left:50%; transform:translateX(-50%);
-    font-family:var(--display); font-size:11px; letter-spacing:.28em; color:rgba(56,230,208,.75);
-    text-transform:uppercase; pointer-events:none; }
-  #lobbyHub .preflight-console{ width:min(94vw,760px); display:flex; flex-direction:column; align-items:center; gap:10px;
-    max-height:80vh; overflow:auto; padding:18px 16px; border-radius:18px;
-    background:radial-gradient(ellipse at 50% 12%,rgba(22,42,64,.66),rgba(5,7,17,.72) 76%); }
+  #lobbyHub .lobby-hub-kicker{ font-family:var(--display); font-size:10px; letter-spacing:.3em;
+    color:var(--amber); text-transform:uppercase; pointer-events:none; align-self:flex-start; }
+  #lobbyHub .preflight-console{ width:min(88vw,560px); display:flex; flex-direction:column; align-items:stretch; gap:12px;
+    max-height:82vh; overflow:auto; padding:24px; border:1px solid rgba(112,203,187,.28); border-radius:16px;
+    background:linear-gradient(145deg,rgba(8,17,24,.94),rgba(7,11,18,.84));
+    box-shadow:0 24px 80px rgba(0,0,0,.48); backdrop-filter:blur(12px); }
+  #lobbyHub .lobby-promise{ font-family:var(--body); font-size:18px; line-height:1.38; color:#d8e2df; }
+  #lobbyHub .lobby-promise b{ display:block; margin-bottom:4px; font:700 22px var(--display); letter-spacing:.06em; color:#f1f5f1; }
   #lobbyHub .preflight-label{ font-size:9px; letter-spacing:.24em; color:#8196bc; text-transform:uppercase; }
-  #lobbyHub .lobby-nodes{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; max-width:720px; padding:0 16px; }
-  #lobbyHub .lobby-node{ cursor:pointer; min-width:148px; padding:16px 18px; border-radius:12px;
-    border:1px solid rgba(120,90,200,.45); background:linear-gradient(180deg,rgba(14,18,34,.88),rgba(8,10,22,.72));
+  #lobbyHub .lobby-nodes{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  #lobbyHub .lobby-node{ cursor:pointer; min-width:0; padding:12px 14px; border-radius:9px;
+    border:1px solid rgba(112,203,187,.22); background:linear-gradient(180deg,rgba(19,28,34,.88),rgba(9,15,20,.82));
     box-shadow:0 8px 32px rgba(0,0,0,.45); transition:transform .15s, border-color .15s, background .15s;
-    color:inherit; font:inherit; text-align:center; }
-  #lobbyHub .lobby-node:hover{ transform:translateY(-3px); border-color:rgba(190,160,255,.8); }
-  #lobbyHub .lobby-node.on{ transform:translateY(-2px); border-color:rgba(89,240,213,.92);
-    background:linear-gradient(180deg,rgba(28,60,78,.94),rgba(12,23,38,.86)); box-shadow:0 0 0 1px rgba(56,230,208,.18),0 10px 32px rgba(24,138,150,.24); }
+    color:inherit; font:inherit; text-align:left; }
+  #lobbyHub .lobby-node:first-child{ grid-column:1/-1; padding:15px 16px; }
+  #lobbyHub .lobby-node:hover{ transform:translateY(-2px); border-color:rgba(89,240,213,.72); }
+  #lobbyHub .lobby-node.on{ transform:none; border-color:rgba(89,240,213,.88);
+    background:linear-gradient(180deg,rgba(25,58,58,.94),rgba(11,29,31,.9)); box-shadow:inset 3px 0 0 var(--teal),0 10px 32px rgba(12,85,83,.2); }
   #lobbyHub .lobby-node:focus-visible{ outline:2px solid var(--teal); outline-offset:3px; }
   #lobbyHub .lobby-node b{ display:block; font-family:var(--display); font-size:15px; letter-spacing:.18em; color:#eaf1ff; }
   #lobbyHub .lobby-node i{ display:block; margin-top:6px; font-size:10px; color:#8fa0c2; font-style:normal; line-height:1.4; }
-  #flightLoadout{ padding:8px 14px 7px; border-radius:10px; border:1px solid rgba(140,110,220,.3); background:rgba(7,10,20,.54); }
+  #flightLoadout{ padding:8px 12px 7px; border-radius:9px; border:1px solid rgba(112,203,187,.18); background:rgba(5,11,15,.5); }
   #flightLoadout #rigPicker{ margin:6px 0 0; }
   #flightLoadout #rigPicker .rig{ cursor:default; }
-  #flightReview{ width:min(100%,620px); padding:12px 14px; border:1px solid rgba(89,240,213,.35); border-radius:12px;
-    background:linear-gradient(135deg,rgba(17,37,50,.9),rgba(14,12,30,.88)); box-shadow:0 12px 34px rgba(0,0,0,.35); }
+  #flightReview{ padding:12px 14px; border:1px solid rgba(89,240,213,.3); border-radius:10px;
+    background:linear-gradient(135deg,rgba(17,37,39,.9),rgba(11,17,22,.9)); box-shadow:0 12px 34px rgba(0,0,0,.35); }
   #flightReview .review-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; text-align:left; }
   #flightReview .review-cell{ min-width:0; }
   #flightReview .review-cell span{ display:block; font-size:9px; letter-spacing:.18em; color:#7f96ba; }
@@ -400,7 +403,12 @@
     background:linear-gradient(180deg,rgba(49,173,165,.56),rgba(31,89,110,.64)); color:#ecfffb; font:700 12px var(--display); letter-spacing:.24em; cursor:pointer; }
   #flightReview .lobby-launch:disabled{ cursor:not-allowed; opacity:.45; filter:saturate(.45); }
   #flightReview .lobby-launch:not(:disabled):hover{ filter:brightness(1.18); transform:translateY(-1px); }
+  @media (max-width:760px){
+    #lobbyHub{ justify-content:center; padding:18px; }
+    #lobbyHub .preflight-console{ width:min(92vw,560px); padding:18px; }
+  }
   #menu.hub-open .card > div:first-child,#menu.hub-open .playwrap,#menu.hub-open .dock{ opacity:0; transform:translateY(10px) scale(.98); filter:blur(5px); pointer-events:none; }
+  #menu.hub-open::before,#menu.hub-open::after,#menu.hub-open #sheen,#menu.hub-open .ripple{ opacity:0; animation:none; }
   #lobbyChapterPanel{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(92vw,380px);
     padding:22px 24px; border-radius:12px; border:1px solid rgba(140,110,220,.5);
     background:rgba(8,10,22,.94); opacity:0; pointer-events:none; transition:opacity .25s; }
@@ -561,16 +569,17 @@
     </div>
     <div class="playwrap">
       <button class="play" id="startBtn" aria-label="Take flight"><span class="tri"></span></button>
-      <div class="playlabel">ENTER HUB</div>
+      <div class="playlabel">VIEW FLIGHT PLAN</div>
     </div>
     <div id="lobbyHub" class="hide">
-      <div class="lobby-hub-kicker">Flight console · choose, review, launch</div>
       <div class="preflight-console">
-        <div class="preflight-label">World / route</div>
+        <div class="lobby-hub-kicker">Wake Perch · first light</div>
+        <div class="lobby-promise"><b>One road through the storm.</b>Learn Galevein's weight in the cove, then follow twelve beacons to the Tempest Gate before nightfall.</div>
+        <div class="preflight-label">Choose how to fly</div>
         <div class="lobby-nodes" aria-label="Flight route">
-          <button class="lobby-node" type="button" data-lobby-mode="story" aria-pressed="false"><b>STORY</b><i>Full beacon road · chapters · nightfall</i></button>
-          <button class="lobby-node" type="button" data-lobby-mode="practice" aria-pressed="false"><b>PRACTICE</b><i>Wake Cove rings · no keeper hunt</i></button>
-          <button class="lobby-node" type="button" data-lobby-mode="chapter" aria-pressed="false"><b>CHAPTER</b><i>Jump to a saved checkpoint</i></button>
+          <button class="lobby-node" type="button" data-lobby-mode="story" aria-pressed="false"><b>CONTINUE THE STORY</b><i>Three cove rings · twelve-beacon escape · one clear ending</i></button>
+          <button class="lobby-node" type="button" data-lobby-mode="practice" aria-pressed="false"><b>PRACTICE</b><i>Learn the cove without keeper pursuit</i></button>
+          <button class="lobby-node" type="button" data-lobby-mode="chapter" aria-pressed="false"><b>CHECKPOINTS</b><i>Resume a chapter already reached</i></button>
         </div>
         <div id="flightLoadout">
           <div class="preflight-label">Player / mount</div>
@@ -578,11 +587,11 @@
         </div>
         <div id="flightReview" aria-live="polite">
           <div class="review-grid">
-            <div class="review-cell"><span>WORLD</span><b data-lobby-world>SELECT A ROUTE</b></div>
+            <div class="review-cell"><span>ROUTE</span><b data-lobby-world>STORY</b></div>
             <div class="review-cell"><span>MOUNT</span><b id="flightMount">STORMLANCE</b></div>
-            <div class="review-contract"><span>FLIGHT CONTRACT · </span><b data-lobby-contract>Choose a route to prepare the flight contract</b></div>
+            <div class="review-contract"><span>NEXT OBJECTIVE · </span><b data-lobby-contract>Fly the beacon road · 12 beacons before nightfall</b></div>
           </div>
-          <button class="lobby-launch" type="button" data-lobby-launch disabled>CHOOSE A ROUTE</button>
+          <button class="lobby-launch" type="button" data-lobby-launch>LAUNCH FROM WAKE PERCH</button>
         </div>
       </div>
       <div id="lobbyChapterPanel" data-lobby-chapter-panel>
@@ -658,6 +667,15 @@ import { LobbyHub, LobbyMarkers } from './world-expansion/modules/lobbyHub.js';
 import { createPoseidonOceanLayer } from './world-expansion/modules/poseidonOceanLayer.js';
 
 const $ = id => document.getElementById(id);
+// Structural world variation is reproducible. Runtime VFX can still vary, but terrain,
+// fauna phase, weather fields and damaged architecture must not reshuffle on reload.
+const WORLD_SEED=0x5ab1e5;
+function seededRandom(seed){ let state=seed>>>0; return ()=>{
+  state=(state+0x6D2B79F5)>>>0; let n=state;
+  n=Math.imul(n^(n>>>15),n|1); n^=n+Math.imul(n^(n>>>7),n|61);
+  return ((n^(n>>>14))>>>0)/4294967296;
+}; }
+const worldRandom=seededRandom(WORLD_SEED);
 const bootErrors=[];
 function surfaceBootError(kind, detail){
   const msg=`${kind}: ${detail}`;
@@ -780,7 +798,7 @@ const uDay={value:0}, uRA={value:0}, uRC={value:new THREE.Vector2(1e5,1e5)}, uRW
 
 // Tempest Gate palette lighting (colours animated by time-of-day each frame)
 const moon = new THREE.DirectionalLight(0xffd9a0, 1.15); moon.position.set(-260,120,140); scene.add(moon);   // sun@dusk -> moon
-const rimP = new THREE.DirectionalLight(0xb072ff, 0.9); rimP.position.set(220,120,180); scene.add(rimP);
+const rimP = new THREE.DirectionalLight(0x70cbbb, 0.9); rimP.position.set(220,120,180); scene.add(rimP);
 const fillT = new THREE.DirectionalLight(0x2fd6c0, 0.45); fillT.position.set(60,-40,-220); scene.add(fillT);
 const amb = new THREE.AmbientLight(0x3a2c3a, 1.7); scene.add(amb);
 const hemi = new THREE.HemisphereLight(0x8aa6c8,0x160d1c,.72); scene.add(hemi);
@@ -939,7 +957,7 @@ function makeWhale(x,z){
   for(const sx of [1,-1]){ const fin=new THREE.Mesh(new THREE.ConeGeometry(4,13,4), whaleMat);
     fin.position.set(4,-2,sx*9); fin.rotation.x=sx*0.6; fin.rotation.z=0.5; g.add(fin); }
   g.position.set(x,-24,z); scene.add(g);
-  whales.push({g, x, z, ph:Math.random()*6.283, next:8+Math.random()*22, up:0, dir:Math.random()*6.283});
+  whales.push({g, x, z, ph:worldRandom()*6.283, next:8+worldRandom()*22, up:0, dir:worldRandom()*6.283});
 }
 makeWhale(-180,340); makeWhale(320,-140); makeWhale(-60,-330); makeWhale(560,420);
 const sharkMat=new THREE.MeshStandardMaterial({color:0x1d2a24,roughness:.7,emissive:0x1c5a3a,emissiveIntensity:.55,flatShading:true});
@@ -949,7 +967,7 @@ function makeShark(x,z){
   const fin=new THREE.Mesh(new THREE.ConeGeometry(1.5,4,3), sharkMat); fin.position.y=2.2; g.add(fin);
   const tail=new THREE.Mesh(new THREE.ConeGeometry(2,3,3), sharkMat);
   tail.position.x=-5.5; tail.rotation.z=Math.PI/2; g.add(tail);
-  scene.add(g); sharks.push({g, cx:x, cz:z, ph:Math.random()*6.283, r:18+Math.random()*26, sp:0.35+Math.random()*0.5});
+  scene.add(g); sharks.push({g, cx:x, cz:z, ph:worldRandom()*6.283, r:18+worldRandom()*26, sp:0.35+worldRandom()*0.5});
 }
 for(const [sx,sz] of [[90,90],[-140,10],[240,-200],[-260,180],[40,-420],[420,-320],[-420,-120],[150,520]]) makeShark(sx,sz);
 const birdMat=new THREE.MeshBasicMaterial({color:0x20242e, side:THREE.DoubleSide});
@@ -958,8 +976,8 @@ function makeBirds(x,z,cnt){
     const g=new THREE.Group();
     for(const sx of [1,-1]){ const w=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.7), birdMat);
       w.position.x=sx*1.2; w.userData.side=sx; g.add(w); }
-    g.position.set(x+(Math.random()-0.5)*70, 30+Math.random()*40, z+(Math.random()-0.5)*70);
-    scene.add(g); birds.push({g, ph:Math.random()*6.283, r:22+Math.random()*30, cx:x, cz:z, h:g.position.y, sp:0.5+Math.random()*0.7});
+    g.position.set(x+(worldRandom()-0.5)*70, 30+worldRandom()*40, z+(worldRandom()-0.5)*70);
+    scene.add(g); birds.push({g, ph:worldRandom()*6.283, r:22+worldRandom()*30, cx:x, cz:z, h:g.position.y, sp:0.5+worldRandom()*0.7});
   }
 }
 makeBirds(60,120,7); makeBirds(-220,-60,6); makeBirds(400,-380,7); makeBirds(-100,600,6);
@@ -1045,11 +1063,11 @@ rock(0,0,34,42); rock(58,32,18,28); rock(-64,-22,16,34); rock(34,-58,13,20);
 rock(-30,70,14,24); rock(90,-30,12,18);
 
 // bioluminescent purple crystals (hazards + glow)
-const crystalMat = new THREE.MeshStandardMaterial({ color:0x2a1550, emissive:0x8a3cff, emissiveIntensity:1.4, roughness:.3, flatShading:true });
+const crystalMat = new THREE.MeshStandardMaterial({ color:0x173f42, emissive:0x59f0d5, emissiveIntensity:1.2, roughness:.38, flatShading:true });
 function crystal(x,z,h){
   const g=new THREE.ConeGeometry(3.2, h, 6); const m=new THREE.Mesh(g,crystalMat);
-  m.position.set(x, h/2, z); m.rotation.y=Math.random()*3; scene.add(m);
-  const gl=new THREE.PointLight(0x9a4cff, 60, 90, 2); gl.position.set(x,h*0.7,z); scene.add(gl);
+  m.position.set(x, h/2, z); m.rotation.y=worldRandom()*3; scene.add(m);
+  const gl=new THREE.PointLight(0x59f0d5, 60, 90, 2); gl.position.set(x,h*0.7,z); scene.add(gl);
   colliders.push({x,z,r:4,top:h}); return m;
 }
 crystal(20,18,26); crystal(-44,-8,20); crystal(70,44,30); crystal(-20,-64,22); crystal(-78,40,24);
@@ -1067,7 +1085,7 @@ function mountain(x,z,r,h){
     colors[i*3]=cc.r; colors[i*3+1]=cc.g; colors[i*3+2]=cc.b; }
   g.setAttribute('color',new THREE.BufferAttribute(colors,3));
   g.computeVertexNormals();
-  const m=new THREE.Mesh(g,mtnMat); m.position.set(x,h/2-4,z); m.rotation.y=Math.random()*6; scene.add(m);
+  const m=new THREE.Mesh(g,mtnMat); m.position.set(x,h/2-4,z); m.rotation.y=worldRandom()*6; scene.add(m);
   const cap=new THREE.Mesh(new THREE.ConeGeometry(r*0.34,h*0.28,9), snowMat);
   cap.position.set(x, h*0.5-4 + h*0.5 - h*0.14, z); cap.rotation.y=m.rotation.y; scene.add(cap);
   colliders.push({x,z,r:r*0.5,top:h*0.72}); shoreline(x,z,r*0.62); return m;
@@ -1089,7 +1107,7 @@ function longhouse(x,z,ry,burned){
   const base=new THREE.Mesh(new THREE.BoxGeometry(16,7,8), burned?charMat:woodMat); base.position.y=2.4; g.add(base);
   const roof=new THREE.Mesh(new THREE.CylinderGeometry(0.5,6.4,16,3,1), burned?charMat:woodMat);
   roof.rotation.z=Math.PI/2; roof.rotation.y=Math.PI/2; roof.position.y=8; roof.scale.z=0.72; g.add(roof);
-  if(burned){ roof.scale.y=0.5+Math.random()*0.4; roof.rotation.x=(Math.random()-0.5)*0.5; }
+  if(burned){ roof.scale.y=0.5+worldRandom()*0.4; roof.rotation.x=(worldRandom()-0.5)*0.5; }
   scene.add(g); colliders.push({x,z,r:9,top:14}); return g;
 }
 longhouse(470,-430,0.4,true); longhouse(505,-455,1.2,true); longhouse(445,-470,2.2,true);
@@ -1105,9 +1123,16 @@ for(let i=0;i<5;i++){
 }
 const skullRock=rock(-560,-380,30,26);                          // where the head came to rest
 // THE TEMPEST GATE — sea-stack ring, the aurora pours into it like a curtain
+const tempestGateScenery=[];
+function trackTempestBuild(build){
+  const start=scene.children.length; build();
+  tempestGateScenery.push(...scene.children.slice(start));
+}
 for(let i=0;i<9;i++){ const a=i/9*6.283, r=150;
-  rock(Math.cos(a)*r, 780+Math.sin(a)*r*0.7, 16+(i%3)*5, 60+(i%4)*22); }
-crystal(0,780,44); crystal(-60,820,30); crystal(55,830,34);
+  trackTempestBuild(()=>rock(Math.cos(a)*r, 780+Math.sin(a)*r*0.7, 16+(i%3)*5, 60+(i%4)*22)); }
+trackTempestBuild(()=>crystal(0,780,44));
+trackTempestBuild(()=>crystal(-60,820,30));
+trackTempestBuild(()=>crystal(55,830,34));
 // implicit story: region ambient lines come from regions.json via chapter director
 
 /* ---- SERPENT CANYON: a weaving slot of sheer cliffs you can almost kiss at full speed ----
@@ -1127,8 +1152,8 @@ function cliff(x,z,w,h,rotY){
 const CAN=[[-60,-150,0.3],[-95,-135,0.7],[-130,-105,1.0],[-155,-65,1.25],[-168,-20,1.5]];
 for(const [cx,cz,a] of CAN){
   const nx=Math.cos(a)*16, nz=Math.sin(a)*16;
-  cliff(cx+nx, cz+nz, 34, 86+Math.random()*30, a);
-  cliff(cx-nx, cz-nz, 34, 92+Math.random()*30, a);
+  cliff(cx+nx, cz+nz, 34, 86+worldRandom()*30, a);
+  cliff(cx-nx, cz-nz, 34, 92+worldRandom()*30, a);
 }
 // canyon gates (objective 2): thread all three
 const gates=[];
@@ -1181,9 +1206,10 @@ beacon(120,90,26,2.1,-0.34,true);
 beacon(-140,60,30,4.0,0.29,true);
 
 /* ---- menu patrol skiff: a searchlight on the water that finds the resting dragon ---- */
-const REST=new THREE.Vector3(56,30,31);
+// Wake Perch sits inside the declared cove and faces the three-ring launch corridor.
+const REST=new THREE.Vector3(700,28,250);
 const lobbyMarkers=new LobbyMarkers(scene, REST);
-const patrol=new THREE.Group(); patrol.position.set(150,7,95); scene.add(patrol);
+const patrol=new THREE.Group(); patrol.position.set(150,7,95); patrol.visible=false; scene.add(patrol);
 const pSpot=new THREE.SpotLight(0xffe3b0,2600,420,0.13,0.5,1.1);
 patrol.add(pSpot,pSpot.target); pSpot.target.position.set(300,26,0);
 const pcg=new THREE.ConeGeometry(15,300,20,1,true); pcg.translate(0,-150,0); pcg.rotateZ(Math.PI/2);
@@ -1196,7 +1222,7 @@ const PATROL_AIM=Math.atan2(-(REST.z-patrol.position.z),(REST.x-patrol.position.
 const RAIN_N=1500, rainBox=280; const rainGeo=new THREE.BufferGeometry();
 const rp=new Float32Array(RAIN_N*6); rainGeo.setAttribute('position',new THREE.BufferAttribute(rp,3));
 scene.add(new THREE.LineSegments(rainGeo,new THREE.LineBasicMaterial({color:0x7488ad,transparent:true,opacity:.28})));
-const rainSeed=Array.from({length:RAIN_N},()=>[Math.random(),Math.random(),Math.random()]);
+const rainSeed=Array.from({length:RAIN_N},()=>[worldRandom(),worldRandom(),worldRandom()]);
 
 /* ---- WIND: long drifting streaks that show which way the gale is blowing ---- */
 const WIND_N=110, windBox=300;
@@ -1206,7 +1232,7 @@ windGeo.setAttribute('position',new THREE.BufferAttribute(wp,3));
 const windLines=new THREE.LineSegments(windGeo,new THREE.LineBasicMaterial({color:0xbcd0e8,
   transparent:true, opacity:0.16, blending:THREE.AdditiveBlending, depthWrite:false, fog:false}));
 windLines.frustumCulled=false; scene.add(windLines);
-const windSeed=Array.from({length:WIND_N},()=>[Math.random(),Math.random(),Math.random()]);
+const windSeed=Array.from({length:WIND_N},()=>[worldRandom(),worldRandom(),worldRandom()]);
 const WINDV=new THREE.Vector3();
 function updateWindLines(){
   // gale direction swings slowly; streaks stretch along it and scroll past the camera
@@ -1231,13 +1257,13 @@ const sp=new Float32Array(STREAK_N*6); streakGeo.setAttribute('position',new THR
 const streaks=new THREE.LineSegments(streakGeo, new THREE.LineBasicMaterial({color:0xcbb6ff,
   transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false, fog:false}));
 streaks.frustumCulled=false; scene.add(streaks);
-const streakSeed=Array.from({length:STREAK_N},()=>[Math.random(),Math.random(),Math.random()]);
+const streakSeed=Array.from({length:STREAK_N},()=>[worldRandom(),worldRandom(),worldRandom()]);
 
 /* ---- beacons (waypoint rings) : a winding route ---- */
 const rings=[]; const RING_R=13; const N_RINGS=12;
-const ringBase=new THREE.MeshStandardMaterial({ color:0x1a0f38, emissive:0x8b46ff, emissiveIntensity:3.0, fog:false });
+const ringBase=new THREE.MeshStandardMaterial({ color:0x3b2a18, emissive:0xffc27a, emissiveIntensity:2.7, fog:false });
 const ringDone=new THREE.MeshStandardMaterial({ color:0x0f2e26, emissive:0x2fd6a0, emissiveIntensity:1.4, fog:false });
-const route=[[0,44,200],[150,70,-40],[-90,66,-150],[-170,72,-10],          // home waters + canyon
+const route=[[520,58,340],[400,68,180],[260,68,20],[-60,72,-150],            // authored cove exit + canyon turn
   [140,60,-260],[420,70,-380],[520,64,-470],                                  // out to the Drowned Village
   [180,80,-560],[-320,90,-420],[-560,96,240],                                 // under the Bone Arches
   [-260,110,560],[0,120,780]];                                                // north to the Tempest Gate
@@ -1246,7 +1272,7 @@ for(let i=0;i<N_RINGS;i++){
   const m=new THREE.Mesh(new THREE.TorusGeometry(RING_R,1.3,10,40), ringBase.clone());
   m.position.set(x,y,z);
   const nx = route[(i+1)%N_RINGS][0], nz=route[(i+1)%N_RINGS][2];
-  m.lookAt(new THREE.Vector3(nx,y,nz)); m.userData.hit=false;
+  m.lookAt(new THREE.Vector3(nx,y,nz)); m.userData.hit=false; m.visible=false;
   rings.push(m); scene.add(m);
 }
 const gateGroup=new THREE.Group(); gateGroup.position.set(0,120,780); scene.add(gateGroup);
@@ -1319,25 +1345,27 @@ function applyDragonMaterials(model, rig){
   model.traverse(o=>{ if(!o.isMesh || !o.material) return;
     const m=o.material;
     if(m.map){ m.map.anisotropy=8; }
-    m.color = new THREE.Color(0x504c60);
-    m.roughness = 0.6; m.metalness = 0.15;
-    m.emissive = new THREE.Color(0x4a3358);
-    if(m.map){ m.emissiveMap = m.map; m.emissiveIntensity = 0.7; }
-    else m.emissiveIntensity = 0.7;
+    // Preserve texture value and surface variation instead of washing every mesh in
+    // purple emissive light. Untextured pieces share the storm-slate fallback.
+    m.color = new THREE.Color(m.map ? 0xe4e1d9 : 0x3d4b52);
+    m.roughness = m.map ? 0.76 : 0.86; m.metalness = 0.03;
+    m.emissive = new THREE.Color(0x071c1d);
+    if(m.map){ m.emissiveMap = m.map; m.emissiveIntensity = 0.045; }
+    else m.emissiveIntensity = 0.09;
     m.needsUpdate = true; o.castShadow=true;
   });
 }
 function attachDragonAccessories(model){
   D.mixer=new THREE.AnimationMixer(model);
   D.headNode=model.getObjectByName('head')||model.getObjectByName('Head');
-  const glow=new THREE.PointLight(0x9a4cff, 0, 60, 2); D.group.add(glow); glow.position.set(0,4,0); D.glow=glow;
+  const glow=new THREE.PointLight(0x59f0d5, 0, 60, 2); D.group.add(glow); glow.position.set(0,4,0); D.glow=glow;
   const key1=new THREE.PointLight(0xcdd6ff, 40, 70, 2); key1.position.set(5,16,-6); D.group.add(key1);
-  const key2=new THREE.PointLight(0x8a6bff, 26, 60, 2); key2.position.set(0,3,7); D.group.add(key2);
+  const key2=new THREE.PointLight(0x70cbbb, 26, 60, 2); key2.position.set(0,3,7); D.group.add(key2);
   const mouth=new THREE.Mesh(new THREE.SphereGeometry(1,12,12),
-    new THREE.MeshBasicMaterial({color:0xd7a0ff, blending:THREE.AdditiveBlending, depthWrite:false, transparent:true}));
+    new THREE.MeshBasicMaterial({color:0x9cfff0, blending:THREE.AdditiveBlending, depthWrite:false, transparent:true}));
   mouth.scale.setScalar(0.001); (D.headNode||model).add(mouth);
   mouth.position.set(0, -0.02, -0.06);
-  const mlt=new THREE.PointLight(0xc86bff,0,80,2); mouth.add(mlt);
+  const mlt=new THREE.PointLight(0x59f0d5,0,80,2); mouth.add(mlt);
   D.mouth=mouth; D.mouthLt=mlt;
   const chest=model.getObjectByName('chest')||model.getObjectByName('Body');
   if(chest){ const rider=new THREE.Group();
@@ -1400,10 +1428,13 @@ loadDragonRig(activeRig).catch(()=>{
 
 /* he sleeps on the sea-rock until the patrol light finds him */
 function stageRest(){
-  D.group.position.copy(REST); D.yaw=2.2; D.pitch=0; D.roll=0;
+  D.group.position.copy(REST); D.yaw=Math.PI; D.pitch=0; D.roll=0;
   D.group.rotation.set(0,D.yaw,0);
   if(D.model) D.model.rotation.x=-0.12;                 // settled, not prone
   if(D.glide){ D.glide.timeScale=0.12; D.flap.setEffectiveWeight(0); D.glide.setEffectiveWeight(1); }
+  for(const r of rings) r.visible=false;
+  for(const r of tutRings) r.visible=false;
+  landmarkPath.root.visible=false;
 }
 
 /* ---- procedural "alive" layer: real spine/tail/neck flex on top of the baked flap+glide ---- */
@@ -1963,9 +1994,12 @@ function addViolence(v){
 /* ---- CHAPTER I: the tutorial cove — three low practice rings between the home cliffs ---- */
 const tutRings=[];
 const tutMat=new THREE.MeshStandardMaterial({color:0x123a30, emissive:0x7fe6c6, emissiveIntensity:2.4});
-for(const [tx,ty,tz] of [[80,40,250],[10,52,300],[-70,44,250]]){
+const TUTORIAL_ROUTE=[[700,40,315],[660,48,370],[600,52,410]];
+for(let i=0;i<TUTORIAL_ROUTE.length;i++){
+  const [tx,ty,tz]=TUTORIAL_ROUTE[i];
   const m=new THREE.Mesh(new THREE.TorusGeometry(12,1.1,10,34), tutMat.clone());
-  m.position.set(tx,ty,tz); m.lookAt(REST.x,ty,REST.z); m.userData.hit=false;
+  m.position.set(tx,ty,tz);
+  const next=TUTORIAL_ROUTE[i+1]||route[0]; m.lookAt(next[0],ty,next[2]); m.userData.hit=false;
   tutRings.push(m); scene.add(m);
 }
 function driveTutorial(dt){
@@ -2431,6 +2465,10 @@ function tick(dt){
   S.t+=dt; seaUniforms.uT.value=S.t; sky.material.uniforms.uT.value=S.t;
   if(S.started&&!S.done) S.flightT+=dt;
   updateTempestGate(dt); driveTimeOfDay(dt); driveThreatTone(dt); driveRogue(dt);
+  landmarkPath.root.visible=!!S.started;
+  horizonDirector.root.visible=!!S.started;
+  gateGroup.visible=!!S.started;
+  for(const object of tempestGateScenery) object.visible=!!S.started;
   landmarkPath.update(D.group.position);
   // escalation: more keepers wake as night falls (extend beam reach + speed)
   for(let i=0;i<searchlights.length;i++){ const sl=searchlights[i], d=routeDifficulty();
@@ -2448,18 +2486,8 @@ function tick(dt){
     lobbyMarkers.syncAnchor(REST);
     if($('lobbyHub').classList.contains('on')) lobbyMarkers.update(S.t);
     else lobbyMarkers.setVisible(false);
-    // the skiff light hunts across the water; at t≈3.8s it lands on him
-    patrol.rotation.y = PATROL_AIM + 0.55*Math.sin(0.5*(S.t-3.8));
-    const off=Math.abs(patrol.rotation.y-PATROL_AIM);
-    if(off<0.045 && S.t>1.5 && S.t-(S.lastSpot||0)>4){ S.lastSpot=S.t; spotMoment(); }
-    if(S.t>7 && !menuEl.classList.contains('live')) spotMoment();  // safety reveal
-    // Hub / resting cinematic still gets sky lightning (weather is visible before you launch).
-    if(S.t>(S.nextThunder||2)){
-      S.nextThunder=S.t+3.5+Math.random()*5;
-      fireSkyBolt();
-      S.flash=Math.max(S.flash,0.85);
-      setTimeout(()=>AU.play('thunder',0.45), 160+Math.random()*280);
-    }
+    // The lobby is a quiet authored shelter. Weather and threats begin on launch.
+    if(S.t>1.8 && !menuEl.classList.contains('live')) spotMoment();
     updateShocks(dt); updateFxPools(dt); updateRain();
     if(S.flash>0){ S.flash=Math.max(0,S.flash-dt*2.2); $('flash').style.opacity=(S.flash*0.5).toFixed(2); moon.intensity=0.8+S.flash*2.5; }
     return;
@@ -2734,7 +2762,7 @@ function tick(dt){
       r.userData.hit=true; r.userData.pop=1; r.material=ringDone; S.score++;
       const clean=S.detection<.18, rewards=[2,2,3,2,3,2,3,3,4,3,4,5];
       const earned=rewards[S.score-1]+(clean?1:0);
-      AU.play('ring',0.75); shockwave(r.position,0x9a5cff);
+      AU.play('ring',0.75); shockwave(r.position,0xffc27a);
       popup((clean?'CLEAN ':'')+'BEACON '+S.score+' / '+rings.length+' · +'+earned+' SCALES');
       S.scales=(S.scales||0)+earned; S.detection=Math.max(0,S.detection-.12);
       S.flash=Math.max(S.flash,0.2);
@@ -2772,10 +2800,9 @@ function flashDom(a){ const el=$('flash'); el.style.transition='none'; el.style.
   requestAnimationFrame(()=>{ el.style.transition='opacity .9s ease'; el.style.opacity=0; }); }
 function triggerRipple(){ const r=$('rippleHit'); r.classList.remove('go'); void r.offsetWidth; r.classList.add('go'); }
 function spotMoment(){
-  if(menuEl.classList.contains('live')){ triggerRipple(); flashDom(0.22); if(D.glow) D.glow.intensity=70; return; }
-  menuEl.classList.add('spot','live');
-  triggerRipple(); flashDom(0.55);
-  if(D.glow) D.glow.intensity=110;
+  if(menuEl.classList.contains('live')) return;
+  menuEl.classList.add('live');
+  if(D.glow) D.glow.intensity=28;
 }
 
 function hud(litNow){
@@ -2911,7 +2938,7 @@ function begin(opts={}){
   setTimeout(()=>{
     S.started=true; S.flightT=0; S.grace=3; TOD.day=0.0; S.keepersWoke=false; S.hp=S.hpMax; S.hurt=0;
     S.chapter=0; S.tutDone=false; S.altitudePeak=0; S.altitudeCollected=false;
-    for(const r of tutRings){ r.userData.hit=false; r.material.emissiveIntensity=2.4; }
+    for(const r of tutRings){ r.userData.hit=false; r.material.emissiveIntensity=2.4; r.visible=true; }
     for(const r of rings) r.visible=false;
     if(S.practiceMode){
       storyPop('Practice flight — three rings in the cove. No keeper hunt.',6);
@@ -2923,7 +2950,7 @@ function begin(opts={}){
     }
     for(const sl of searchlights){ sl.hp=sl.maxHp; sl.hbT=0; sl.fireCd=2+Math.random(); if(S.practiceMode) sl.alerted=0; }
     D.group.position.set(REST.x, REST.y+6, REST.z);
-    D.yaw=2.83; D.pitch=0.22; D.roll=0; D.speed=30; S.prevSpeed=30;
+    D.yaw=Math.PI; D.pitch=0.18; D.roll=0; D.speed=30; S.prevSpeed=30;
     if(D.model) D.model.scale.setScalar(activeRig.scale||9);
     if(D.glide) D.glide.timeScale=1;
     $('menu').classList.add('hide'); $('hud').classList.add('on');
@@ -2935,7 +2962,7 @@ function begin(opts={}){
   setTimeout(()=>{ S.launching=false; },2900);
 }
 function reset(){
-  startAudio(); D.group.position.set(REST.x,REST.y+6,REST.z); D.yaw=2.83; D.pitch=0.22; D.roll=0; D.speed=30; input.flap=false;
+  startAudio(); D.group.position.set(REST.x,REST.y+6,REST.z); D.yaw=Math.PI; D.pitch=0.18; D.roll=0; D.speed=30; input.flap=false;
   S.done=false; S.flightT=0; S.detection=0; S.score=0; S.shake=0; S.fpv=false; S.nextThunder=S.t+5; S.shootCd=0;
   S.finishing=false; S.finishToken++; GATE.open=0; S.impactCd=0; S.alertStage=0;
   S.boost=0; S.accel=0; S.prevSpeed=30; S.boomed=false; S.charges=3; S.chargeT=-1; S.grace=3; S.launching=true;
@@ -3080,12 +3107,12 @@ function render(dt=1/60){
   updateStreaks();
   $('speedvig').style.opacity=(S.boost*.42+THREE.MathUtils.clamp((D.motion.gLoad-1)/3,0,.18)).toFixed(2);
 
-  // landing page: cinematic close arc around the resting dragon
+  // Wake Perch: a restrained, authored over-shoulder composition with the first
+  // beacon corridor visible ahead. No orbit through nearby world geometry.
   if(!S.started){
     camera.fov += (48-camera.fov)*fdamp(6,dt); camera.updateProjectionMatrix();
-    const a=S.t*0.11+2.1;
-    camera.position.set(REST.x+Math.sin(a)*15, REST.y+5.5+Math.sin(S.t*0.3)*1.3, REST.z+Math.cos(a)*15);
-    camera.lookAt(REST.x, REST.y+2.5, REST.z);
+    camera.position.set(REST.x+18, REST.y+10+Math.sin(S.t*.22)*.24, REST.z-24);
+    camera.lookAt(REST.x-1, REST.y+3, REST.z+8);
     renderWorld(dt); return;
   }
 
@@ -3315,6 +3342,34 @@ window.SIM={
   jumpBeacon:simJumpBeacon, jumpChapter:simJumpChapter, jumpState:simJumpState,
   runSteps:simRunSteps, runUntil:simRunUntil, snapshot:simSnapshot,
   route:()=>route.map((p,i)=>({beacon:i+1,x:p[0],y:p[1],z:p[2]})),
+  openingScene:()=>{
+    const openingIds=new Set(['wake-arch']);
+    const openingProxies=colliders.filter(c=>c.landmark&&openingIds.has(String(c.landmark).split('-').slice(0,-1).join('-')));
+    let minCorridorGap=Infinity;
+    for(const point of TUTORIAL_ROUTE){
+      for(const proxy of openingProxies){
+        minCorridorGap=Math.min(minCorridorGap,Math.hypot(point[0]-proxy.x,point[2]-proxy.z)-proxy.r);
+      }
+    }
+    return {
+      contract:'wake-perch-v1', build:document.querySelector('meta[name="galevein-build"]')?.content||'',
+      worldSeed:WORLD_SEED, rest:REST.toArray(), dragonYaw:+D.yaw.toFixed(3),
+      tutorialRoute:TUTORIAL_ROUTE.map(p=>p.slice()), firstBeacon:route[0].slice(),
+      minCorridorGap:Number.isFinite(minCorridorGap)?+minCorridorGap.toFixed(1):null,
+      routeRingsVisible:rings.filter(r=>r.visible).length,
+      landmarkRootVisible:landmarkPath.root.visible,
+      horizonRootVisible:horizonDirector.root.visible,
+      tempestGateVisible:gateGroup.visible||tempestGateScenery.some(object=>object.visible),
+      visibleLandmarks:landmarkPath.root.visible
+        ? landmarkPath.route.filter(entry=>entry.object?.visible).map(entry=>entry.id)
+        : [],
+      patrolVisible:patrol.visible, markers:lobbyMarkers.snapshot(),
+      defaultMode:lobby.snapshot().selection?.mode||null,
+      primaryAction:document.querySelector('[data-lobby-launch]')?.textContent||'',
+      materialDirection:'texture-preserving storm-slate',
+      palette:['basalt','weathered-bronze','warm-keeper-lamp','beacon-cyan']
+    };
+  },
   win:()=>{ simJumpState({started:true,done:false,chapter:5,score:11,detection:0,day:0.2});
     simJumpBeacon(11,{speed:36,yOffset:0}); return simRunUntil(s=>s.score>=12||s.done,{controls:{accel:true},maxSteps:2400}); },
   loseDetection:()=>{ simJumpState({started:true,done:false,chapter:2,score:2,detection:0.92,day:0.3});

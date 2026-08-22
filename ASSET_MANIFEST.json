@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-20T15:01:32.077Z",
+  "generatedAt": "2026-08-22T08:18:29.978Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 203575,
-      "sha256": "0bda7fbba9f2831657fd712c05196cbbadb50835a19e972997aedf5f7ede0485"
+      "bytes": 206958,
+      "sha256": "01d67e6f1655122707a1a094356833da006a586c138ee3273052ee33852f6f3c"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -85,13 +85,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 2648,
-      "sha256": "c97ad96ceefea2696b7cdd0a51d375255ab3cdf795388061b72562d5e88921c8"
+      "bytes": 2801,
+      "sha256": "18d735b4ab81f363be8be60b3814d64e3c92dc4c903b80f3577c81c607033f25"
     },
     {
       "path": "RELEASE_READINESS.md",
-      "bytes": 2702,
-      "sha256": "53448b1f1fe1ebbbe6dbd9e09bbbc033e8e6605253d6dd5c7207860bd1af9b7a"
+      "bytes": 3075,
+      "sha256": "34ad2008330585e2c653646428a13a54aad9f97f3004b3d22589b140da724003"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -215,8 +215,8 @@
     },
     {
       "path": "world-expansion/data/regions.json",
-      "bytes": 5884,
-      "sha256": "791c08e07b7721ff97fadc86aaed93b824e9d6f90dacf15c3455e21bbb7e1e57"
+      "bytes": 5887,
+      "sha256": "54e47ff1cea87f3351cd26d6005659746609ab1100220e9329c70eef653d9cd2"
     },
     {
       "path": "world-expansion/modules/chapterDirector.js",
@@ -250,13 +250,13 @@
     },
     {
       "path": "world-expansion/modules/landmarkPath.js",
-      "bytes": 8644,
-      "sha256": "f94f94db67a7ccec71dcd8ef1a14ce5f0dc72a282765bbc875cdeb9b95a0998e"
+      "bytes": 8737,
+      "sha256": "4c46d3e023f70ba6c940bf6542c64335cc7714d4f9ae068dd7252a400e3e3df8"
     },
     {
       "path": "world-expansion/modules/lobbyHub.js",
-      "bytes": 8168,
-      "sha256": "01af4b97076a5cbad9be1844cb4191b1b42108df082e31e61ef60a237237db40"
+      "bytes": 9047,
+      "sha256": "dd0cf973cc4ebec9bc38396e7090b13061989319695cac9a9796f00e5a946b07"
     },
     {
       "path": "world-expansion/modules/poseidonOceanLayer.js",
@@ -265,8 +265,8 @@
     },
     {
       "path": "world-expansion/modules/proceduralLandmarks.js",
-      "bytes": 57676,
-      "sha256": "7dcbb8ba8e431e03df3db8756b15f90f4d02afec4a5d79a5ce7e0dc8daf7aad0"
+      "bytes": 57990,
+      "sha256": "1c599d4a7372e03084eebe1cc9682d454eb5d1c8cfe99b5881799f9edd8e2cae"
     }
   ]
 }

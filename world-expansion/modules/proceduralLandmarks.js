@@ -819,21 +819,21 @@ function palette(stone, metal, signal) {
 // while a weak spring holds it near where it was authored. Hand-placing twelve sites
 // against seven mountains, twenty-one rocks and a twelve-leg route does not converge.
 export const LANDMARK_SITES = Object.freeze([
-  { id: 'wake-arch', archetype: 'seagate', position: [128, 6, 263], yaw: -0.62, scale: 1.0, palette: palette(0x4a6a70, 0x6f8b8f, 0x86f0e2), seed: 1207 },
-  { id: 'tide-viaduct', archetype: 'viaduct', position: [-185, 4, 151], yaw: -0.567, scale: .92, palette: palette(0x445267, 0x707d94, 0x9fc6ff), seed: 3391 },
-  { id: 'storm-spire', archetype: 'beacon', position: [248, 8, 6], yaw: -0.3, scale: 1.06, palette: palette(0x3a4068, 0x6a6f96, 0xa08cff), seed: 5122 },
+  { id: 'wake-arch', archetype: 'seagate', position: [500, 6, 460], yaw: -0.32, scale: .62, palette: palette(0x304550, 0x7a6347, 0x59f0d5), seed: 1207 },
+  { id: 'tide-viaduct', archetype: 'viaduct', position: [880, 4, 480], yaw: 0.12, scale: .50, palette: palette(0x293b47, 0x725d45, 0x59f0d5), seed: 3391 },
+  { id: 'storm-spire', archetype: 'beacon', position: [520, 8, 30], yaw: -0.3, scale: .64, palette: palette(0x2a3b46, 0x796147, 0xffc27a), seed: 5122 },
   // A compact arcade: the inner archipelago has no room for a full-length viaduct.
-  { id: 'keeper-arcade', archetype: 'viaduct', position: [-82, 4, -292], yaw: 1.202, scale: .58, palette: palette(0x3f4f5c, 0x69808c, 0x7fdcf2), seed: 811 },
-  { id: 'drowned-gate', archetype: 'seagate', position: [361, 6, -116], yaw: -0.234, scale: 1.12, palette: palette(0x3d5666, 0x64818f, 0x7ce0f4), seed: 9044 },
-  { id: 'cinder-harbor', archetype: 'harbor', position: [545, 2, -305], yaw: 0.62, scale: 1.0, palette: palette(0x5b3f39, 0x8a6353, 0xff8a52), seed: 2266 },
-  { id: 'salt-arcade', archetype: 'viaduct', position: [612, 4, -552], yaw: -0.34, scale: 1.0, palette: palette(0x53474a, 0x7d7175, 0xffb27a), seed: 7710 },
-  { id: 'bone-sentinel', archetype: 'ribhall', position: [67, 4, -673], yaw: 1.36, scale: 1.08, palette: palette(0x7a747c, 0x9b94a2, 0xdcbcff), seed: 4488 },
-  { id: 'gale-spire', archetype: 'beacon', position: [-155, 8, -587], yaw: 0.22, scale: .94, palette: palette(0x424a70, 0x6f76a0, 0xb0a2ff), seed: 6301 },
-  { id: 'keeper-works', archetype: 'harbor', position: [-525, 2, -216], yaw: -0.86, scale: .94, palette: palette(0x3c4b52, 0x69808a, 0x8fe6d6), seed: 1555 },
+  { id: 'keeper-arcade', archetype: 'viaduct', position: [-150, 4, 35], yaw: 1.08, scale: .46, palette: palette(0x283945, 0x705b43, 0x59f0d5), seed: 811 },
+  { id: 'drowned-gate', archetype: 'seagate', position: [285, 6, -105], yaw: -0.234, scale: .68, palette: palette(0x2c404b, 0x725e47, 0x59f0d5), seed: 9044 },
+  { id: 'cinder-harbor', archetype: 'harbor', position: [545, 2, -305], yaw: 0.62, scale: .72, palette: palette(0x3b3633, 0x7d5d42, 0xffc27a), seed: 2266 },
+  { id: 'salt-arcade', archetype: 'viaduct', position: [612, 4, -552], yaw: -0.34, scale: .68, palette: palette(0x343c42, 0x746149, 0xffc27a), seed: 7710 },
+  { id: 'bone-sentinel', archetype: 'ribhall', position: [67, 4, -673], yaw: 1.36, scale: .74, palette: palette(0x465159, 0x78664f, 0x59f0d5), seed: 4488 },
+  { id: 'gale-spire', archetype: 'beacon', position: [-155, 8, -587], yaw: 0.22, scale: .68, palette: palette(0x2a3d48, 0x715e47, 0x59f0d5), seed: 6301 },
+  { id: 'keeper-works', archetype: 'harbor', position: [-525, 2, -216], yaw: -0.86, scale: .70, palette: palette(0x2c3d45, 0x725f48, 0xffc27a), seed: 1555 },
   // Long axis laid parallel to the r9 -> r10 leg and offset west of it, so the nave reads
   // as a close pass down its flank instead of a wall in the way.
-  { id: 'rib-vault', archetype: 'ribhall', position: [-504, 4, 519], yaw: 0.752, scale: 1.0, palette: palette(0x6d7480, 0x8f97a6, 0xa8d8ff), seed: 8823 },
-  { id: 'aurora-crown', archetype: 'seagate', position: [-253, 6, 815], yaw: -0.7, scale: 1.18, palette: palette(0x3f6664, 0x6c9490, 0x7dffc8), seed: 3077 }
+  { id: 'rib-vault', archetype: 'ribhall', position: [-504, 4, 519], yaw: 0.752, scale: .72, palette: palette(0x3b4c55, 0x76644d, 0x59f0d5), seed: 8823 },
+  { id: 'aurora-crown', archetype: 'seagate', position: [-253, 6, 815], yaw: -0.7, scale: .78, palette: palette(0x34505a, 0x79664f, 0x75ffe3), seed: 3077 }
 ]);
 
 /** Filter sites by region.json allowedLandmarkIds / allowedLandmarkArchetypes. */
@@ -851,8 +851,13 @@ export function filterLandmarkSites(sites, filter = {}) {
 /** Landmarks assigned to a region via allowedLandmarkIds (authoritative over archetype list). */
 export function landmarksForRegion(region, sites = LANDMARK_SITES) {
   if (!region) return [];
+  // Explicit site IDs are the authored region membership contract. Archetypes are a
+  // fallback for older region data, not an additional OR/AND rule that leaks repeated
+  // archetypes from other parts of the world into this region.
+  if (region.allowedLandmarkIds?.length) {
+    return filterLandmarkSites(sites, { allowedLandmarkIds: region.allowedLandmarkIds });
+  }
   return filterLandmarkSites(sites, {
-    allowedLandmarkIds: region.allowedLandmarkIds,
     allowedLandmarkArchetypes: region.allowedLandmarkArchetypes
   });
 }

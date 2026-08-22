@@ -133,7 +133,8 @@ export class LandmarkPath {
     if (!this.regionFilter) return true;
     const idOk = this._regionIds ? this._regionIds.has(entry.id) : true;
     const archetypeOk = this._regionArchetypes ? this._regionArchetypes.has(entry.archetype) : true;
-    if (this._regionIds && this._regionArchetypes) return idOk || archetypeOk;
+    // Explicit IDs are authoritative. Using ID OR archetype made every viaduct in the
+    // whole world appear in Wake Cove simply because the cove contains one viaduct.
     if (this._regionIds) return idOk;
     if (this._regionArchetypes) return archetypeOk;
     return true;
