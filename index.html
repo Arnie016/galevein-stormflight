@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-wake-perch-r6">
+<meta name="galevein-build" content="stormflight-wake-perch-r7">
 <link rel="icon" href="data:,">
 <style>
   :root{ --purple:#70cbbb; --teal:#59f0d5; --amber:#ffc27a; --warn:#ff6b68;
@@ -131,24 +131,23 @@
   .up button{ font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:1px; cursor:pointer;
     padding:7px 14px; border-radius:4px; border:1px solid #6b4a20; background:#3c2a17; color:#f4e6c6; }
   .up button:disabled{ opacity:.35; cursor:default; }
-  #ach{ position:fixed; left:50%; top:26%; transform:translate(-50%,-50%); z-index:8; opacity:0;
-    pointer-events:none; text-align:center; }
-  #ach.on{ animation:achpop 4s cubic-bezier(.2,.9,.25,1) forwards; }
-  @keyframes achpop{ 0%{opacity:0; transform:translate(-50%,-50%) scale(.6) rotate(-4deg);}
-    12%{opacity:1; transform:translate(-50%,-50%) scale(1.06);}
-    18%{transform:translate(-50%,-50%) scale(1);} 82%{opacity:1;}
-    100%{opacity:0; transform:translate(-50%,-58%) scale(1.02);} }
-  .ach-in{ padding:22px 46px; position:relative;
-    background:linear-gradient(160deg, rgba(232,217,180,.97), rgba(198,172,126,.97));
-    clip-path:polygon(2% 6%,8% 0,22% 5%,38% 0,54% 5%,70% 0,86% 5%,97% 1%,100% 12%,98% 30%,
-      100% 50%,98% 70%,100% 88%,95% 99%,80% 95%,64% 100%,48% 95%,32% 100%,16% 95%,3% 99%,0 84%,2% 62%,0 40%,2% 20%);
-    box-shadow:0 20px 70px rgba(0,0,0,.7), 0 0 90px rgba(255,190,90,.35); }
-  .ach-k{ font-family:var(--mono); font-size:11px; letter-spacing:.5em; color:#8a5a22; }
-  .ach-n{ font-family:var(--display); font-size:clamp(26px,4.4vw,44px); font-weight:900;
-    letter-spacing:.08em; color:#3d2a12; margin:4px 0 2px; }
-  .ach-d{ font-family:var(--body); font-style:italic; font-size:15px; color:#6c5432; }
-  .ach-key{ display:inline-block; margin-top:9px; font-family:var(--mono); font-size:15px; font-weight:700;
-    letter-spacing:2px; padding:5px 15px; border-radius:4px; background:#3c2a17; color:#f4e6c6; }
+  #ach{ position:fixed; left:auto; right:16px; top:108px; width:min(320px,calc(100vw - 32px));
+    z-index:8; opacity:0; pointer-events:none; text-align:left; transform:translateX(22px); }
+  #ach.on{ animation:achtoast 2.8s cubic-bezier(.2,.9,.25,1) forwards; }
+  @keyframes achtoast{ 0%{opacity:0; transform:translateX(22px);}
+    12%{opacity:1; transform:translateX(0);} 78%{opacity:1; transform:translateX(0);}
+    100%{opacity:0; transform:translateX(12px);} }
+  .ach-in{ min-height:48px; padding:10px 62px 10px 14px; position:relative; border-radius:8px;
+    border:1px solid rgba(255,194,122,.46); border-left:3px solid rgba(255,194,122,.9);
+    background:linear-gradient(135deg,rgba(12,18,27,.94),rgba(14,25,29,.9));
+    box-shadow:0 12px 34px rgba(0,0,0,.48),0 0 24px rgba(89,240,213,.08); }
+  .ach-k{ font-family:var(--mono); font-size:8px; letter-spacing:.28em; color:#d9a968; }
+  .ach-n{ font-family:var(--display); font-size:16px; font-weight:800; line-height:1.12;
+    letter-spacing:.08em; color:#eef8f7; margin:3px 0 2px; }
+  .ach-d{ display:block; font-family:var(--body); font-style:italic; font-size:11px; line-height:1.2; color:#aebfd0; }
+  .ach-key{ position:absolute; right:12px; top:50%; transform:translateY(-50%); margin:0;
+    font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:1px; padding:5px 8px;
+    border-radius:5px; border:1px solid rgba(89,240,213,.38); background:rgba(35,84,85,.45); color:#dffff9; }
   #book{ position:fixed; inset:0; z-index:7; display:flex; align-items:center; justify-content:center;
     background:rgba(4,6,13,.55); opacity:0; pointer-events:none; transition:opacity .28s; }
   #book.on{ opacity:1; pointer-events:auto; }
@@ -2083,18 +2082,56 @@ function renderShop(){
 }
 function toggleShop(){ S.shopOpen=!S.shopOpen; $('shop').classList.toggle('on',S.shopOpen);
   if(S.shopOpen) renderShop(); AU.play('flap',0.25); }
-function achievement(name,desc,key){
-  $('achName').textContent=name; $('achDesc').textContent=desc; $('achKey').textContent=key;
-  const el=$('ach'); el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
-  AU.play('ring',0.75); S.flash=Math.max(S.flash,0.3);
+const ACHIEVEMENT_UI={
+  profile:'flight-toast-v1',queue:[],active:null,shown:[],timer:null,
+  maxVisibleMs:2800,maxConcurrent:1,batching:true
+};
+function achievementUiSnapshot(){
+  const el=$('ach'),rect=el?.getBoundingClientRect(),style=el?getComputedStyle(el):null;
+  const area=rect&&innerWidth&&innerHeight?(rect.width*rect.height)/(innerWidth*innerHeight):0;
+  return {profile:ACHIEVEMENT_UI.profile,position:'top-right',blocking:false,
+    maxVisibleMs:ACHIEVEMENT_UI.maxVisibleMs,maxConcurrent:ACHIEVEMENT_UI.maxConcurrent,batching:ACHIEVEMENT_UI.batching,
+    active:ACHIEVEMENT_UI.active?{name:ACHIEVEMENT_UI.active.name,key:ACHIEVEMENT_UI.active.key}:null,
+    queueDepth:ACHIEVEMENT_UI.queue.length,shown:ACHIEVEMENT_UI.shown.slice(-8),
+    unlockOrder:SKILLS.filter(sk=>sk.unlockAt!=null).map(sk=>({name:sk.name,at:sk.unlockAt,key:sk.k})),
+    rect:rect?{top:+rect.top.toFixed(1),right:+(innerWidth-rect.right).toFixed(1),width:+rect.width.toFixed(1),height:+rect.height.toFixed(1)}:null,
+    screenCoverage:+area.toFixed(4),pointerEvents:style?.pointerEvents||null};
 }
-// watch for newly-earned skills and fanfare them
+function pumpAchievementQueue(){
+  if(ACHIEVEMENT_UI.active||!ACHIEVEMENT_UI.queue.length) return;
+  const item=ACHIEVEMENT_UI.queue.shift(),el=$('ach'); ACHIEVEMENT_UI.active=item;
+  ACHIEVEMENT_UI.shown.push({name:item.name,key:item.key});
+  $('achName').textContent=item.name; $('achDesc').textContent=item.desc; $('achKey').textContent=item.key;
+  el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  AU.play('ring',.38); S.flash=Math.max(S.flash,.06);
+  clearTimeout(ACHIEVEMENT_UI.timer);
+  ACHIEVEMENT_UI.timer=setTimeout(()=>{
+    el.classList.remove('on'); ACHIEVEMENT_UI.active=null;
+    ACHIEVEMENT_UI.timer=setTimeout(pumpAchievementQueue,120);
+  },ACHIEVEMENT_UI.maxVisibleMs);
+}
+function clearAchievementUi(resetHistory=false){
+  clearTimeout(ACHIEVEMENT_UI.timer); ACHIEVEMENT_UI.timer=null;
+  ACHIEVEMENT_UI.queue.length=0; ACHIEVEMENT_UI.active=null; $('ach').classList.remove('on');
+  $('ach').style.animationPlayState='';
+  if(resetHistory) ACHIEVEMENT_UI.shown.length=0;
+}
+function achievement(name,desc,key){
+  const item={id:key+'|'+name,name,desc,key};
+  if(ACHIEVEMENT_UI.active?.id===item.id||ACHIEVEMENT_UI.queue.some(entry=>entry.id===item.id)) return false;
+  ACHIEVEMENT_UI.queue.push(item); pumpAchievementQueue(); return true;
+}
+// Newly earned skills keep their authored order. Checkpoint jumps batch them into
+// one quiet notice instead of replaying four overlapping fanfares.
 function checkSkillUnlocks(){
+  const newly=[];
   for(const sk of SKILLS){
     if(!sk._had && sk.have()){ sk._had=true;
-      if(S.started && S.t>4 && S.score>0) achievement(sk.name, sk.d, sk.k);
+      if(S.started && S.t>4 && S.score>0) newly.push(sk);
     }
   }
+  if(newly.length===1) achievement(newly[0].name,newly[0].d,newly[0].k);
+  else if(newly.length>1) achievement(newly.length+' SKILLS MAPPED',newly.map(sk=>sk.name).join(' · '),'CODEX');
 }
 
 const SKILLS=[
@@ -2103,10 +2140,10 @@ const SKILLS=[
   {k:'UP / DOWN',name:'Climb & Dive', d:'read the wind with your body',          have:()=>true},
   {k:'X',       name:'Plasma Breath', d:'hold to charge: spit, bolt, arc burst', have:()=>true},
   {k:'V',       name:"Rider's Eye",   d:'ride first-person',                     have:()=>true},
-  {k:'C',       name:'Echolocation',  d:'see the world by sound',                have:()=>S.score>=1},
-  {k:'HOLD A/D',name:'Spiral to Ultra',d:'wind the corkscrew, then release',     have:()=>S.score>=2},
-  {k:'DOWN,UP', name:'Stormbreak Dive',d:'scream down, pull up: sonic boom',     have:()=>S.score>=3},
-  {k:'F',       name:'Dragon Call',   d:'the wild flock hides you',              have:()=>S.score>=4},
+  {k:'C',       name:'Echolocation',  d:'see the world by sound',                unlockAt:1,have:()=>S.score>=1},
+  {k:'HOLD A/D',name:'Spiral to Ultra',d:'wind the corkscrew, then release',     unlockAt:2,have:()=>S.score>=2},
+  {k:'DOWN,UP', name:'Stormbreak Dive',d:'scream down, pull up: sonic boom',     unlockAt:3,have:()=>S.score>=3},
+  {k:'F',       name:'Dragon Call',   d:'the wild flock hides you',              unlockAt:4,have:()=>S.score>=4},
 ];
 function renderBook(){
   const el=$('bkSkills'); if(!el) return;
@@ -3030,6 +3067,7 @@ function showOver(kick,title,cls,sub){
   setTimeout(()=>{ if(S.done) returnToHub(S.cause||kick); }, cls==='good'?2200:800);
 }
 function returnToHub(reason=''){
+  clearAchievementUi();
   $('over').classList.add('hide'); $('hud').classList.remove('on');
   menuEl.classList.remove('hide'); menuEl.classList.add('live','hub-open');
   $('lobbyHub').classList.add('on'); $('lobbyHub').classList.remove('hide');
@@ -3086,6 +3124,7 @@ function setMuted(muted){
 }
 function begin(opts={}){
   if(S.launching||S.started) return; S.launching=true;
+  clearAchievementUi();
   S.lobbyMode=opts.mode||S.lobbyMode||'story';
   S.practiceMode=!!opts.practice||S.lobbyMode==='practice';
   menuEl.classList.remove('hub-open');
@@ -3120,6 +3159,7 @@ function begin(opts={}){
   setTimeout(()=>{ S.launching=false; },2900);
 }
 function reset(){
+  clearAchievementUi(true);
   startAudio(); D.group.position.set(REST.x,REST.y+6,REST.z); D.yaw=Math.PI; D.pitch=0.18; D.roll=0; D.speed=30; input.flap=false;
   S.done=false; S.flightT=0; S.detection=0; S.score=0; S.shake=0; S.fpv=false; S.nextThunder=S.t+5; S.shootCd=0;
   S.finishing=false; S.finishToken++; GATE.open=0; S.impactCd=0; S.alertStage=0;
@@ -3480,6 +3520,7 @@ function simSnapshot(extra={}){
     state:SIM.state(),
     motion:SIM.motion(),
     expansion:SIM.expansion(),
+    achievementUI:achievementUiSnapshot(),
     renderInfo:SIM.renderInfo?.()??null,
     cameraShake:{intensity:CAM_SHAKE.intensity, jerk:+CAM.jerk.value.toFixed(4)},
     ...extra
@@ -3499,6 +3540,10 @@ window.SIM={
   controls:simSetControls, clearControls:simClearControls, steerObjective:simSteerObjective,
   jumpBeacon:simJumpBeacon, jumpChapter:simJumpChapter, jumpState:simJumpState,
   runSteps:simRunSteps, runUntil:simRunUntil, snapshot:simSnapshot,
+  achievementUI:achievementUiSnapshot, clearAchievements:()=>{clearAchievementUi(true);return achievementUiSnapshot();},
+  previewUnlockToast:()=>{ clearAchievementUi(true);
+    achievement('4 SKILLS MAPPED',SKILLS.filter(sk=>sk.unlockAt!=null).map(sk=>sk.name).join(' · '),'CODEX');
+    return achievementUiSnapshot(); },
   route:()=>route.map((p,i)=>({beacon:i+1,x:p[0],y:p[1],z:p[2]})),
   drownedVillage:drownedVillageSnapshot,
   objectiveStyle:()=>({
