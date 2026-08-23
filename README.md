@@ -96,6 +96,17 @@ cover, shrine health, plasma destruction, Story routing, and multiplayer combat
 authority are unchanged. This improves cultural coherence and flight
 readability; it does not make the procedural architecture photorealistic.
 
+Build r18 replaces Chapter IV's unrelated center rock pile with **Keeper
+Hollow**, a deterministic coastal valley built around the three shrines. Eight
+large eroded perimeter shoulders, 520 clustered ledge conifers, 112 talus
+rocks, wet shore aprons, and broken surf collars now form one fog-backed basin
+without changing the twelve-beacon route. The six original center collision
+proxies are preserved exactly, new shoulders are route-checked, and the old
+Serpent Canyon wall is visible only during its own chapter. The subsystem uses
+five instanced draw calls and no external art. It improves spatial hierarchy
+and forest density, but remains stylized procedural environment art rather
+than photoreal terrain.
+
 ## Build the release artifact
 
 ```sh
