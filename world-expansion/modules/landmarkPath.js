@@ -20,7 +20,6 @@ import {
   validateRouteClearance
 } from './proceduralLandmarks.js';
 
-const CULL_DISTANCE = 2300;
 const ACTIVE_DISTANCE = 620;
 
 export const DRAGON_STORM_LANDMARK_ROUTE = LANDMARK_SITES;
@@ -31,7 +30,8 @@ export class LandmarkPath {
     this.scene = scene;
     this.flightRoute = options.flightRoute || null;
     this.allSites = options.sites || LANDMARK_SITES;
-    // Build the full route for colliders; region visibility is applied in update().
+    // Build the full authored map once. Region state may choose objectives and
+    // nearby signal lights, but it never removes physical landmarks from the world.
     this.sites = this.allSites;
     this.activeRegionId = options.activeRegionId ?? null;
     this.regionProfiles = options.regionProfiles ?? null;
@@ -48,6 +48,8 @@ export class LandmarkPath {
     this.regionFilter = null;
     this._regionArchetypes = null;
     this._regionIds = null;
+    this.placementRevision = 0;
+    this.placementSignature = null;
 
     // A small fixed pool of point lights, moved to the nearest sites each frame. The
     // previous build gave every landmark its own light, which charges every lit
@@ -73,6 +75,7 @@ export class LandmarkPath {
           for (const entry of this.route) {
             const built = buildLandmarkSite(entry, this.materials);
             entry.object = built.lod;
+            entry.object.visible = true;
             entry.proxies = built.proxies;
             this.root.add(built.lod);
             proxies.push(...built.proxies);
@@ -97,6 +100,8 @@ export class LandmarkPath {
             tallest: Math.max(...perSite.map((site) => site.height)),
             perSite
           };
+          this.placementRevision += 1;
+          this.placementSignature = this._calculatePlacementSignature();
           resolve(this.getSnapshot());
         } catch (error) {
           this.buildError = error;
@@ -140,6 +145,25 @@ export class LandmarkPath {
     return true;
   }
 
+  _calculatePlacementSignature() {
+    let signature = 2166136261;
+    const feed = (value) => {
+      signature ^= value;
+      signature = Math.imul(signature, 16777619);
+    };
+    for (const entry of this.route) {
+      for (const character of entry.id) feed(character.charCodeAt(0));
+      for (const value of entry.position) feed(Math.round(value * 1000));
+      if (!entry.object) continue;
+      for (const value of [
+        ...entry.object.position.toArray(),
+        ...entry.object.quaternion.toArray(),
+        ...entry.object.scale.toArray()
+      ]) feed(Math.round(value * 100000));
+    }
+    return (signature >>> 0).toString(16).padStart(8, '0');
+  }
+
   update(playerPosition) {
     if (!playerPosition?.isVector3) return;
     const nearest = this._nearest;
@@ -150,7 +174,9 @@ export class LandmarkPath {
       entry.distance = distance;
       const regionOk = this._passesRegionFilter(entry);
       entry.active = regionOk && distance < ACTIVE_DISTANCE;
-      entry.object.visible = regionOk && distance < CULL_DISTANCE;
+      // Spatial permanence is part of the map contract: a landmark may become an
+      // active objective nearby, but it never spawns, despawns, or follows the rider.
+      entry.object.visible = true;
       if (entry.active) nearest.push(entry);
     }
     nearest.sort((a, b) => a.distance - b.distance);
@@ -194,6 +220,14 @@ export class LandmarkPath {
       regionFilter: this.regionFilter,
       activeRegionArchetypes: [...new Set(activeSites.map((site) => site.archetype))],
       regionProfiles: this.regionProfiles,
+      visibilityMode: 'always-present-authored-map-v1',
+      spatialPermanence: true,
+      worldAnchored: true,
+      playerRelativeCulling: false,
+      regionVisibilityCulling: false,
+      visible: this.route.filter((entry) => entry.object?.visible).map((entry) => entry.id),
+      placementRevision: this.placementRevision,
+      placementSignature: this.placementSignature,
       collisionWiringRequired: !this.collisionAuthority
     };
   }

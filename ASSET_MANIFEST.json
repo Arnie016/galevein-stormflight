@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-23T09:27:13.449Z",
+  "generatedAt": "2026-08-23T09:59:10.107Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -10,8 +10,8 @@
     },
     {
       "path": "assets/galevein_stormlance.glb",
-      "bytes": 228460,
-      "sha256": "bd67619de98643e9da036d14dcaa3d79159a80c075831aac22ac948d878602fd"
+      "bytes": 179772,
+      "sha256": "159ab7171338f63979483b303f868af485e64a601401d3084090d1beba58d511"
     },
     {
       "path": "audio/amb_sea.mp3",
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 268500,
-      "sha256": "386798266050f89f690fa8f0e02f08fa71c9e125d4ae1be5d862829344945612"
+      "bytes": 273352,
+      "sha256": "1c00a2fe446926c66239b8891d47dd0258cf9266ffd9e1aa0799c30a426bb5d5"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -85,8 +85,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 16173,
-      "sha256": "d540843ec75c8471eb2391c104eded7e475fe6e52b71d0afa758b9a9fad66126"
+      "bytes": 17157,
+      "sha256": "7b6e34099cdad6b9bc9d1542d88bc0228de298ed5e63df6a5bbff5a7dfdcbf23"
     },
     {
       "path": "RELEASE_READINESS.md",
@@ -235,8 +235,8 @@
     },
     {
       "path": "world-expansion/modules/dragonRigs.js",
-      "bytes": 1133,
-      "sha256": "47250c4557b3def185c16b8b70bb599d276027428aa050c896e8a3c61e7440ce"
+      "bytes": 1181,
+      "sha256": "9922416d1f95a35707a42a7c0fb874ea0a37edaab66c6f11d3e098997e7a9b5e"
     },
     {
       "path": "world-expansion/modules/galeveinPoseidonSky.js",
@@ -255,8 +255,8 @@
     },
     {
       "path": "world-expansion/modules/horizonDirector.js",
-      "bytes": 18260,
-      "sha256": "32cd2600795129e72d09d885b276b1e4d3054466a1214d28777ce15f393fa7b8"
+      "bytes": 18399,
+      "sha256": "f241c638a39937984986e7197a63f27ad64b2b734b9068e08602666599eb5f1f"
     },
     {
       "path": "world-expansion/modules/keeperHollowBiome.js",
@@ -265,8 +265,8 @@
     },
     {
       "path": "world-expansion/modules/landmarkPath.js",
-      "bytes": 8737,
-      "sha256": "4c46d3e023f70ba6c940bf6542c64335cc7714d4f9ae068dd7252a400e3e3df8"
+      "bytes": 10198,
+      "sha256": "87420817a01af2ea18423e7ab5b025cc88a15e929de7f336006a38dc6ccde7bb"
     },
     {
       "path": "world-expansion/modules/lobbyHub.js",

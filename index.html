@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-continuous-ridges-r25">
+<meta name="galevein-build" content="stormflight-fixed-world-r27">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -1590,9 +1590,11 @@ function loadRivalDragon(){
   if(RIVAL.loaded||RIVAL.loading) return RIVAL.loading;
   RIVAL.loading=new Promise((resolve,reject)=>loader.load(activeRig.asset,g=>{
     const model=g.scene; model.scale.setScalar(activeRig.scale||9); model.rotation.y=Math.PI;
+    const maps=stormlanceHideMaps();
     model.traverse(o=>{ if(!o.isMesh||!o.material)return;
       paintStormlanceHide(o); const old=o.material;
       o.material=new THREE.MeshPhysicalMaterial({name:'Rival_Stormlance_Hide',color:0xb88a82,vertexColors:true,
+        map:maps.albedo,normalMap:maps.normal,roughnessMap:maps.roughness,normalScale:new THREE.Vector2(.24,.24),
         roughness:.63,metalness:.02,clearcoat:.2,clearcoatRoughness:.66,sheen:.3,
         sheenRoughness:.8,sheenColor:new THREE.Color(0xef9c89),emissive:new THREE.Color(0x210908),
         emissiveIntensity:.08,side:THREE.DoubleSide,fog:true}); old.dispose?.(); o.castShadow=true;
@@ -1640,7 +1642,35 @@ function findClip(animations, name){
   return THREE.AnimationClip.findByName(animations, name)
     || animations.find(c=>c.name===name||c.name.endsWith(name)||c.name.includes(name));
 }
-const STORMLANCE_SURFACE='stormlance-wet-hide-v3';
+const STORMLANCE_SURFACE='stormlance-uv-hide-v4';
+let STORMLANCE_HIDE_MAPS=null;
+function stormlanceHideMaps(){
+  if(STORMLANCE_HIDE_MAPS)return STORMLANCE_HIDE_MAPS;
+  const size=256, makeCanvas=()=>{const canvas=document.createElement('canvas');canvas.width=canvas.height=size;return canvas;};
+  const albedoCanvas=makeCanvas(),normalCanvas=makeCanvas(),roughCanvas=makeCanvas();
+  const albedo=albedoCanvas.getContext('2d').createImageData(size,size);
+  const normal=normalCanvas.getContext('2d').createImageData(size,size);
+  const rough=roughCanvas.getContext('2d').createImageData(size,size);
+  const heightAt=(x,y)=>{ const row=Math.floor(y/9),ox=(row&1)*5;
+    const dx=(((x+ox)%11)/11-.5)*2,dy=((y%9)/9-.5)*2;
+    const bed=Math.max(0,1-dx*dx*1.15-dy*dy*1.9);
+    return Math.pow(bed,1.7)*.72+Math.sin(x*.19+y*.11)*.045+Math.sin(x*.047-y*.083)*.035; };
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+    const h=heightAt(x,y),hx=heightAt(x+1,y)-heightAt(x-1,y),hy=heightAt(x,y+1)-heightAt(x,y-1);
+    const i=(y*size+x)*4,mottle=Math.sin(x*.071+y*.053)*6+Math.sin(x*.023-y*.041)*5;
+    albedo.data[i]=THREE.MathUtils.clamp(54+h*24+mottle,0,255);
+    albedo.data[i+1]=THREE.MathUtils.clamp(78+h*31+mottle*.7,0,255);
+    albedo.data[i+2]=THREE.MathUtils.clamp(83+h*35+mottle*.5,0,255); albedo.data[i+3]=255;
+    const n=new THREE.Vector3(-hx*.85,-hy*.85,1).normalize();
+    normal.data[i]=(n.x*.5+.5)*255;normal.data[i+1]=(n.y*.5+.5)*255;normal.data[i+2]=(n.z*.5+.5)*255;normal.data[i+3]=255;
+    const rv=THREE.MathUtils.clamp(188-h*42+Math.sin(x*.13-y*.17)*7,112,224);
+    rough.data[i]=rough.data[i+1]=rough.data[i+2]=rv;rough.data[i+3]=255;
+  }
+  albedoCanvas.getContext('2d').putImageData(albedo,0,0);normalCanvas.getContext('2d').putImageData(normal,0,0);roughCanvas.getContext('2d').putImageData(rough,0,0);
+  const texture=(canvas,color=false)=>{const t=new THREE.CanvasTexture(canvas);t.anisotropy=8;t.wrapS=t.wrapT=THREE.RepeatWrapping;if(color)t.colorSpace=THREE.SRGBColorSpace;return t;};
+  STORMLANCE_HIDE_MAPS={albedo:texture(albedoCanvas,true),normal:texture(normalCanvas),roughness:texture(roughCanvas),resolution:size};
+  return STORMLANCE_HIDE_MAPS;
+}
 function paintStormlanceHide(mesh){
   const g=mesh.geometry, pos=g?.getAttribute('position'), normal=g?.getAttribute('normal');
   const joints=g?.getAttribute('skinIndex'), weights=g?.getAttribute('skinWeight');
@@ -1688,12 +1718,14 @@ function paintStormlanceHide(mesh){
   return mesh.userData.surfaceProfile;
 }
 function applyDragonMaterials(model, rig){
+  const maps=stormlanceHideMaps();
   model.traverse(o=>{ if(!o.isMesh || !o.material) return;
     const previous=o.material;
     paintStormlanceHide(o);
     o.material=new THREE.MeshPhysicalMaterial({
-      name:'Stormlance_WetHide', color:0xffffff, vertexColors:true,
-      roughness:.68, metalness:.015, clearcoat:.16, clearcoatRoughness:.72,
+      name:'Stormlance_UVHide', color:0xffffff, vertexColors:true,
+      map:maps.albedo,normalMap:maps.normal,roughnessMap:maps.roughness,normalScale:new THREE.Vector2(.28,.28),
+      roughness:.72, metalness:.012, clearcoat:.12, clearcoatRoughness:.78,
       sheen:.24, sheenRoughness:.86, sheenColor:new THREE.Color(0x4f948b),
       emissive:new THREE.Color(0x061718), emissiveIntensity:.035,
       side:THREE.DoubleSide, fog:true
@@ -1704,14 +1736,14 @@ function applyDragonMaterials(model, rig){
 }
 function stormlanceSurfaceSnapshot(){
   const out={profile:STORMLANCE_SURFACE,meshes:0,surfaceMeshes:0,accessoryMeshes:0,
-    physicalMaterials:0,vertexColored:0,textures:0,
+    physicalMaterials:0,vertexColored:0,uvMeshes:0,textures:0,generatedTextureResolution:STORMLANCE_HIDE_MAPS?.resolution||0,
     vertices:0,regions:{body:0,wing:0,tail:0,leg:0,head:0}};
   D.model?.traverse(o=>{ if(!o.isMesh)return; out.meshes++;
     const materials=Array.isArray(o.material)?o.material:[o.material];
     for(const m of materials){ if(m?.isMeshPhysicalMaterial)out.physicalMaterials++;
       for(const slot of ['map','normalMap','roughnessMap','metalnessMap','emissiveMap'])if(m?.[slot])out.textures++; }
     if(o.geometry?.getAttribute('color'))out.vertexColored++;
-    const p=o.userData.surfaceProfile; if(p){ out.surfaceMeshes++; out.vertices+=p.vertices||0;
+    const p=o.userData.surfaceProfile; if(p){ out.surfaceMeshes++; if(o.geometry?.getAttribute('uv'))out.uvMeshes++; out.vertices+=p.vertices||0;
       for(const key of Object.keys(out.regions))out.regions[key]+=p.regions?.[key]||0; }
   });
   out.accessoryMeshes=out.meshes-out.surfaceMeshes;
@@ -1730,6 +1762,14 @@ function attachDragonAccessories(model){
   const mlt=new THREE.PointLight(0x59f0d5,0,80,2); mouth.add(mlt);
   D.mouth=mouth; D.mouthLt=mlt;
   const chest=model.getObjectByName('chest')||model.getObjectByName('Body');
+  if(D.headNode){
+    const eyeGeo=new THREE.SphereGeometry(.018,18,12),pupilGeo=new THREE.SphereGeometry(.009,14,9);
+    const eyeMat=new THREE.MeshPhysicalMaterial({color:0x8fffe7,emissive:0x1f9f87,emissiveIntensity:1.1,roughness:.28,clearcoat:.45});
+    const pupilMat=new THREE.MeshStandardMaterial({color:0x020607,roughness:.38});
+    for(const side of [-1,1]){ const eye=new THREE.Mesh(eyeGeo,eyeMat);eye.name=`Stormlance_Eye_${side<0?'L':'R'}`;
+      eye.position.set(side*.054,.018,-.038);eye.scale.set(1,.72,1.18);
+      const pupil=new THREE.Mesh(pupilGeo,pupilMat);pupil.position.set(0,-.006,-.012);pupil.scale.set(.52,.72,1.05);eye.add(pupil);D.headNode.add(eye); }
+  }
   if(chest){ const rider=new THREE.Group();
     const cloth=new THREE.MeshStandardMaterial({color:0x2a2119,roughness:.9});
     const leather=new THREE.MeshStandardMaterial({color:0x17120c,roughness:.8});
@@ -4092,7 +4132,7 @@ window.SIM={
     arenaVisible:DUEL_ARENA.visible,arenaPosition:DUEL_ARENA.position.toArray(),arenaName:DUEL_ARENA.name,
     rivalLoaded:RIVAL.loaded,rivalVisible:RIVAL.group.visible,rivalPosition:RIVAL.group.position.toArray(),
     playerVisible:D.group.visible,playerPosition:D.group.position.toArray()}),
-  duelStage:(kind='faceoff')=>{
+  duelStage:(kind='faceoff',options={})=>{
     const serverMode=localDuel.snapshot().serverAuthoritative;
     S.started=true; S.done=false; S.duelMode=true; S.practiceMode=true; S.chapter=1; S.tutDone=true;
     menuEl.classList.add('hide','live'); $('hud').classList.add('on'); $('duelHud').classList.add('on');
@@ -4106,7 +4146,9 @@ window.SIM={
     D.group.position.fromArray(positions[role]||positions.host);
     D.yaw=kind==='proof'?(role==='host'?Math.PI/2:-Math.PI/2):(role==='host'?-Math.PI/2:Math.PI/2);
     D.pitch=0;D.roll=0;D.speed=20;S.prevSpeed=20;
-    if(!serverMode){S.duelDead=false;S.hp=S.hpMax;} D.group.visible=!S.duelDead;
+    // Repeated harness pose anchoring must not heal away replicated damage.
+    // Initial staging still resets vitals unless the caller explicitly preserves them.
+    if(!serverMode&&!options.preserveVitals){S.duelDead=false;S.hp=S.hpMax;} D.group.visible=!S.duelDead;
     return localDuel.snapshot();
   },
   duelHit:(damage=42,attackId='volt-lance')=>localDuel.reportHit(damage,attackId),
@@ -4255,6 +4297,7 @@ window.SIM={
   warp:(dt,steps=60)=>{ for(let i=0;i<steps;i++) tick(dt); render(); },
   capturePose:name=>{ const poses={
       glide:{action:'glide',phase:.08,pitch:-.08,speed:38},
+      portrait:{action:'glide',phase:.18,pitch:-.02,speed:32},
       wingUp:{action:'flap',phase:.24,pitch:0,speed:28},
       wingDown:{action:'flap',phase:.72,pitch:0,speed:28},
       brake:{action:'brake',phase:.50,pitch:.12,speed:24},
@@ -4268,20 +4311,14 @@ window.SIM={
     D.mixer.timeScale=1; const action=pose.action==='flap'?D.flap:pose.action==='brake'?D.brake:D.glide; if(!action)return null;
     D.mixer.setTime(action.getClip().duration*pose.phase); D.mixer.update(0); D.mixer.timeScale=0; D.model.updateMatrixWorld(true);
     menuEl.classList.add('hide','live'); $('hud').classList.add('on'); $('shutter').classList.remove('closed'); $('shutter').style.display='none';
-    const back=new THREE.Vector3(Math.sin(D.yaw),0,Math.cos(D.yaw));
-    const right=new THREE.Vector3(Math.cos(D.yaw),0,-Math.sin(D.yaw));
-    const cameraSpec=name==='wingUp'
-      ? {back:32,right:20,up:5}
-      : name==='wingDown' ? {back:-32,right:-18,up:5}
-      : name==='brake' ? {back:34,right:-19,up:6} : {back:34,right:19,up:6};
     const bounds=new THREE.Box3().setFromObject(D.model), center=bounds.getCenter(new THREE.Vector3()), size=bounds.getSize(new THREE.Vector3());
-    camera.position.copy(center)
-      .addScaledVector(back,cameraSpec.back)
-      .addScaledVector(right,cameraSpec.right)
-      .add(new THREE.Vector3(0,cameraSpec.up,0));
-    camera.lookAt(center); render();
-    const tipPositions=D.bones.wingTips.map(b=>b.getWorldPosition(new THREE.Vector3()));
     const tailTip=D.bones.tail.at(-1)?.getWorldPosition(new THREE.Vector3()), head=D.bones.head?.getWorldPosition(new THREE.Vector3());
+    const forward=head&&tailTip?head.clone().sub(tailTip).normalize():new THREE.Vector3(0,0,-1),up=new THREE.Vector3(0,1,0);
+    const side=forward.clone().cross(up).normalize();
+    if(name==='portrait')camera.position.copy(head).addScaledVector(forward,5.8).addScaledVector(side,2.6).addScaledVector(up,2.1);
+    else { const sideAmount=name==='wingDown'?-18:18;camera.position.copy(center).addScaledVector(forward,-30).addScaledVector(side,sideAmount).addScaledVector(up,14); }
+    camera.lookAt(name==='portrait'?head:center); render();
+    const tipPositions=D.bones.wingTips.map(b=>b.getWorldPosition(new THREE.Vector3()));
     const metrics={bounds:size.toArray().map(v=>+v.toFixed(2)),wingTipMeanY:+(tipPositions.reduce((sum,p)=>sum+p.y,0)/tipPositions.length).toFixed(2),
       wingTipRangeY:+(Math.max(...tipPositions.map(p=>p.y))-Math.min(...tipPositions.map(p=>p.y))).toFixed(2),
       headTailDistance:head&&tailTip?+head.distanceTo(tailTip).toFixed(2):null};
@@ -4347,6 +4384,26 @@ window.SIM={
     return {profile:before.profile,anchor:before.anchor,displacedCamera:[2450,620,-2380],
       placementRevision:before.placementRevision,placementSignature:before.placementSignature,stable};
   },
+  worldPermanenceProof:()=>{
+    const savedPosition=D.group.position.clone();
+    const probes=[[700,28,250],[128,80,263],[545,80,-305],[-900,240,-260],[2450,620,-2380]];
+    const samples=probes.map(position=>{
+      D.group.position.set(...position);landmarkPath.update(D.group.position);
+      const landmarks=landmarkPath.getSnapshot(),horizon=horizonDirector.getSnapshot();
+      return {position,landmarkSignature:landmarks.placementSignature,
+        landmarkRevision:landmarks.placementRevision,visible:landmarks.visible.slice().sort(),
+        horizonSignature:horizon.placementSignature,horizonRevision:horizon.placementRevision,
+        monolithRotation:+horizonDirector.monoliths.rotation.y.toFixed(6)};
+    });
+    D.group.position.copy(savedPosition);landmarkPath.update(D.group.position);
+    const first=samples[0];
+    const stable=samples.every(sample=>sample.landmarkSignature===first.landmarkSignature&&
+      sample.landmarkRevision===first.landmarkRevision&&sample.horizonSignature===first.horizonSignature&&
+      sample.horizonRevision===first.horizonRevision&&sample.monolithRotation===0&&
+      JSON.stringify(sample.visible)===JSON.stringify(first.visible));
+    return {profile:'fixed-authored-world-v1',stable,probeCount:samples.length,
+      authoredLandmarks:landmarkPath.route.length,samples};
+  },
   // Renderer counters for the landmark budget; info.render is reset each frame by three.
   renderInfo:()=>({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
     programs:renderer.info.programs.length,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,
@@ -4389,7 +4446,7 @@ window.SIM={
   structureSnapshot:()=>structure?.snapshot()??null,
   rig:()=>({id:activeRig?.id,loreName:activeRig?.loreName,
     geometryProfile:activeRig?.geometryProfile,flapProfile:activeRig?.flapProfile,
-    brakeProfile:activeRig?.brakeProfile,aliveProfile:activeRig?.aliveProfile}),
+    brakeProfile:activeRig?.brakeProfile,aliveProfile:activeRig?.aliveProfile,surfaceProfile:activeRig?.surfaceProfile}),
   rigMotion:()=>({profile:activeRig?.aliveProfile,clips:{
       flap:D.flap?.getClip().name||null,glide:D.glide?.getClip().name||null,brake:D.brake?.getClip().name||null},
     responseChannels:Object.keys(D.springs||{}),cruiseMode:'stable-glide',flapAuthority:'player-command',brakeMode:'held-authored-pose'}),

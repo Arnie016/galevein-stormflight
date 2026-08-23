@@ -365,7 +365,9 @@ export class HorizonDirector {
     this.layers[2].material.color.setHSL(hue + .035, .12, .70 - dayAmount * .15);
     this.forest.material.color.setHSL(.40 + this._hueShift * .25, .34, .12 - dayAmount * .025);
     this.monoliths.material.color.setHSL(hue + .01, .18, .17 - dayAmount * .035);
-    this.monoliths.rotation.y = Math.sin(time * .015) * .0025;
+    // Suspended rock is allowed; scenery drift is not. Keep the transform authored
+    // and immutable so parallax comes only from rider movement through the basin.
+    this.monoliths.rotation.y = 0;
   }
 
   getSnapshot() {

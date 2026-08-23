@@ -183,6 +183,19 @@ clean-room silhouette, and one-skinned-mesh contract are unchanged. This is a
 more legible original Galevein flight rig, not a licensed Night Fury asset,
 facial-performance rig, or final production sculpt.
 
+Build r27 removes the remaining scenery-pop illusion. All 12 authored
+landmarks now stay present at fixed world coordinates for the entire flight;
+chapter regions still select objectives and nearby signal lighting, but no
+longer hide physical structures. A five-position permanence probe requires the
+same landmark placement signature (`44cff379`), the same horizon signature
+(`eae55bb3`), one placement revision, and all 12 visible landmark IDs at every
+sample. The four distant sky monoliths are suspended at authored positions and
+no longer rotate. Stormlance also gains one generated UV hide surface with
+albedo, normal, and roughness maps while preserving its 25-joint skin and the
+Flap, Glide, and Brake contracts. This improves spatial continuity and surface
+readability; shoreline set-dressing, terrain materials, and the head sculpt
+remain below the intended realistic final-art bar.
+
 ## Build the release artifact
 
 ```sh
@@ -210,7 +223,7 @@ then creates `release/` from an explicit allowlist. It does not include
 
 ## Prototype boundary
 
-This is a free, non-commercial prototype under a working title. It uses an original locally generated Stormlance Galevein, procedural landmarks, synthesized project audio, a documented CC0 menu track, vendored Three.js, and an MIT-licensed Poseidon spectral-ocean adaptation. Stormlance retains its 25-bone rig, higher-density crescent membrane, broad torso and neck, split lightning crown, jaw keel, sensory barbs, and rider-seat clearance; r26 exports named Flap, Glide, and Brake clips. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), [OCEAN_PROVENANCE.md](OCEAN_PROVENANCE.md), and [RELEASE_READINESS.md](RELEASE_READINESS.md).
+This is a free, non-commercial prototype under a working title. It uses an original locally generated Stormlance Galevein, procedural landmarks, synthesized project audio, a documented CC0 menu track, vendored Three.js, and an MIT-licensed Poseidon spectral-ocean adaptation. Stormlance retains its 25-bone rig, higher-density crescent membrane, broad torso and neck, split lightning crown, jaw keel, sensory barbs, and rider-seat clearance; r26 exports named Flap, Glide, and Brake clips, and r27 adds a generated UV hide surface without importing third-party creature textures. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), [OCEAN_PROVENANCE.md](OCEAN_PROVENANCE.md), and [RELEASE_READINESS.md](RELEASE_READINESS.md).
 
 The r24 Story route adds one fixed Drowned Hearth decision at beacon seven.
 The prompt is triggered by authored world position and campaign progress, then
