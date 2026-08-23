@@ -196,6 +196,19 @@ Flap, Glide, and Brake contracts. This improves spatial continuity and surface
 readability; shoreline set-dressing, terrain materials, and the head sculpt
 remain below the intended realistic final-art bar.
 
+Build r31 rebuilds Stormlance around a **folded flight-rest silhouette** and a
+layered secondary-motion rig. The clean-room Blender asset broadens the swept
+crescent wings from 1.4789 to 1.5472 source units, shifts tail authority from
+the old vertical spike into a wider horizontal storm-rudder, broadens the
+original lightning-crown head, and folds the bind-pose legs into the belly
+wake. The browser keeps the authored `Flap`, `Glide`, and `Brake` clips as its
+base, then adds three deterministic spring channels for sideslip, body torsion,
+and downwash. Matched crosswind probes reverse wing-tip asymmetry from -1.77 m
+to +2.04 m while the foot chain remains within 1.4 m of the hips. This adopts
+the layered-control principle confirmed in the installed Unreal Engine 5.8
+toolset without shipping Unreal code, plugins, or assets. Stormlance remains
+original Galevein IP, not a Night Fury model or final facial-performance rig.
+
 ## Build the release artifact
 
 ```sh

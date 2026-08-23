@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-serpent-coast-r30">
+<meta name="galevein-build" content="stormflight-stormlance-r31">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -1537,7 +1537,7 @@ const D={ group:new THREE.Group(), model:null, mixer:null, flap:null, glide:null
   yaw:Math.PI, pitch:0, roll:0, speed:20, flapping:false, headNode:null, glow:null,
   turn:0, pTurn:0, pPitch:0, bones:null, mouth:null, mouthLt:null,
   motion:{longAccel:0,yawRate:0,pitchRate:0,gLoad:1}, prevYaw:Math.PI, prevPitch:0,
-  springs:null };
+  springs:null, rigOverride:null };
 D.group.position.copy(START); scene.add(D.group);
 const draco=new DRACOLoader().setDecoderPath('./vendor/draco/');
 const loader=new GLTFLoader(); loader.setDRACOLoader(draco);
@@ -1667,9 +1667,12 @@ function stormlanceHideMaps(){
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const h=heightAt(x,y),hx=heightAt(x+1,y)-heightAt(x-1,y),hy=heightAt(x,y+1)-heightAt(x,y-1);
     const i=(y*size+x)*4,mottle=Math.sin(x*.071+y*.053)*6+Math.sin(x*.023-y*.041)*5;
-    albedo.data[i]=THREE.MathUtils.clamp(54+h*24+mottle,0,255);
-    albedo.data[i+1]=THREE.MathUtils.clamp(78+h*31+mottle*.7,0,255);
-    albedo.data[i+2]=THREE.MathUtils.clamp(83+h*35+mottle*.5,0,255); albedo.data[i+3]=255;
+    // The vertex palette owns the hide colour. This map is neutral detail, not
+    // another dark tint; multiplying two dark layers previously crushed the
+    // chest and folded limbs to black in normal daylight.
+    albedo.data[i]=THREE.MathUtils.clamp(178+h*28+mottle,0,255);
+    albedo.data[i+1]=THREE.MathUtils.clamp(190+h*30+mottle*.7,0,255);
+    albedo.data[i+2]=THREE.MathUtils.clamp(196+h*32+mottle*.5,0,255); albedo.data[i+3]=255;
     const n=new THREE.Vector3(-hx*.85,-hy*.85,1).normalize();
     normal.data[i]=(n.x*.5+.5)*255;normal.data[i+1]=(n.y*.5+.5)*255;normal.data[i+2]=(n.z*.5+.5)*255;normal.data[i+3]=255;
     const rv=THREE.MathUtils.clamp(188-h*42+Math.sin(x*.13-y*.17)*7,112,224);
@@ -1686,10 +1689,10 @@ function paintStormlanceHide(mesh){
   if(!pos||!normal||!joints||!weights) return null;
   const colors=new Float32Array(pos.count*3);
   const palette={
-    body:new THREE.Color(0x293b42), wing:new THREE.Color(0x18464a),
-    tail:new THREE.Color(0x24343d), leg:new THREE.Color(0x21313a),
-    head:new THREE.Color(0x324b52), ventral:new THREE.Color(0x728990),
-    wingtip:new THREE.Color(0x2f8079)
+    body:new THREE.Color(0x34474e), wing:new THREE.Color(0x205257),
+    tail:new THREE.Color(0x304149), leg:new THREE.Color(0x2b3b42),
+    head:new THREE.Color(0x405a61), ventral:new THREE.Color(0x82999f),
+    wingtip:new THREE.Color(0x3b8b83)
   };
   const counts={body:0,wing:0,tail:0,leg:0,head:0};
   const c=new THREE.Color(), regionWeights=new Float32Array(5);
@@ -1762,8 +1765,8 @@ function attachDragonAccessories(model){
   D.mixer=new THREE.AnimationMixer(model);
   D.headNode=model.getObjectByName('head')||model.getObjectByName('Head');
   const glow=new THREE.PointLight(0x59f0d5, 0, 60, 2); D.group.add(glow); glow.position.set(0,4,0); D.glow=glow;
-  const key1=new THREE.PointLight(0xcdd6ff, 40, 70, 2); key1.position.set(5,16,-6); D.group.add(key1);
-  const key2=new THREE.PointLight(0x70cbbb, 26, 60, 2); key2.position.set(0,3,7); D.group.add(key2);
+  const key1=new THREE.PointLight(0xcdd6ff, 82, 76, 2); key1.position.set(5,16,-6); D.group.add(key1);
+  const key2=new THREE.PointLight(0x70cbbb, 54, 66, 2); key2.position.set(0,3,7); D.group.add(key2);
   const mouth=new THREE.Mesh(new THREE.SphereGeometry(1,12,12),
     new THREE.MeshBasicMaterial({color:0x9cfff0, blending:THREE.AdditiveBlending, depthWrite:false, transparent:true}));
   mouth.scale.setScalar(0.001); (D.headNode||model).add(mouth);
@@ -1858,7 +1861,8 @@ function collectBones(model){
   D.bones={ tail:[by('tail1'),by('tail2'),by('tail3'),by('tail4'),by('tail5')],
     neck:by('neck'), head:by('head'), chest:by('chest'), hips:by('hips'),
     shoulders:[], forearms:[], wingTips:[], membranes:[], wings:[],
-    thighs:[by('thigh.R'),by('thigh.L')], shins:[by('shin.R'),by('shin.L')] };
+    thighs:[by('thigh.R'),by('thigh.L')], shins:[by('shin.R'),by('shin.L')],
+    feet:[by('foot.R'),by('foot.L')] };
   for(const [n,side,chain] of [['shoulder.R',1,'shoulders'],['shoulder.L',-1,'shoulders'],
     ['forearm.R',1,'forearms'],['forearm.L',-1,'forearms'],
     ['fingerA.R',1,'wingTips'],['fingerA.L',-1,'wingTips'],['fingerB.R',1,'wingTips'],
@@ -1868,11 +1872,11 @@ function collectBones(model){
     const b=by(n); if(b)D.bones.membranes.push(b); }
   const axis=()=>({value:0,velocity:0});
   D.springs={turn:axis(),pitch:axis(),tail:axis(),neck:axis(),head:axis(),wing:axis(),wind:axis(),
-    tension:axis(),launch:axis(),load:axis()};
+    tension:axis(),launch:axis(),load:axis(),slip:axis(),torsion:axis(),downwash:axis()};
   D.boneReport={ tail:D.bones.tail.filter(Boolean).length, neck:!!D.bones.neck, head:!!D.bones.head,
     chest:!!D.bones.chest, hips:!!D.bones.hips, wings:D.bones.wings.length,
     shoulders:D.bones.shoulders.length, forearms:D.bones.forearms.length, wingTips:D.bones.wingTips.length,
-    membranes:D.bones.membranes.length };
+    membranes:D.bones.membranes.length, feet:D.bones.feet.filter(Boolean).length };
 }
 // world-space axes of the model, so rotations are predictable regardless of bone roll
 const _mq=new THREE.Quaternion(), _AUP=new THREE.Vector3(), _ART=new THREE.Vector3(), _AFW=new THREE.Vector3();
@@ -1888,16 +1892,26 @@ function applyAlive(dt){
   springAxis(q.neck,-D.turn*.12-m.yawRate*.055,dt,2.4,.78);
   springAxis(q.head,-D.turn*.18+m.yawRate*.04,dt,3.1,.72);
   springAxis(q.wing,THREE.MathUtils.clamp((D.speed-26)/55,0,1),dt,1.8,.9);
-  springAxis(q.wind,CURRENT_WIND_FORCES.crosswind*(.2+CURRENT_WIND.gust*.8),dt,2.35,.76);
+  const crosswind=D.rigOverride?.crosswind??CURRENT_WIND_FORCES.crosswind;
+  const gust=D.rigOverride?.gust??CURRENT_WIND.gust;
+  const flapAuthority=D.rigOverride?.flap??(input.flap?1:0);
+  springAxis(q.wind,crosswind*(.2+gust*.8),dt,2.35,.76);
   springAxis(q.tension,THREE.MathUtils.clamp((m.gLoad-1)/2.6,0,1),dt,3.0,.8);
   springAxis(q.load,THREE.MathUtils.clamp(m.longAccel/32,-1,1),dt,2.2,.76);
   springAxis(q.launch,S.launching?(S.started?1:-1):0,dt,S.started?2.0:3.2,.72);
+  // UE-style layered control-rig principle: the authored clip owns the main
+  // pose, while slip, torsion and downwash are independent secondary channels.
+  // They are deterministic and cheap enough to run in the browser skin.
+  springAxis(q.slip,THREE.MathUtils.clamp(crosswind*.55-m.yawRate*.18,-1,1),dt,1.65,.68);
+  springAxis(q.torsion,THREE.MathUtils.clamp(D.roll*.32+m.yawRate*.24,-1,1),dt,2.15,.74);
+  springAxis(q.downwash,THREE.MathUtils.clamp(flapAuthority*.75+Math.max(0,m.gLoad-1)*.18,0,1),dt,3.1,.78);
   D.pTurn=q.turn.value; D.pPitch=q.pitch.value;
   const tl=D.bones.tail;
   for(let i=0;i<tl.length;i++){ const b=tl[i]; if(!b) continue;
     const lag=(i+1)/tl.length, ph=t*1.35-i*.48;
-    const sway=(Math.sin(ph)*.012*(.6+.4*spd)+q.tail.value*lag*.095-q.turn.velocity*lag*.006)*g;
-    const lift=(Math.sin(ph+.6)*.008-q.pitch.velocity*lag*.004)*g;
+    const sway=(Math.sin(ph)*.012*(.6+.4*spd)+q.tail.value*lag*.095-q.turn.velocity*lag*.006
+      -q.slip.value*lag*.052-q.torsion.value*lag*.022)*g;
+    const lift=(Math.sin(ph+.6)*.008-q.pitch.velocity*lag*.004-q.downwash.value*lag*.012)*g;
     b.rotateOnWorldAxis(_AUP, sway); b.rotateOnWorldAxis(_ART, lift);
   }
   if(D.bones.neck){ D.bones.neck.rotateOnWorldAxis(_AUP,(q.neck.value+Math.sin(t)*.006)*g);
@@ -1905,29 +1919,32 @@ function applyAlive(dt){
   if(D.bones.head){ D.bones.head.rotateOnWorldAxis(_AUP,q.head.value*g);
     D.bones.head.rotateOnWorldAxis(_ART,(q.pitch.value*.055+q.pitch.velocity*.012+Math.sin(t*.8)*.006)*g); }
   const coil=q.launch.value, effort=q.tension.value;
-  if(D.bones.chest){ D.bones.chest.rotateOnWorldAxis(_AFW,(q.turn.value*.038-m.yawRate*.012)*g);
-    D.bones.chest.rotateOnWorldAxis(_ART,(-coil*.09-q.load.value*.055-effort*.045)*g); }
-  if(D.bones.hips) D.bones.hips.rotateOnWorldAxis(_ART,(coil*.075+q.load.value*.035)*g);
+  if(D.bones.chest){ D.bones.chest.rotateOnWorldAxis(_AFW,(q.turn.value*.038-m.yawRate*.012+q.torsion.value*.045)*g);
+    D.bones.chest.rotateOnWorldAxis(_ART,(-coil*.09-q.load.value*.055-effort*.045-q.downwash.value*.018)*g); }
+  if(D.bones.hips){ D.bones.hips.rotateOnWorldAxis(_ART,(coil*.075+q.load.value*.035+q.downwash.value*.012)*g);
+    D.bones.hips.rotateOnWorldAxis(_AFW,-q.torsion.value*.028*g); }
   const brake=(key['KeyS']&&D.speed>16)?1:0;
   const sweep=-.08-q.wing.value*.28+brake*.24, cup=THREE.MathUtils.clamp(q.pitch.value,-1,1)*.16+effort*.12;
   for(const w of D.bones.shoulders){
-    const diff=-q.turn.value*w.side*.14+q.wind.value*w.side*.09;
+    const diff=-q.turn.value*w.side*.14+q.wind.value*w.side*.09+q.slip.value*w.side*.085;
     w.rotateOnWorldAxis(_AUP,(sweep*.34+diff)*g*w.side);
     w.rotateOnWorldAxis(_AFW,(cup+coil*.08)*g*w.side);
   }
   for(const w of D.bones.forearms){
-    const diff=-q.turn.value*w.side*.22+q.wind.value*w.side*.14;
+    const diff=-q.turn.value*w.side*.22+q.wind.value*w.side*.14+q.slip.value*w.side*.14;
     w.rotateOnWorldAxis(_AUP,(sweep*.72+diff)*g*w.side);
     w.rotateOnWorldAxis(_AFW,(cup*.72-brake*.12)*g*w.side);
   }
   for(const w of D.bones.wingTips){
-    const trail=-q.wing.velocity*.035-q.turn.velocity*w.side*.018+q.wind.velocity*w.side*.009;
+    const trail=-q.wing.velocity*.035-q.turn.velocity*w.side*.018+q.wind.velocity*w.side*.009
+      +q.slip.value*w.side*.16+q.torsion.value*w.side*.07-q.downwash.value*.045;
     w.rotateOnWorldAxis(_AUP,(sweep*.42+trail)*g*w.side);
     w.rotateOnWorldAxis(_AFW,(effort*.075-brake*.08)*g*w.side);
   }
-  const tuck=(D.speed>18?1:0.5)*g;
-  if(D.bones.thighs) for(const b of D.bones.thighs){ if(b) b.rotateOnWorldAxis(_ART, -0.20*tuck); }
-  if(D.bones.shins)  for(const b of D.bones.shins){ if(b) b.rotateOnWorldAxis(_ART, 0.25*tuck); }
+  const tuck=(D.speed>18?1:0.65)*g;
+  if(D.bones.thighs) for(const b of D.bones.thighs){ if(b) b.rotateOnWorldAxis(_ART,(-.30-q.downwash.value*.035)*tuck); }
+  if(D.bones.shins)  for(const b of D.bones.shins){ if(b) b.rotateOnWorldAxis(_ART,(.48+q.downwash.value*.045)*tuck); }
+  if(D.bones.feet)   for(const b of D.bones.feet){ if(b) b.rotateOnWorldAxis(_ART,-.28*tuck); }
 }
 
 /* ============================ INPUT ============================ */
@@ -4378,33 +4395,59 @@ window.SIM={
   },
   warp:(dt,steps=60)=>{ for(let i=0;i<steps;i++) tick(dt); render(); },
   capturePose:name=>{ const poses={
-      glide:{action:'glide',phase:.08,pitch:-.08,speed:38},
-      portrait:{action:'glide',phase:.18,pitch:-.02,speed:32},
-      wingUp:{action:'flap',phase:.24,pitch:0,speed:28},
-      wingDown:{action:'flap',phase:.72,pitch:0,speed:28},
-      brake:{action:'brake',phase:.50,pitch:.12,speed:24},
-      leap:{action:'flap',phase:.48,pitch:.52,speed:36},
-      dive:{action:'glide',phase:.50,pitch:-.78,speed:58}};
+      glide:{action:'glide',phase:.08,pitch:-.08,speed:38,view:'rear',crosswind:0,gust:.18},
+      portrait:{action:'glide',phase:.18,pitch:-.02,speed:32,view:'front',crosswind:.12,gust:.24},
+      wingUp:{action:'flap',phase:.24,pitch:0,speed:28,view:'side',crosswind:-.18,gust:.32,flap:1},
+      wingDown:{action:'flap',phase:.72,pitch:0,speed:28,view:'sideReverse',crosswind:.18,gust:.32,flap:1},
+      brake:{action:'brake',phase:.50,pitch:.12,speed:24,view:'rear',crosswind:.2,gust:.38},
+      gustPort:{action:'glide',phase:.12,pitch:-.04,speed:36,view:'rearPort',crosswind:-1,gust:.92,roll:-.32},
+      gustStarboard:{action:'glide',phase:.12,pitch:-.04,speed:36,view:'rearStarboard',crosswind:1,gust:.92,roll:.32},
+      leap:{action:'flap',phase:.48,pitch:.52,speed:36,view:'side',crosswind:0,gust:.5,flap:1},
+      dive:{action:'glide',phase:.50,pitch:-.78,speed:58,view:'rear',crosswind:.25,gust:.58}};
     const pose=poses[name]; if(!pose||!D.mixer)return null;
-    S.started=true; S.done=true; S.captureKind=name; S.fpv=false; S.shake=0; S.boost=0; S.accel=0; D.roll=0; D.yaw=Math.PI; D.pitch=pose.pitch; D.speed=pose.speed;
-    D.group.position.set(900,220,900); D.group.rotation.set(0,D.yaw,0); D.group.rotateX(D.pitch*.75);
-    D.model.rotation.x=THREE.MathUtils.clamp(-.85-D.pitch*.3,-1.2,-.45); D.model.rotation.z=0;
+    S.started=true; S.done=true; S.captureKind=name; S.fpv=false; S.shake=0; S.boost=0; S.accel=0;
+    S.chapter=2;S.score=6;S.grace=999;TOD.day=.34;uDay.value=TOD.day;driveTimeOfDay(0);
+    D.group.position.set(385,168,-248);D.yaw=simHeadingTo(520,18,-420);D.pitch=pose.pitch;D.roll=pose.roll||0;D.speed=pose.speed;
+    D.group.rotation.set(0,D.yaw,0); D.group.rotateX(D.pitch*.75);D.group.rotateZ(-D.roll*.9);
+    D.model.scale.setScalar(activeRig.scale||10);D.model.rotation.x=THREE.MathUtils.clamp(-.85-D.pitch*.3,-1.2,-.45); D.model.rotation.z=0;
     D.flap?.setEffectiveWeight(pose.action==='flap'?1:0); D.glide?.setEffectiveWeight(pose.action==='glide'?1:0); D.brake?.setEffectiveWeight(pose.action==='brake'?1:0);
     D.mixer.timeScale=1; const action=pose.action==='flap'?D.flap:pose.action==='brake'?D.brake:D.glide; if(!action)return null;
     D.mixer.setTime(action.getClip().duration*pose.phase); D.mixer.update(0); D.mixer.timeScale=0; D.model.updateMatrixWorld(true);
+    D.rigOverride={crosswind:pose.crosswind||0,gust:pose.gust||0,flap:pose.flap||0};
+    for(const axis of Object.values(D.springs||{})){axis.value=0;axis.velocity=0;}
+    if(D.springs){
+      D.springs.wind.value=D.rigOverride.crosswind*(.2+D.rigOverride.gust*.8);
+      D.springs.slip.value=THREE.MathUtils.clamp(D.rigOverride.crosswind*.55,-1,1);
+      D.springs.torsion.value=THREE.MathUtils.clamp(D.roll*.32,-1,1);
+      D.springs.downwash.value=THREE.MathUtils.clamp(D.rigOverride.flap*.75,0,1);
+    }
+    applyAlive(1/60);D.model.updateMatrixWorld(true);
     menuEl.classList.add('hide','live'); $('hud').classList.add('on'); $('shutter').classList.remove('closed'); $('shutter').style.display='none';
+    $('over').classList.add('hide');$('ach').classList.remove('on');for(const ring of rings)ring.visible=false;
+    horizonDirector.root.visible=true;landmarkPath.root.visible=true;
     const bounds=new THREE.Box3().setFromObject(D.model), center=bounds.getCenter(new THREE.Vector3()), size=bounds.getSize(new THREE.Vector3());
     const tailTip=D.bones.tail.at(-1)?.getWorldPosition(new THREE.Vector3()), head=D.bones.head?.getWorldPosition(new THREE.Vector3());
     const forward=head&&tailTip?head.clone().sub(tailTip).normalize():new THREE.Vector3(0,0,-1),up=new THREE.Vector3(0,1,0);
     const side=forward.clone().cross(up).normalize();
-    if(name==='portrait')camera.position.copy(head).addScaledVector(forward,5.8).addScaledVector(side,2.6).addScaledVector(up,2.1);
-    else { const sideAmount=name==='wingDown'?-18:18;camera.position.copy(center).addScaledVector(forward,-30).addScaledVector(side,sideAmount).addScaledVector(up,14); }
-    camera.lookAt(name==='portrait'?head:center); render();
-    const tipPositions=D.bones.wingTips.map(b=>b.getWorldPosition(new THREE.Vector3()));
-    const metrics={bounds:size.toArray().map(v=>+v.toFixed(2)),wingTipMeanY:+(tipPositions.reduce((sum,p)=>sum+p.y,0)/tipPositions.length).toFixed(2),
-      wingTipRangeY:+(Math.max(...tipPositions.map(p=>p.y))-Math.min(...tipPositions.map(p=>p.y))).toFixed(2),
-      headTailDistance:head&&tailTip?+head.distanceTo(tailTip).toFixed(2):null};
-    return {name,action:pose.action,phase:pose.phase,pitch:pose.pitch,speed:pose.speed,metrics}; },
+    const cameraViews={
+      rear:{forward:-27,side:9,up:9},rearPort:{forward:-27,side:12,up:9},rearStarboard:{forward:-27,side:-12,up:9},
+      front:{forward:12,side:8,up:4,targetHead:true},side:{forward:-3,side:27,up:8},sideReverse:{forward:-3,side:-27,up:8}
+    };
+    const view=cameraViews[pose.view]||cameraViews.rear,target=view.targetHead&&head?head:center;
+    camera.position.copy(view.targetHead&&head?head:center).addScaledVector(forward,view.forward).addScaledVector(side,view.side).addScaledVector(up,view.up);
+    camera.fov=view.targetHead?46:52;camera.updateProjectionMatrix();camera.lookAt(target); render();
+    const tipPositions=D.bones.wingTips.map(b=>({side:b.side,position:b.getWorldPosition(new THREE.Vector3())}));
+    const meanTipY=sideValue=>{const a=tipPositions.filter(p=>p.side===sideValue);return a.reduce((sum,p)=>sum+p.position.y,0)/Math.max(1,a.length);};
+    const rightMean=meanTipY(1),leftMean=meanTipY(-1);
+    const feet=(D.bones.feet||[]).filter(Boolean).map(b=>b.getWorldPosition(new THREE.Vector3()));
+    const hips=D.bones.hips?.getWorldPosition(new THREE.Vector3());
+    const metrics={bounds:size.toArray().map(v=>+v.toFixed(2)),wingTipMeanY:+(tipPositions.reduce((sum,p)=>sum+p.position.y,0)/tipPositions.length).toFixed(2),
+      wingTipRangeY:+(Math.max(...tipPositions.map(p=>p.position.y))-Math.min(...tipPositions.map(p=>p.position.y))).toFixed(2),
+      wingTipAsymmetry:+(rightMean-leftMean).toFixed(2),headTailDistance:head&&tailTip?+head.distanceTo(tailTip).toFixed(2):null,
+      footTuck:hips&&feet.length?+(hips.y-feet.reduce((sum,p)=>sum+p.y,0)/feet.length).toFixed(2):null};
+    metrics.wingTipMeanY=+(tipPositions.reduce((sum,p)=>sum+p.position.y,0)/tipPositions.length).toFixed(2);
+    return {name,action:pose.action,phase:pose.phase,pitch:pose.pitch,speed:pose.speed,view:pose.view,
+      response:{crosswind:D.rigOverride.crosswind,gust:D.rigOverride.gust,flap:D.rigOverride.flap},metrics}; },
   bones:()=>D.boneReport, alive:v=>{ALIVE=v;}, setTurn:v=>{D.turn=v;}, day:v=>{TOD.day=v;uDay.value=v;},
   motion:()=>({accel:+D.motion.longAccel.toFixed(2),yawRate:+D.motion.yawRate.toFixed(3),
     pitchRate:+D.motion.pitchRate.toFixed(3),gLoad:+D.motion.gLoad.toFixed(2),
@@ -4531,7 +4574,8 @@ window.SIM={
     brakeProfile:activeRig?.brakeProfile,aliveProfile:activeRig?.aliveProfile,surfaceProfile:activeRig?.surfaceProfile}),
   rigMotion:()=>({profile:activeRig?.aliveProfile,clips:{
       flap:D.flap?.getClip().name||null,glide:D.glide?.getClip().name||null,brake:D.brake?.getClip().name||null},
-    responseChannels:Object.keys(D.springs||{}),cruiseMode:'stable-glide',flapAuthority:'player-command',brakeMode:'held-authored-pose'}),
+    responseChannels:Object.keys(D.springs||{}),cruiseMode:'stable-glide',flapAuthority:'player-command',brakeMode:'held-authored-pose',
+    secondaryAuthority:'layered-control-rig-v1',windResponse:'asymmetric-slip-torsion-v1',legSilhouette:'folded-flight-rest-v1'}),
   rigSurface:stormlanceSurfaceSnapshot,
   pickerRigs:()=>rigCatalog().map(r=>({id:r.id,loreName:r.loreName,epithet:r.epithet,default:!!r.default})),
   lobby:()=>lobby.snapshot(),
