@@ -128,6 +128,16 @@ shrine view, r20 measured 8.4 ms median / 17.3 ms p95 frame time versus r19 at
 8.3 ms / 25.9 ms. The retained treatment is still deliberately stylized rather
 than a claim of photoreal terrain.
 
+Build r21 adds a collision-free **atmospheric depth ring** beyond Keeper Hollow:
+thirty deterministic mountain masses across three staggered distance bands and
+240 fog-graded conifers. They are real instanced geometry rather than billboard
+silhouettes, so the existing exponential atmosphere produces parallax and
+depth while the flight route remains bounded and unchanged. The system costs
+two draw calls, 26,040 triangles, and no textures. Two matched eight-second
+forced-WebGL pairs held the same 8.3-8.4 ms median as r20; r20 measured 16.7 /
+33.1 ms p95 and r21 measured 17.4 / 24.2 ms p95. The effect is deliberately
+restrained at night and remains stylized environmental art.
+
 ## Build the release artifact
 
 ```sh

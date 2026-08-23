@@ -9,6 +9,9 @@ const PROFILE = 'keeper-hollow-biome-v1';
 const FOREST_COUNT = 520;
 const TALUS_COUNT = 112;
 const SURFACE_TEXTURE_SIZE = 128;
+const BACKDROP_RIDGE_COUNT = 30;
+const BACKDROP_FOREST_COUNT = 240;
+const BACKDROP_CENTER = Object.freeze({ x:-360, z:70 });
 
 export const KEEPER_SHRINE_SITES = Object.freeze([
   Object.freeze({ id:'south-watch', x:-220, z:-220, baseH:42, yaw0:0, rate:.42 }),
@@ -178,6 +181,34 @@ const MASSES = Object.freeze([
   { id:'northeast-gate', x:-80, z:620, radius:110, top:245, proxyRadius:64, proxyTop:245, shoulder:true }
 ]);
 
+// Three staggered rings sit beyond every playable approach. They are visual
+// depth only: no collider, objective, or route logic depends on them. Real
+// geometry lets the shared exponential fog create parallax and atmospheric
+// separation without billboard silhouettes or transparent fog cards.
+function backdropRidgeLayout() {
+  const layers = [
+    { distance:820, radius:135, top:330 },
+    { distance:1080, radius:170, top:405 },
+    { distance:1360, radius:210, top:475 }
+  ];
+  const layout = [];
+  for (let index = 0; index < BACKDROP_RIDGE_COUNT; index += 1) {
+    const layer = index % layers.length;
+    const slot = Math.floor(index / layers.length);
+    const spec = layers[layer];
+    const angle = slot / (BACKDROP_RIDGE_COUNT / layers.length) * TAU + layer * .115 + (hash(index + 5100) - .5) * .09;
+    const distance = spec.distance + (hash(index + 5300) - .5) * 110;
+    layout.push(Object.freeze({
+      layer, angle,
+      x:BACKDROP_CENTER.x + Math.cos(angle) * distance,
+      z:BACKDROP_CENTER.z + Math.sin(angle) * distance,
+      radius:spec.radius * (.84 + hash(index + 5500) * .30),
+      top:spec.top * (.82 + hash(index + 5700) * .32)
+    }));
+  }
+  return Object.freeze(layout);
+}
+
 function pointSegmentDistance(x, z, a, b) {
   const dx = b[0] - a[0], dz = b[2] - a[2];
   const lengthSq = dx * dx + dz * dz || 1;
@@ -255,6 +286,60 @@ export class KeeperHollowBiome {
     }
     this.forest.instanceMatrix.needsUpdate = true; this.root.add(this.forest);
 
+    this.backdropLayout = backdropRidgeLayout();
+    this.backdropRidgeMaterial = new THREE.MeshBasicMaterial({
+      color:0xffffff, fog:true, toneMapped:true
+    });
+    this.backdropRidges = new THREE.InstancedMesh(
+      erodedCliffGeometry(12, 9), this.backdropRidgeMaterial, BACKDROP_RIDGE_COUNT
+    );
+    this.backdropRidges.name = 'KeeperHollow_AtmosphericMountainBands';
+    this.backdropRidges.frustumCulled = false;
+    const ridgePalette = [new THREE.Color(0x263b35), new THREE.Color(0x2d3d43), new THREE.Color(0x34414a)];
+    for (let index = 0; index < this.backdropLayout.length; index += 1) {
+      const ridge = this.backdropLayout[index];
+      this.position.set(ridge.x, -28, ridge.z);
+      this.quaternion.setFromEuler(new THREE.Euler(0, -ridge.angle + hash(index + 5900) * .24, 0));
+      this.scale.set(ridge.radius, ridge.top + 28, ridge.radius * (.62 + hash(index + 6100) * .16));
+      this.matrix.compose(this.position, this.quaternion, this.scale);
+      this.backdropRidges.setMatrixAt(index, this.matrix);
+      const tint = .91 + (hash(index + 6300) - .5) * .12;
+      this.backdropRidges.setColorAt(index, ridgePalette[ridge.layer].clone().multiplyScalar(tint));
+    }
+    this.backdropRidges.instanceMatrix.needsUpdate = true;
+    this.backdropRidges.instanceColor.needsUpdate = true;
+
+    this.backdropForestMaterial = new THREE.MeshBasicMaterial({ color:0xffffff, fog:true, toneMapped:true });
+    this.backdropForest = new THREE.InstancedMesh(
+      coniferGeometry(4), this.backdropForestMaterial, BACKDROP_FOREST_COUNT
+    );
+    this.backdropForest.name = 'KeeperHollow_FogTreelineBands';
+    this.backdropForest.frustumCulled = false;
+    const forestPalette = [new THREE.Color(0x17372f), new THREE.Color(0x244039), new THREE.Color(0x344b49)];
+    const ledgeBands = [.38, .50, .61, .70];
+    for (let index = 0; index < BACKDROP_FOREST_COUNT; index += 1) {
+      const ridge = this.backdropLayout[index % this.backdropLayout.length];
+      const v = ledgeBands[Math.floor(hash(index + 6500) * ledgeBands.length)] + (hash(index + 6700) - .5) * .055;
+      const angleCluster = Math.floor(hash(index + 6900) * 12) / 12 * TAU;
+      const angle = angleCluster + (hash(index + 7100) - .5) * .22;
+      const ledgeRadius = ridge.radius * cliffRadius(v) * (.72 + hash(index + 7300) * .17);
+      const height = 13 + ridge.layer * 3 + hash(index + 7500) * 11;
+      this.position.set(
+        ridge.x + Math.cos(angle) * ledgeRadius,
+        -28 + (ridge.top + 28) * v,
+        ridge.z + Math.sin(angle) * ledgeRadius * .72
+      );
+      this.quaternion.setFromEuler(new THREE.Euler(0, hash(index + 7700) * TAU, (hash(index + 7900) - .5) * .045));
+      this.scale.set(height * (.74 + hash(index + 8100) * .16), height, height * (.74 + hash(index + 8300) * .16));
+      this.matrix.compose(this.position, this.quaternion, this.scale);
+      this.backdropForest.setMatrixAt(index, this.matrix);
+      const tint = .91 + (hash(index + 8500) - .5) * .16;
+      this.backdropForest.setColorAt(index, forestPalette[ridge.layer].clone().multiplyScalar(tint));
+    }
+    this.backdropForest.instanceMatrix.needsUpdate = true;
+    this.backdropForest.instanceColor.needsUpdate = true;
+    this.root.add(this.backdropRidges, this.backdropForest);
+
     this.talusMaterial = new THREE.MeshStandardMaterial({ color:0x202c2b, roughness:.93, metalness:.02, flatShading:true, fog:true });
     this.talus = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0), this.talusMaterial, TALUS_COUNT);
     this.talus.name = 'KeeperHollow_ShoreTalus'; this.talus.frustumCulled = false;
@@ -295,6 +380,8 @@ export class KeeperHollowBiome {
   update(time = 0, day = 0, gust = 0) {
     this.cliffMaterial.emissiveIntensity = .04 + day * .08;
     this.forestMaterial.color.setHSL(.39 + day * .015, .36, .16 - day * .035);
+    this.backdropRidgeMaterial.color.setHSL(.48 + day * .025, .11, .84 - day * .18);
+    this.backdropForestMaterial.color.setHSL(.42 + day * .01, .30, .86 - day * .22);
     this.talusMaterial.color.setHSL(.48, .14, .16 - day * .025);
     this.wetMaterial.color.setHSL(.52 + day * .03, .24, .12 - day * .025);
     this.surfMaterial.opacity = .11 + Math.max(0, Math.sin(time * 1.25)) * .06 + gust * .04;
@@ -308,29 +395,33 @@ export class KeeperHollowBiome {
 
   getSnapshot() {
     const triangles = (mesh) => Math.round(((mesh.geometry.index?.count || mesh.geometry.attributes.position.count) / 3) * mesh.count);
+    const backdropTriangles = triangles(this.backdropRidges) + triangles(this.backdropForest);
     return {
       profile:PROFILE, authored:true, deterministic:true, externalAssets:0,
       architecture:'continuous-eroded-cliff-bowl', cliffInstances:MASSES.length,
       valleyShoulders:MASSES.filter((mass) => mass.shoulder).length,
       shrineSupports:MASSES.filter((mass) => mass.shrine).length,
       forestInstances:this.forest.count, talusInstances:this.talus.count,
-      forestDistribution:'deterministic-ledge-clusters', fogBackdrop:'shared-exponential-atmosphere',
+      forestDistribution:'deterministic-ledge-clusters', fogBackdrop:'layered-exp2-geometry-v2',
       wetAprons:this.wetAprons.count, surfCollars:this.surf.count,
-      drawCalls:5, collisionProxies:MASSES.length,
+      drawCalls:7, collisionProxies:MASSES.length,
+      atmosphericDepthProfile:'keeper-hollow-ridge-bands-v1', backdropMountainLayers:3,
+      backdropMountainInstances:this.backdropRidges.count, backdropForestInstances:this.backdropForest.count,
+      backdropDrawCalls:2, backdropTriangles, billboardSilhouettes:0, visualOnlyBackdrop:true,
       surfaceProfile:'coastal-strata-pbr-v1', generatedSurfaceTextures:1,
       surfaceTextureResolution:this.cliffTextures.size, uvLayout:'seam-safe-cylindrical-v1',
       cliffShading:'smooth-generated-albedo', instanceColorVariants:MASSES.length,
       collisionContract:'chapter-iv-route-corridor-v2', routeAligned:true,
       routeMinimumClearance:this.routeMinimumClearance,
       shrineSites:KEEPER_SHRINE_SITES.map(site=>({id:site.id,x:site.x,z:site.z,baseH:site.baseH})),
-      triangles:triangles(this.cliffs) + triangles(this.forest) + triangles(this.talus) + triangles(this.wetAprons) + triangles(this.surf),
+      triangles:triangles(this.cliffs) + triangles(this.forest) + triangles(this.talus) + triangles(this.wetAprons) + triangles(this.surf) + backdropTriangles,
       visualOnlyForest:true, productionDefault:true
     };
   }
 
   dispose() {
     this.scene.remove(this.root);
-    for (const mesh of [this.cliffs, this.forest, this.talus, this.wetAprons, this.surf]) {
+    for (const mesh of [this.cliffs, this.forest, this.backdropRidges, this.backdropForest, this.talus, this.wetAprons, this.surf]) {
       mesh.geometry.dispose(); mesh.material.dispose();
     }
     for (const texture of Object.values(this.cliffTextures)) if (texture?.dispose) texture.dispose();

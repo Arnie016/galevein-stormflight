@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-23T05:55:48.066Z",
+  "generatedAt": "2026-08-23T06:24:33.639Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 253386,
-      "sha256": "03efaebeedf003bd44428b0a3c567d510f7d757e326dc31f5bf824d3f79d14ef"
+      "bytes": 253389,
+      "sha256": "a3535d7acdd157479575ec8694a00d0cf1369a1585cc374d9ef567a4213d579b"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -85,13 +85,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 11959,
-      "sha256": "23bae29b84a9bdeb272e5f4671ad46dc847371beaaaa170c955d175996ca134e"
+      "bytes": 12642,
+      "sha256": "54f7030d111124d4a089c1cceb6b134908847ce0444421b181d53d4ae08e7d19"
     },
     {
       "path": "RELEASE_READINESS.md",
-      "bytes": 13958,
-      "sha256": "253968af99b9a12621d6ac9d93b13f98725afa2a0215f479dc5abf5d82c5bbc8"
+      "bytes": 15262,
+      "sha256": "91c73eacdafeb885dd88b08b53e0bef0a31ab3af7aea2ac7f4faa90df47dc8c3"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -255,8 +255,8 @@
     },
     {
       "path": "world-expansion/modules/keeperHollowBiome.js",
-      "bytes": 18717,
-      "sha256": "c2881b36cb458e5d0378ed94c3382cdd4eec06fc2f0bccf6c5fc3773cf836c3b"
+      "bytes": 23947,
+      "sha256": "d181454b2587a2cc5324a0c3a584d821c15658817456a90d1b228977d2132d3f"
     },
     {
       "path": "world-expansion/modules/landmarkPath.js",
