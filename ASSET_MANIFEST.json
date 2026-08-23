@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-23T11:12:47.537Z",
+  "generatedAt": "2026-08-23T11:39:44.715Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 277071,
-      "sha256": "308a2ba83b558fce64286f34a589466b73c073bcc3c682f7c7d1c1bbc4f6156b"
+      "bytes": 278680,
+      "sha256": "4a39335b1420a550ad0dbac6b603b41e64e3ecef66cd77d06bb90193178ed66d"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -292,6 +292,11 @@
       "path": "world-expansion/modules/proceduralLandmarks.js",
       "bytes": 60303,
       "sha256": "e8cf3aea822677d2f9c80400fb678097b209dc218422a0fb08c61859cddd0423"
+    },
+    {
+      "path": "world-expansion/modules/serpentCoast.js",
+      "bytes": 10325,
+      "sha256": "42d558bc2d92d832857ab3736c21745696cd59f7c924ee1c2d722f49de80bcbc"
     },
     {
       "path": "world-expansion/modules/windField.js",

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-story-contract-r29">
+<meta name="galevein-build" content="stormflight-serpent-coast-r30">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -741,6 +741,7 @@ import { createPoseidonOceanLayer } from './world-expansion/modules/poseidonOcea
 import { GaleveinWindField } from './world-expansion/modules/windField.js';
 import { CrownfallRange } from './world-expansion/modules/crownfallRange.js';
 import { DrownedHearthDecision } from './world-expansion/modules/hearthDecision.js';
+import { SerpentCoast } from './world-expansion/modules/serpentCoast.js';
 import { ATMOSPHERE_PROFILE, ATMOSPHERE_STOPS, atmospherePhase, sampleAtmosphere } from './world-expansion/modules/atmosphereProfile.js';
 
 const $ = id => document.getElementById(id);
@@ -1192,9 +1193,7 @@ function finishVillageInstances(mesh){
   mesh.instanceMatrix.needsUpdate=true; mesh.computeBoundingSphere(); mesh.castShadow=true; mesh.receiveShadow=true;
   drownedVillageRoot.add(mesh); return mesh;
 }
-const villageShoal=new THREE.Mesh(new THREE.IcosahedronGeometry(38,2),villageWetStoneMat);
-villageShoal.name='shared-crescent-shoal'; villageShoal.position.set(487,-3.7,-454); villageShoal.scale.set(1,.13,.65);
-villageShoal.rotation.y=-.12; villageShoal.receiveShadow=true; drownedVillageRoot.add(villageShoal);
+let serpentCoast=null;
 
 const villageFoundations=new THREE.InstancedMesh(new THREE.BoxGeometry(18,1.8,10),villageTimberMat,4);
 const villageStilts=new THREE.InstancedMesh(new THREE.CylinderGeometry(.42,.62,7,6),villageTimberMat,16);
@@ -1265,8 +1264,9 @@ function drownedVillageSnapshot(){
     const geometry=object.geometry,base=(geometry.index?.count||geometry.attributes.position.count)/3;
     return sum+base*(object.isInstancedMesh?object.count:1);
   },0);
-  return {contract:'drowned-hearth-crescent-v1',houses:DROWNED_VILLAGE_HOUSES.length,charred:burned.length,spared:1,
-    hearths:1,sharedShoal:true,jettyPlanks:jettyPlanks.count,drawCalls:renderables.length,triangles:Math.round(triangles),
+  const coast=serpentCoast.getSnapshot();
+  return {contract:'drowned-hearth-coast-v2',houses:DROWNED_VILLAGE_HOUSES.length,charred:burned.length,spared:1,
+    hearths:1,sharedShoal:true,coast,jettyPlanks:jettyPlanks.count,drawCalls:renderables.length+coast.drawCalls,triangles:Math.round(triangles+coast.terrainTriangles),
     externalAssets:0,beacon:[beacon.x,beacon.y,beacon.z],minHorizontalClearance:+minHorizontalClearance.toFixed(1),
     verticalClearance:+(beacon.y-maxTop).toFixed(1),decisionAnchor:lastHearth.position.toArray(),
     returnSignalRings:hearthSignalRings.length,positions:DROWNED_VILLAGE_HOUSES.map(h=>[h.id,h.x,h.z,h.yaw,h.state])};
@@ -1482,6 +1482,10 @@ const route=[[520,58,340],[400,68,180],[260,68,20],[-60,72,-150],            // 
   [140,60,-260],[420,70,-380],[520,64,-470],                                  // out to the Drowned Village
   [180,80,-560],[-320,90,-420],[-560,96,240],                                 // under the Bone Arches
   [-260,110,560],[0,120,780]];                                                // north to the Tempest Gate
+serpentCoast=new SerpentCoast(scene,{flightRoute:route});
+for(const proxy of serpentCoast.getCollisionProxies()) colliders.push({
+  x:proxy.x,z:proxy.z,r:proxy.radius,top:proxy.top,serpentCoast:true,id:proxy.id
+});
 const keeperHollowBiome=new KeeperHollowBiome(scene,{flightRoute:route.slice(8,11)});
 for(const proxy of keeperHollowBiome.getCollisionProxies()) colliders.push({
   x:proxy.x,z:proxy.z,r:proxy.radius,top:proxy.top,keeperHollow:true,landmark:proxy.id
@@ -4331,6 +4335,25 @@ window.SIM={
     $('spdV').textContent=Math.round(D.speed);$('altV').textContent=Math.round(D.group.position.y);
     camera.lookAt(new THREE.Vector3(...spec.target));render(1/60);
     return {view,position:spec.position,target:spec.target,horizon:horizonDirector.getSnapshot(),anchorProof:SIM.horizonAnchorProof(),state:SIM.state()};
+  },
+  serpentCoastStage:(view='approach')=>{
+    const views={
+      approach:{position:[335,150,-245],target:[520,16,-420],day:.14},
+      village:{position:[405,112,-590],target:[492,8,-450],day:.42},
+      harbor:{position:[685,165,-245],target:[550,15,-385],day:.72}
+    };
+    const spec=views[view]||views.approach;
+    simJumpChapter(2);S.finishToken++;
+    S.started=true;S.done=true;S.finishing=false;S.captureKind=null;S.fpv=false;S.shake=0;S.boost=0;S.accel=0;
+    S.chapter=2;S.tutDone=true;S.score=6;S.grace=999;TOD.day=spec.day;uDay.value=TOD.day;driveTimeOfDay(0);
+    menuEl.classList.add('hide','live');$('hud').classList.add('on');$('over').classList.add('hide');$('ach').classList.remove('on');
+    for(const ring of rings)ring.visible=false;
+    popEl.textContent='';popEl.style.animation='none';storyEl.textContent='';storyEl.style.animation='none';
+    D.group.position.fromArray(spec.position);D.yaw=simHeadingTo(...spec.target);D.pitch=-.035;D.roll=0;D.speed=34;
+    D.group.rotation.set(0,D.yaw,0);D.group.rotateX(D.pitch*.75);D.prevYaw=D.yaw;D.prevPitch=D.pitch;S.prevSpeed=D.speed;
+    camera.position.copy(D.group.position).add(new THREE.Vector3(Math.sin(D.yaw)*29,12,Math.cos(D.yaw)*29));
+    camera.lookAt(new THREE.Vector3(...spec.target));$('spdV').textContent=Math.round(D.speed);$('altV').textContent=Math.round(D.group.position.y);render(1/60);
+    return {view,position:spec.position,target:spec.target,coast:serpentCoast.getSnapshot(),village:drownedVillageSnapshot(),state:SIM.state()};
   },
   keeperStage:(view='shrine')=>{
     const views={
