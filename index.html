@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-fixed-island-r22">
+<meta name="galevein-build" content="stormflight-power-body-r23">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -1612,17 +1612,17 @@ function findClip(animations, name){
   return THREE.AnimationClip.findByName(animations, name)
     || animations.find(c=>c.name===name||c.name.endsWith(name)||c.name.includes(name));
 }
-const STORMLANCE_SURFACE='stormlance-wet-hide-v2';
+const STORMLANCE_SURFACE='stormlance-wet-hide-v3';
 function paintStormlanceHide(mesh){
   const g=mesh.geometry, pos=g?.getAttribute('position'), normal=g?.getAttribute('normal');
   const joints=g?.getAttribute('skinIndex'), weights=g?.getAttribute('skinWeight');
   if(!pos||!normal||!joints||!weights) return null;
   const colors=new Float32Array(pos.count*3);
   const palette={
-    body:new THREE.Color(0x33434a), wing:new THREE.Color(0x245052),
-    tail:new THREE.Color(0x2b3a42), leg:new THREE.Color(0x27343a),
-    head:new THREE.Color(0x3b5056), ventral:new THREE.Color(0x829097),
-    wingtip:new THREE.Color(0x3f8177)
+    body:new THREE.Color(0x293b42), wing:new THREE.Color(0x18464a),
+    tail:new THREE.Color(0x24343d), leg:new THREE.Color(0x21313a),
+    head:new THREE.Color(0x324b52), ventral:new THREE.Color(0x728990),
+    wingtip:new THREE.Color(0x2f8079)
   };
   const counts={body:0,wing:0,tail:0,leg:0,head:0};
   const c=new THREE.Color(), regionWeights=new Float32Array(5);
@@ -1711,7 +1711,7 @@ function attachDragonAccessories(model){
     const legR=legL.clone(); legR.position.x=-.033; legR.rotation.z=-1.05;
     rider.add(torso,hood,legL,legR);
     chest.updateWorldMatrix(true,false);
-    const pw=new THREE.Vector3(0,.620,.03).applyMatrix4(model.matrixWorld);
+    const pw=new THREE.Vector3(0,.675,.03).applyMatrix4(model.matrixWorld);
     rider.position.copy(chest.worldToLocal(pw)); chest.add(rider);
   }
 }
@@ -1845,8 +1845,8 @@ function applyAlive(dt){
     w.rotateOnWorldAxis(_AFW,(effort*.075-brake*.08)*g*w.side);
   }
   const tuck=(D.speed>18?1:0.5)*g;
-  if(D.bones.thighs) for(const b of D.bones.thighs){ if(b) b.rotateOnWorldAxis(_ART, -0.55*tuck); }
-  if(D.bones.shins)  for(const b of D.bones.shins){ if(b) b.rotateOnWorldAxis(_ART, 0.5*tuck); }
+  if(D.bones.thighs) for(const b of D.bones.thighs){ if(b) b.rotateOnWorldAxis(_ART, -0.20*tuck); }
+  if(D.bones.shins)  for(const b of D.bones.shins){ if(b) b.rotateOnWorldAxis(_ART, 0.25*tuck); }
 }
 
 /* ============================ INPUT ============================ */
@@ -4067,6 +4067,7 @@ window.SIM={
   },
   warp:(dt,steps=60)=>{ for(let i=0;i<steps;i++) tick(dt); render(); },
   capturePose:name=>{ const poses={
+      glide:{action:'glide',phase:.08,pitch:-.08,speed:38},
       wingUp:{action:'flap',phase:.24,pitch:0,speed:28},
       wingDown:{action:'flap',phase:.72,pitch:0,speed:28},
       leap:{action:'flap',phase:.48,pitch:.52,speed:36},
@@ -4079,7 +4080,14 @@ window.SIM={
     D.mixer.timeScale=1; const action=pose.action==='flap'?D.flap:D.glide; D.mixer.setTime(action.getClip().duration*pose.phase); D.mixer.timeScale=0;
     menuEl.classList.add('hide','live'); $('hud').classList.add('on');
     const back=new THREE.Vector3(Math.sin(D.yaw),0,Math.cos(D.yaw));
-    camera.position.copy(D.group.position).addScaledVector(back,10).add(new THREE.Vector3(0,5,0));
+    const right=new THREE.Vector3(Math.cos(D.yaw),0,-Math.sin(D.yaw));
+    const cameraSpec=name==='wingUp'
+      ? {back:8,right:6,up:5}
+      : name==='wingDown' ? {back:-9,right:-5,up:4.5} : {back:10,right:0,up:5};
+    camera.position.copy(D.group.position)
+      .addScaledVector(back,cameraSpec.back)
+      .addScaledVector(right,cameraSpec.right)
+      .add(new THREE.Vector3(0,cameraSpec.up,0));
     camera.lookAt(D.group.position.clone().add(new THREE.Vector3(0,-1,0))); render();
     return {name,action:pose.action,phase:pose.phase,pitch:pose.pitch,speed:pose.speed}; },
   bones:()=>D.boneReport, alive:v=>{ALIVE=v;}, setTurn:v=>{D.turn=v;}, day:v=>{TOD.day=v;uDay.value=v;},
@@ -4183,7 +4191,8 @@ window.SIM={
   landmarkReady,
   chapterHud:()=>structure?.director?.lastHud??null,
   structureSnapshot:()=>structure?.snapshot()??null,
-  rig:()=>({id:activeRig?.id,loreName:activeRig?.loreName}),
+  rig:()=>({id:activeRig?.id,loreName:activeRig?.loreName,
+    geometryProfile:activeRig?.geometryProfile,flapProfile:activeRig?.flapProfile}),
   rigSurface:stormlanceSurfaceSnapshot,
   pickerRigs:()=>rigCatalog().map(r=>({id:r.id,loreName:r.loreName,epithet:r.epithet,default:!!r.default})),
   lobby:()=>lobby.snapshot(),

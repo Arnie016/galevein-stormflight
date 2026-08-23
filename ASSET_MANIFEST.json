@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-23T07:48:43.020Z",
+  "generatedAt": "2026-08-23T08:09:58.851Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -10,8 +10,8 @@
     },
     {
       "path": "assets/galevein_stormlance.glb",
-      "bytes": 194208,
-      "sha256": "44bb2bd083718f465b5baa80d40b953968542458b05349d46c304f535455c742"
+      "bytes": 195012,
+      "sha256": "c8cb7380bd6c981202ca75cafc054cc00a45e9a0578649f2505bb7bf6f6dbba7"
     },
     {
       "path": "audio/amb_sea.mp3",
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 254378,
-      "sha256": "a120f3434118b1ff9d1731b09320406220e09f2533ddcd5ce554cc9ba8b0817e"
+      "bytes": 254824,
+      "sha256": "66ec3244e8d0e3832b5b370d7cc92cf601043e3fd4c153dd19683662c38cf56b"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -85,13 +85,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 13449,
-      "sha256": "f453b6b0bc7be364d4929400fbed4979fd4a90a4582a02e598186447957dfbc6"
+      "bytes": 14230,
+      "sha256": "859804b92824b518cc81b784eb118fd71886e47c941c2ce1f03c3e25af49735f"
     },
     {
       "path": "RELEASE_READINESS.md",
-      "bytes": 16347,
-      "sha256": "d38d5915e21c8bc11e7ecfd1d57505f9666a7617bfddc66e6ddb11422973ca45"
+      "bytes": 17697,
+      "sha256": "6bfe7fac5608df337d85d5e27a2be8def40022aa5b2f50270f637da178b18cdf"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -235,8 +235,8 @@
     },
     {
       "path": "world-expansion/modules/dragonRigs.js",
-      "bytes": 901,
-      "sha256": "4d8728ee1df2f0ba20558f4569c58d390da6137e0bb227ab5c5a3c50e370fcb2"
+      "bytes": 1015,
+      "sha256": "4c084fc94451518eec2059e1cbc3dcb0d02f72cfdecee7865e3bd11e15877c41"
     },
     {
       "path": "world-expansion/modules/galeveinPoseidonSky.js",

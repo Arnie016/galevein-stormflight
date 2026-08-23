@@ -150,6 +150,17 @@ sky sphere follows the camera as an atmospheric shell; neither moves the island.
 This establishes stable spatial structure, not photoreal materials or a finished
 open-world art pass.
 
+Build r23 replaces the narrow Stormlance v2 flight silhouette with the original
+**Stormlance power-body v3**. The clean-room Blender source broadens the maximum
+torso diameter from 0.192 to 0.274 units while keeping body length near one unit,
+reduces wing dominance slightly, compacts the hind limbs, lowers the vertical
+rudder, and adds a symmetric horizontal storm-rudder vane. The 25-joint gameplay
+contract, rider, mouth attachment, named `Flap` and `Glide` clips, and one-skinned-
+mesh runtime remain intact. The new `loaded-downstroke-v1` flap uses a slower
+recovery and stronger downstroke rather than an even oscillation. This is a
+project-owned original creature, not a Night Fury model or licensed DreamWorks
+asset, and remains stylized rather than a production sculpt.
+
 ## Build the release artifact
 
 ```sh
