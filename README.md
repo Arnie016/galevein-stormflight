@@ -138,6 +138,18 @@ forced-WebGL pairs held the same 8.3-8.4 ms median as r20; r20 measured 16.7 /
 33.1 ms p95 and r21 measured 17.4 / 24.2 ms p95. The effect is deliberately
 restrained at night and remains stylized environmental art.
 
+Build r22 removes the camera-relative horizon rebuild that made distant scenery
+appear to load, drift, and advance with the rider. The Bounded Reach now has one
+fixed island anchor at `[-20, 0, 110]`, one fixed route heading, and one
+deterministic placement signature. Camera-cell snapping, view-direction
+rotation, and chapter-driven landscape repositioning are disabled. A regression
+probe moves the camera to `[2450, 620, -2380]`, changes its view direction, and
+proves that placement revision `1` and signature `f06754e8` remain unchanged.
+Terrain LOD may still exchange mesh detail at fixed world coordinates, and the
+sky sphere follows the camera as an atmospheric shell; neither moves the island.
+This establishes stable spatial structure, not photoreal materials or a finished
+open-world art pass.
+
 ## Build the release artifact
 
 ```sh

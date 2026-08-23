@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-atmospheric-depth-r21">
+<meta name="galevein-build" content="stormflight-fixed-island-r22">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -4127,6 +4127,22 @@ window.SIM={
       islandDrawCalls:horizonDirector.getSnapshot().drawCalls,
       mountainProfile:crownfallRange.getSnapshot().profile,mountainLodTriangles:crownfallRange.getSnapshot().lodTriangles,
       landmarkMaterials:2,keeperHollow:keeperHollowBiome.getSnapshot(),objectiveRingsFogFree:rings.every(r=>r.material.fog===false)}}),
+  horizonAnchorProof:()=>{
+    const savedPosition=camera.position.clone(),savedQuaternion=camera.quaternion.clone();
+    const before=horizonDirector.getSnapshot();
+    camera.position.set(2450,620,-2380);camera.lookAt(-1900,80,2100);
+    horizonDirector.update(camera.position,S.t,TOD.day);
+    const displaced=horizonDirector.getSnapshot();
+    camera.position.copy(savedPosition);camera.quaternion.copy(savedQuaternion);
+    horizonDirector.update(camera.position,S.t,TOD.day);
+    const restored=horizonDirector.getSnapshot();
+    const stable=before.placementRevision===displaced.placementRevision&&
+      before.placementRevision===restored.placementRevision&&
+      before.placementSignature===displaced.placementSignature&&
+      before.placementSignature===restored.placementSignature;
+    return {profile:before.profile,anchor:before.anchor,displacedCamera:[2450,620,-2380],
+      placementRevision:before.placementRevision,placementSignature:before.placementSignature,stable};
+  },
   // Renderer counters for the landmark budget; info.render is reset each frame by three.
   renderInfo:()=>({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
     programs:renderer.info.programs.length,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,

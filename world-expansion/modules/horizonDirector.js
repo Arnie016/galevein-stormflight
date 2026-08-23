@@ -1,10 +1,13 @@
-// Authored, camera-relative basin backdrop. The geometry is visual-only: gameplay
-// collision remains in the bounded region and Crownfall proxy systems.
+// Authored, world-anchored basin backdrop. The geometry is visual-only: gameplay
+// collision remains in the bounded region and Crownfall proxy systems. Landscape
+// placement never follows the camera or rebuilds around view direction.
 import * as THREE from 'three';
 
 const TAU = Math.PI * 2;
-const PROFILE = 'bounded-reach-basin-v2';
+const PROFILE = 'bounded-reach-island-v3';
 const LAYER_COUNTS = Object.freeze({ near: 24, mid: 34, far: 28, forest: 220, skyMonoliths: 6 });
+const FIXED_WORLD_ANCHOR = Object.freeze({ x:-20, y:0, z:110 });
+const FIXED_ROUTE_HEADING = Math.atan2(-700, 530);
 
 function seeded(index) {
   let value = (index + 1) * 0x9e3779b1;
@@ -90,11 +93,21 @@ export class HorizonDirector {
     this.camera = camera;
     this.near = options.near ?? 850;
     this.far = options.far ?? 3600;
+    this.fixedNear = this.near;
+    this.fixedFar = this.far;
     this.cameraFar = options.cameraFar ?? 9000;
     this.fogDensity = options.fogDensity ?? 0.00082;
-    this.snap = options.snap ?? 400;
     this.silhouetteCount = options.silhouetteCount ?? 24;
     this.silhouetteHeightMul = options.silhouetteHeightMul ?? 1;
+    this.fixedSilhouetteHeightMul = this.silhouetteHeightMul;
+    this.anchor = new THREE.Vector3(
+      options.anchorX ?? FIXED_WORLD_ANCHOR.x,
+      options.anchorY ?? FIXED_WORLD_ANCHOR.y,
+      options.anchorZ ?? FIXED_WORLD_ANCHOR.z
+    );
+    this.routeHeading = options.routeHeading ?? FIXED_ROUTE_HEADING;
+    this.placementRevision = 0;
+    this.placementSignature = null;
     this._hueShift = 0;
     this._emissivePulse = 0.12;
     this.root = new THREE.Group();
@@ -149,21 +162,21 @@ export class HorizonDirector {
     this.position = new THREE.Vector3();
     this.quaternion = new THREE.Quaternion();
     this.scale = new THREE.Vector3();
-    this._lastCellX = Infinity;
-    this._lastCellZ = Infinity;
-    this.update(new THREE.Vector3(), 0, 0);
+    this.rebuild();
+    this.update(null, 0, 0);
   }
 
   applySkyPreset(preset = {}) {
     if (preset.fogDensity != null) this.fogDensity = preset.fogDensity;
-    if (preset.horizonNear != null) this.near = preset.horizonNear;
-    if (preset.horizonFar != null) this.far = preset.horizonFar;
-    if (preset.silhouetteCount != null) this.silhouetteCount = preset.silhouetteCount;
-    if (preset.silhouetteHeightMul != null) this.silhouetteHeightMul = preset.silhouetteHeightMul;
+    // Region presets may grade fog and color, but cannot move or rescale the
+    // physical landscape. ChapterDirector writes these fields before calling
+    // this hook, so restore the authored island contract here.
+    this.near = this.fixedNear;
+    this.far = this.fixedFar;
+    this.silhouetteHeightMul = this.fixedSilhouetteHeightMul;
     if (preset.hueShift != null) this._hueShift = preset.hueShift;
     if (preset.emissivePulse != null) this._emissivePulse = preset.emissivePulse;
     this._skyPreset = preset;
-    this._lastCellX = Infinity;
   }
 
   configureFog(sceneFog) {
@@ -225,28 +238,31 @@ export class HorizonDirector {
     this.monoliths.instanceMatrix.needsUpdate = true;
   }
 
-  rebuild(center) {
-    const baseX = Math.floor(center.x / this.snap) * this.snap;
-    const baseZ = Math.floor(center.z / this.snap) * this.snap;
-    const direction = new THREE.Vector3();
-    this.camera.getWorldDirection(direction);
-    const forwardAngle = Math.atan2(direction.x, direction.z);
+  _calculatePlacementSignature() {
+    let signature = 2166136261;
+    for (const mesh of [...this.layers, this.forest, this.monoliths]) {
+      for (const value of mesh.instanceMatrix.array) {
+        signature ^= Math.round(value * 1000);
+        signature = Math.imul(signature, 16777619);
+      }
+    }
+    return (signature >>> 0).toString(16).padStart(8, '0');
+  }
+
+  rebuild() {
+    const baseX = this.anchor.x;
+    const baseZ = this.anchor.z;
+    const forwardAngle = this.routeHeading;
     this._placeLayer(this.layers[0], 0, LAYER_COUNTS.near, baseX, baseZ, forwardAngle);
     this._placeLayer(this.layers[1], 1, LAYER_COUNTS.mid, baseX, baseZ, forwardAngle);
     this._placeLayer(this.layers[2], 2, LAYER_COUNTS.far, baseX, baseZ, forwardAngle);
     this._placeForest(baseX, baseZ, forwardAngle);
     this._placeMonoliths(baseX, baseZ);
+    this.placementRevision += 1;
+    this.placementSignature = this._calculatePlacementSignature();
   }
 
-  update(cameraPosition, time = 0, dayAmount = 0) {
-    if (!cameraPosition?.isVector3) return;
-    const cellX = Math.floor(cameraPosition.x / this.snap);
-    const cellZ = Math.floor(cameraPosition.z / this.snap);
-    if (cellX !== this._lastCellX || cellZ !== this._lastCellZ) {
-      this._lastCellX = cellX;
-      this._lastCellZ = cellZ;
-      this.rebuild(cameraPosition);
-    }
+  update(_cameraPosition, time = 0, dayAmount = 0) {
     this.configureFog(this.scene.fog);
     const hue = 0.54 + dayAmount * .10 + (this._hueShift || 0);
     this.layers[0].material.color.setHSL(hue, .20, .21 - dayAmount * .055);
@@ -260,6 +276,16 @@ export class HorizonDirector {
   getSnapshot() {
     return {
       profile: PROFILE,
+      placementMode: 'fixed-island-map-v1',
+      worldAnchored: true,
+      cameraRelative: false,
+      cellSnapping: false,
+      viewDirectionRebuilds: false,
+      runtimeRepositioning: false,
+      anchor: this.anchor.toArray(),
+      routeHeadingDegrees: +(THREE.MathUtils.radToDeg(this.routeHeading)).toFixed(1),
+      placementRevision: this.placementRevision,
+      placementSignature: this.placementSignature,
       cameraFar: this.cameraFar,
       fogDensity: this.fogDensity,
       instances: LAYER_COUNTS.near + LAYER_COUNTS.mid + LAYER_COUNTS.far,
