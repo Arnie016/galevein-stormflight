@@ -98,12 +98,12 @@
       "name": "Rib Wastes",
       "theme": "Bleached bone arches and keeper works — vast ribs, gale spire, long night",
       "bounds": {
-        "minX": -620,
-        "maxX": 120,
-        "minZ": -720,
-        "maxZ": -260,
-        "center": [-280, 0, -480],
-        "radius": 380
+        "minX": -780,
+        "maxX": -40,
+        "minZ": -540,
+        "maxZ": 700,
+        "center": [-400, 0, 80],
+        "radius": 600
       },
       "narrative": "Ribs like sea-stacks. Whatever hunted the keepers' fathers was real. The gale spire marks the last shelter before the open night.",
       "storyBeats": ["cross_bone_arches", "destroy_tower", "survive_long_night"],

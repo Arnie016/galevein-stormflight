@@ -107,6 +107,17 @@ five instanced draw calls and no external art. It improves spatial hierarchy
 and forest density, but remains stylized procedural environment art rather
 than photoreal terrain.
 
+Build r19 turns that basin into **The Long Night route** instead of leaving it
+as scenery beside the real objective path. Ten alternating cliff shoulders and
+three shrine seats now follow beacons nine through eleven, with 69.4 units of
+measured minimum route clearance and a stronger Chapter IV fog layer. Beacon
+eleven is sealed until all three wind shrines have been destroyed with charged
+plasma; the HUD reports the remaining shrines and then opens the final approach.
+The release verifier fires six real projectiles through the production combat
+path to prove the gate. This fixes an objective-placement bug and makes the
+chapter feel like a bounded flight-and-combat valley, but its faceted procedural
+geology is still stylized rather than photoreal.
+
 ## Build the release artifact
 
 ```sh
@@ -137,7 +148,7 @@ This is a free, non-commercial prototype under a working title. It uses an origi
 
 ## Flight harness
 
-The development workspace includes a local preflight harness inspired by the supplied game-harness reference, adapted to this game rather than imported from it. It boots the exact static artifact in an isolated browser, verifies the one original creature and procedural world, checks Crownfall's scale, LOD budget, collision proxies, and protected-route clearance, proves that one deterministic wind field couples physics, weather, audio, and the WebGPU sky, proves the WebGPU ocean or fallback decision, exercises Story, Practice, and Chapter entry paths, and asserts the escape, detection, and nightfall outcomes.
+The development workspace includes a local preflight harness inspired by the supplied game-harness reference, adapted to this game rather than imported from it. It boots the exact static artifact in an isolated browser, verifies the one original creature and procedural world, checks Crownfall and Keeper Hollow scale, collision proxies, and protected-route clearance, proves that one deterministic wind field couples physics, weather, audio, and the WebGPU sky, proves the WebGPU ocean or fallback decision, exercises Story, Practice, and Chapter entry paths, fires real charged-plasma projectiles through the three-shrine Long Night gate, and asserts the escape, detection, and nightfall outcomes.
 
 ```sh
 node scripts/flight-harness.mjs --root release --out /tmp/galevein-flight-harness.json

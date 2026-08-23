@@ -9,6 +9,12 @@ const PROFILE = 'keeper-hollow-biome-v1';
 const FOREST_COUNT = 520;
 const TALUS_COUNT = 112;
 
+export const KEEPER_SHRINE_SITES = Object.freeze([
+  Object.freeze({ id:'south-watch', x:-220, z:-220, baseH:42, yaw0:0, rate:.42 }),
+  Object.freeze({ id:'west-watch', x:-650, z:40, baseH:34, yaw0:2.1, rate:-.34 }),
+  Object.freeze({ id:'north-watch', x:-200, z:460, baseH:38, yaw0:4.0, rate:.29 })
+]);
+
 function hash(index) {
   let value = Math.imul(index + 1, 0x9e3779b1);
   value ^= value >>> 16; value = Math.imul(value, 0x85ebca6b); value ^= value >>> 13;
@@ -86,26 +92,23 @@ function coniferGeometry(radialSegments = 7) {
   return geometry;
 }
 
-// The first six entries preserve the old rock() collision positions/radii/tops.
-// Two more low stacks seat the formerly floating east and west shrines. The
-// remaining shoulders frame the route from outside its protected lane.
+// Three low stacks seat the route-aligned wind shrines. Ten larger shoulders
+// alternate along the Chapter IV polyline, creating a bounded flyable valley
+// while remaining outside the protected lane.
 const MASSES = Object.freeze([
-  { id:'hollow-heart', x:0, z:0, radius:34, top:46, proxyRadius:27.88, proxyTop:46, legacy:true, shrine:true },
-  { id:'east-fin', x:58, z:32, radius:20, top:32, proxyRadius:14.76, proxyTop:32, legacy:true },
-  { id:'west-fin', x:-64, z:-22, radius:18, top:38, proxyRadius:13.12, proxyTop:38, legacy:true },
-  { id:'south-tooth', x:34, z:-58, radius:15, top:24, proxyRadius:10.66, proxyTop:24, legacy:true },
-  { id:'north-tooth', x:-30, z:70, radius:16, top:28, proxyRadius:11.48, proxyTop:28, legacy:true },
-  { id:'east-tooth', x:90, z:-30, radius:14, top:22, proxyRadius:9.84, proxyTop:22, legacy:true },
-  { id:'east-shrine-seat', x:120, z:90, radius:24, top:30, proxyRadius:16, proxyTop:30, shrine:true },
-  { id:'west-shrine-seat', x:-140, z:60, radius:28, top:34, proxyRadius:18, proxyTop:34, shrine:true },
-  { id:'northwest-wall', x:-300, z:0, radius:70, top:168, proxyRadius:40, proxyTop:168, shoulder:true },
-  { id:'north-mist-wall', x:-100, z:300, radius:110, top:226, proxyRadius:64, proxyTop:226, shoulder:true },
-  { id:'north-crown', x:100, z:400, radius:115, top:254, proxyRadius:67, proxyTop:254, shoulder:true },
-  { id:'northeast-gate', x:300, z:500, radius:120, top:272, proxyRadius:70, proxyTop:272, shoulder:true },
-  { id:'east-rampart', x:600, z:0, radius:110, top:232, proxyRadius:64, proxyTop:232, shoulder:true },
-  { id:'southeast-wall', x:600, z:-200, radius:110, top:246, proxyRadius:64, proxyTop:246, shoulder:true },
-  { id:'south-crown', x:0, z:-700, radius:120, top:268, proxyRadius:70, proxyTop:268, shoulder:true },
-  { id:'southwest-wall', x:-500, z:-400, radius:110, top:242, proxyRadius:64, proxyTop:242, shoulder:true }
+  { id:'south-watch-seat', x:-220, z:-220, radius:28, top:46, proxyRadius:18, proxyTop:46, shrine:true },
+  { id:'west-watch-seat', x:-650, z:40, radius:30, top:38, proxyRadius:19, proxyTop:38, shrine:true },
+  { id:'north-watch-seat', x:-200, z:460, radius:30, top:42, proxyRadius:19, proxyTop:42, shrine:true },
+  { id:'southwest-threshold', x:-450, z:-500, radius:90, top:210, proxyRadius:52, proxyTop:210, shoulder:true },
+  { id:'southeast-threshold', x:-150, z:-350, radius:100, top:225, proxyRadius:58, proxyTop:225, shoulder:true },
+  { id:'west-gully', x:-520, z:-280, radius:92, top:218, proxyRadius:53, proxyTop:218, shoulder:true },
+  { id:'east-gully', x:-180, z:-120, radius:110, top:240, proxyRadius:64, proxyTop:240, shoulder:true },
+  { id:'west-crown', x:-720, z:140, radius:105, top:248, proxyRadius:61, proxyTop:248, shoulder:true },
+  { id:'middle-crown', x:-380, z:100, radius:82, top:196, proxyRadius:48, proxyTop:196, shoulder:true },
+  { id:'northwest-rampart', x:-650, z:420, radius:110, top:255, proxyRadius:64, proxyTop:255, shoulder:true },
+  { id:'northeast-rampart', x:-300, z:350, radius:78, top:190, proxyRadius:45, proxyTop:190, shoulder:true },
+  { id:'northwest-gate', x:-450, z:650, radius:115, top:268, proxyRadius:67, proxyTop:268, shoulder:true },
+  { id:'northeast-gate', x:-80, z:620, radius:110, top:245, proxyRadius:64, proxyTop:245, shoulder:true }
 ]);
 
 function pointSegmentDistance(x, z, a, b) {
@@ -163,7 +166,7 @@ export class KeeperHollowBiome {
     this.forest = new THREE.InstancedMesh(coniferGeometry(), this.forestMaterial, FOREST_COUNT);
     this.forest.name = 'KeeperHollow_LedgeForest'; this.forest.frustumCulled = false;
     const forestShoulders = MASSES.filter((mass) => mass.shoulder);
-    const forestSeats = MASSES.filter((mass) => mass.shrine && !mass.legacy);
+    const forestSeats = MASSES.filter((mass) => mass.shrine);
     for (let index = 0; index < FOREST_COUNT; index += 1) {
       const mass = index % 11 === 0
         ? forestSeats[Math.floor(index / 11) % forestSeats.length]
@@ -243,8 +246,9 @@ export class KeeperHollowBiome {
       forestDistribution:'deterministic-ledge-clusters', fogBackdrop:'shared-exponential-atmosphere',
       wetAprons:this.wetAprons.count, surfCollars:this.surf.count,
       drawCalls:5, collisionProxies:MASSES.length,
-      legacyCoreProxiesPreserved:MASSES.filter((mass) => mass.legacy).length === 6,
+      collisionContract:'chapter-iv-route-corridor-v2', routeAligned:true,
       routeMinimumClearance:this.routeMinimumClearance,
+      shrineSites:KEEPER_SHRINE_SITES.map(site=>({id:site.id,x:site.x,z:site.z,baseH:site.baseH})),
       triangles:triangles(this.cliffs) + triangles(this.forest) + triangles(this.talus) + triangles(this.wetAprons) + triangles(this.surf),
       visualOnlyForest:true, productionDefault:true
     };

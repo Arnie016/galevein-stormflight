@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-keeper-hollow-r18">
+<meta name="galevein-build" content="stormflight-long-night-route-r19">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -701,7 +701,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { CinematicDofPipeline } from './world-expansion/modules/cinematicDof.js';
 import { HorizonDirector } from './world-expansion/modules/horizonDirector.js';
-import { KeeperHollowBiome } from './world-expansion/modules/keeperHollowBiome.js';
+import { KeeperHollowBiome, KEEPER_SHRINE_SITES } from './world-expansion/modules/keeperHollowBiome.js';
 import { LandmarkPath } from './world-expansion/modules/landmarkPath.js';
 import { gameStructure } from './world-expansion/modules/gameStructure.js';
 import { defaultRig, rigCatalog } from './world-expansion/modules/dragonRigs.js';
@@ -1094,7 +1094,11 @@ function updateShores(){
 
 /* ---- rocks (collidable) + purple crystal spires ---- */
 const colliders = [];   // {x,z,r,top}
-function colliderActive(c){ return !(c.region==='serpent-canyon' && S.chapter>=3); }
+function colliderActive(c){
+  if(c.region==='serpent-canyon' && S.chapter>=3) return false;
+  if(c.keeperHollow && S.chapter!==3) return false;
+  return true;
+}
 const rockMat = new THREE.MeshStandardMaterial({ color:0x141922, roughness:.72, metalness:.10, flatShading:true });
 const iceMat  = new THREE.MeshStandardMaterial({ color:0xbcd6e8, roughness:.22, metalness:.18,
   transparent:true, opacity:.55, flatShading:true });
@@ -1364,9 +1368,7 @@ function beacon(x,z,baseH,yaw0,rate,warm){
     hp:4, maxHp:4, hbBg, hbFill, hbW, hbT:0, fireCd:1.5+Math.random(), alerted:0 };
   searchlights.push(sl); return sl;
 }
-beacon(0,0,42,0,0.42,true);
-beacon(120,90,26,2.1,-0.34,true);
-beacon(-140,60,30,4.0,0.29,true);
+for(const site of KEEPER_SHRINE_SITES) beacon(site.x,site.z,site.baseH,site.yaw0,site.rate,true);
 
 /* ---- menu patrol skiff: keeper sight on the water finds the resting dragon ---- */
 // Wake Perch sits inside the declared cove and faces the three-ring launch corridor.
@@ -1447,7 +1449,7 @@ const route=[[520,58,340],[400,68,180],[260,68,20],[-60,72,-150],            // 
   [140,60,-260],[420,70,-380],[520,64,-470],                                  // out to the Drowned Village
   [180,80,-560],[-320,90,-420],[-560,96,240],                                 // under the Bone Arches
   [-260,110,560],[0,120,780]];                                                // north to the Tempest Gate
-const keeperHollowBiome=new KeeperHollowBiome(scene,{flightRoute:route});
+const keeperHollowBiome=new KeeperHollowBiome(scene,{flightRoute:route.slice(8,11)});
 for(const proxy of keeperHollowBiome.getCollisionProxies()) colliders.push({
   x:proxy.x,z:proxy.z,r:proxy.radius,top:proxy.top,keeperHollow:true,landmark:proxy.id
 });
@@ -1465,6 +1467,7 @@ function setStormVaneState(vane,hit){
 for(let i=0;i<N_RINGS;i++){
   const [x,y,z]=route[i];
   const m=stormVaneMesh();
+  m.userData.routeIndex=i;
   m.position.set(x,y,z);
   const nx = route[(i+1)%N_RINGS][0], nz=route[(i+1)%N_RINGS][2];
   m.lookAt(new THREE.Vector3(nx,y,nz)); setStormVaneState(m,false); m.visible=false;
@@ -2229,7 +2232,20 @@ function destroyTower(sl,power){
       spin:new THREE.Vector3(Math.random()*6,Math.random()*6,Math.random()*6), life:3.5});
   }
   S.flash=Math.max(S.flash,0.85); S.shake=Math.max(S.shake,0.9); AU.play('crash',0.7);
-  popup('SHRINE BROKEN'); if(D.glow) D.glow.intensity=140;
+  const broken=searchlights.filter(shrine=>shrine.destroyed).length;
+  popup(`SHRINE BROKEN · ${broken}/3`);
+  if(broken===3) storyPop('The Hollow exhales. Beacon eleven opens beyond the broken wind.',5.5);
+  if(D.glow) D.glow.intensity=140;
+}
+function keeperObjectiveSnapshot(){
+  const destroyed=searchlights.filter(shrine=>shrine.destroyed).length;
+  return {
+    profile:'long-night-shrine-lock-v1', required:3, destroyed, remaining:Math.max(0,3-destroyed),
+    gateBeacon:11, gateRouteIndex:10,
+    blocking:S.chapter===3&&S.score>=10&&destroyed<3,
+    enforced:S.chapter===3&&destroyed<3,
+    shrineSites:KEEPER_SHRINE_SITES.map(site=>({id:site.id,x:site.x,z:site.z,baseH:site.baseH}))
+  };
 }
 const debris=[];
 function updateDebris(dt){
@@ -2907,7 +2923,8 @@ function driveTimeOfDay(dt){
   hemi.color.copy(_hemiSkyDay).lerp(_hemiSkyNight,d); hemi.groundColor.copy(_hemiGroundDay).lerp(_hemiGroundNight,d); hemi.intensity=.78+.18*d;
   rimP.intensity=.82+.82*d; fillT.intensity=.58+.42*d;
   scene.fog.color.copy(_fogSet).lerp(_fogNight, d).lerp(_fogDay, dayW);
-  horizonDirector.fogDensity=.00058+.00032*d+.00010*THREE.MathUtils.smoothstep(d,.78,1);
+  const keeperValleyFog=S.started&&S.chapter===3?.00018:0;
+  horizonDirector.fogDensity=.00058+.00032*d+.00010*THREE.MathUtils.smoothstep(d,.78,1)+keeperValleyFog;
   scene.fog.density=horizonDirector.fogDensity;
   renderer.toneMappingExposure=1.62-.12*d + dayW*.14;
   landmarkPath.setNightfall(d,S.t);
@@ -2957,7 +2974,7 @@ function tick(dt){
   landmarkPath.root.visible=!!S.started;
   horizonDirector.root.visible=!!S.started;
   serpentCanyonRoot.visible=!!S.started&&S.chapter<3;
-  keeperHollowBiome.setVisible(!!S.started&&S.chapter>=3);
+  keeperHollowBiome.setVisible(!!S.started&&S.chapter===3);
   gateGroup.visible=!!S.started;
   for(const object of tempestGateScenery) object.visible=!!S.started;
   landmarkPath.update(D.group.position);
@@ -3258,6 +3275,13 @@ function tick(dt){
       r.userData.flowArc.material.opacity=r.material.opacity*.48;
     }
     if(p.distanceTo(r.position)<BEACON_STYLE.mainHitRadius){
+      if(S.chapter===3&&r.userData.routeIndex===10&&keeperObjectiveSnapshot().destroyed<3){
+        if((S.keeperGateWarnAt||0)<=S.t){
+          S.keeperGateWarnAt=S.t+1.8;
+          popup(`BEACON SEALED · ${keeperObjectiveSnapshot().remaining} SHRINES REMAIN`);
+        }
+        continue;
+      }
       setStormVaneState(r,true); r.userData.pop=1; S.score++;
       const clean=S.detection<.18, rewards=[2,2,3,2,3,2,3,3,4,3,4,5];
       const earned=rewards[S.score-1]+(clean?1:0);
@@ -3483,7 +3507,7 @@ function reset(){
   clearAchievementUi(true);
   startAudio(); D.group.position.set(REST.x,REST.y+6,REST.z); D.yaw=Math.PI; D.pitch=0.18; D.roll=0; D.speed=30; input.flap=false;
   S.done=false; S.flightT=0; S.detection=0; S.score=0; S.shake=0; S.fpv=false; S.nextThunder=S.t+5; S.shootCd=0;
-  S.finishing=false; S.finishToken++; GATE.open=0; S.impactCd=0; S.alertStage=0;
+  S.finishing=false; S.finishToken++; GATE.open=0; S.impactCd=0; S.alertStage=0; S.keeperGateWarnAt=0;
   S.boost=0; S.accel=0; S.prevSpeed=30; S.boomed=false; S.charges=3; S.chargeT=-1; S.scatterCd=0; S.pulseCd=0; S.grace=3; S.launching=true;
   TOD.day=0.0; S.keepersWoke=false; ROG.amp=0; ROG.life=0; ROG.next=6; uRA.value=0;
   if(D.model) D.model.scale.setScalar(9);
@@ -3817,6 +3841,38 @@ function simJumpState(patch={}){
   if(patch.speed!=null){ D.speed=patch.speed; S.prevSpeed=patch.speed; }
   return SIM.state();
 }
+function simLongNightObjectiveProof(){
+  reset();simJumpChapter(3);S.launching=false;S.done=false;S.grace=999;TOD.day=.58;uDay.value=TOD.day;
+  S.score=10;
+  for(let index=0;index<rings.length;index++)setStormVaneState(rings[index],index<10);
+  const gateRing=rings[10];
+  D.group.position.copy(gateRing.position);D.speed=0;D.pitch=0;D.roll=0;
+  tick(1/60);
+  const blockedScore=S.score,blocked=keeperObjectiveSnapshot();
+  const combat=[];
+  for(let index=0;index<searchlights.length;index++){
+    const shrine=searchlights[index],before=shrine.hp;
+    const approach=index===1
+      ? new THREE.Vector3(shrine.lampPos.x+110,shrine.lampPos.y,shrine.lampPos.z)
+      : new THREE.Vector3(shrine.lampPos.x,shrine.lampPos.y,shrine.lampPos.z-110);
+    D.group.position.copy(approach);
+    D.yaw=simHeadingTo(shrine.lampPos.x,shrine.lampPos.y,shrine.lampPos.z);D.pitch=0;D.roll=0;D.speed=0;
+    D.group.rotation.set(0,D.yaw,0);D.group.updateMatrixWorld(true);
+    const shots=[];
+    for(let shotIndex=0;shotIndex<2&&!shrine.destroyed;shotIndex++){
+      S.charges=3;S.shootCd=0;const fired=shoot(1),bolt=bolts.at(-1);let minimum=Infinity;
+      for(let step=0;step<40;step++){
+        if(bolt) minimum=Math.min(minimum,bolt.m.position.distanceTo(shrine.lampPos));
+        updateBolts(1/60);
+      }
+      shots.push({fired,minimum:Number.isFinite(minimum)?+minimum.toFixed(2):null});
+    }
+    combat.push({id:KEEPER_SHRINE_SITES[index].id,before,after:shrine.hp,destroyed:shrine.destroyed,shots});
+  }
+  D.group.position.copy(gateRing.position);D.speed=0;D.pitch=0;D.roll=0;S.detection=0;
+  tick(1/60);
+  return {blockedScore,blocked,combat,unlockedScore:S.score,objective:keeperObjectiveSnapshot(),state:SIM.state()};
+}
 async function simRunSteps({dt=1/60, steps=1, controls=null, reseat=null}={}){
   if(controls) simSetControls(controls);
   if(reseat) reseat();
@@ -3896,6 +3952,8 @@ window.SIM={
     achievement('4 SKILLS MAPPED',SKILLS.filter(sk=>sk.unlockAt!=null).map(sk=>sk.name).join(' · '),'CODEX');
     return achievementUiSnapshot(); },
   route:()=>route.map((p,i)=>({beacon:i+1,x:p[0],y:p[1],z:p[2]})),
+  keeperObjective:keeperObjectiveSnapshot,
+  longNightObjectiveProof:simLongNightObjectiveProof,
   drownedVillage:drownedVillageSnapshot,
   objectiveStyle:()=>({
     ...BEACON_STYLE,
@@ -3921,6 +3979,7 @@ window.SIM={
     detectionAuthority:'unchanged-angular-occlusion-v1',
     ranges:searchlights.map(shrine=>+shrine.range.toFixed(1)),
     health:searchlights.map(shrine=>shrine.maxHp),
+    sites:KEEPER_SHRINE_SITES.map(site=>({id:site.id,x:site.x,z:site.z,baseH:site.baseH})),
     windCoupled:searchlights.every(shrine=>shrine.ribbons?.name==='Keeper_SegmentedWindShear'),
     destroyable:searchlights.every(shrine=>shrine.maxHp===4)
   }),
@@ -3987,13 +4046,13 @@ window.SIM={
   },
   keeperStage:(view='shrine')=>{
     const views={
-      shrine:{position:[145,96,158],target:[0,70,0],day:.12,tower:0},
-      shear:{position:[286,104,210],target:[120,58,90],day:.58,tower:1},
-      storm:{position:[-286,122,186],target:[-140,62,60],day:.90,tower:2}
+      shrine:{position:[-320,120,-420],target:[-220,72,-220],day:.12,tower:0},
+      shear:{position:[-560,132,240],target:[-650,66,40],day:.58,tower:1},
+      storm:{position:[-260,150,560],target:[-200,70,460],day:.90,tower:2}
     };
     const spec=views[view]||views.shrine;simJumpChapter(3);S.finishToken++;
     S.started=true;S.done=true;S.finishing=false;S.captureKind=null;S.fpv=false;S.shake=0;S.boost=0;S.accel=0;
-    S.chapter=3;S.tutDone=true;S.score=8;S.grace=999;TOD.day=spec.day;uDay.value=TOD.day;
+    S.chapter=3;S.tutDone=true;S.score=8;S.grace=999;TOD.day=spec.day;uDay.value=TOD.day;driveTimeOfDay(0);
     menuEl.classList.add('hide','live');$('hud').classList.add('on');$('over').classList.add('hide');$('ach').classList.remove('on');
     for(const ring of rings)ring.visible=false;popEl.textContent='';popEl.style.animation='none';storyEl.textContent='';storyEl.style.animation='none';
     searchlights.forEach((shrine,index)=>{shrine.group.visible=true;shrine.destroyed=false;shrine.cone.visible=true;shrine.ribbons.visible=true;
