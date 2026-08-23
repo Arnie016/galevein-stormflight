@@ -13,6 +13,20 @@ import { createSkyDome } from './galeveinPoseidonSky.js';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const query = new URLSearchParams(location.search);
+const CYCLE_PROFILE = 'day-dusk-night-reflection-v2';
+const CYCLE = Object.freeze({
+  horizon: [new Color(0x8fb6c3), new Color(0xb76b72), new Color(0x11172c)],
+  zenith: [new Color(0x315c83), new Color(0x29345c), new Color(0x050917)],
+  ambient: [new Color(0x9db7b1), new Color(0x705f70), new Color(0x16243e)],
+  sun: [new Color(0xfff1cf), new Color(0xffb474), new Color(0x9eb9ff)]
+});
+
+function ease(value) { return value * value * (3 - 2 * value); }
+function cycleColor(target, colors, day) {
+  if (day <= .56) target.copy(colors[0]).lerp(colors[1], ease(day / .56));
+  else target.copy(colors[1]).lerp(colors[2], ease((day - .56) / .44));
+}
+function cyclePhase(day) { return day < .40 ? 'daylight' : day < .73 ? 'dusk' : 'night'; }
 
 export function createPoseidonOceanLayer({ canvas, onModeChange = () => {} }) {
   const state = {
@@ -27,6 +41,9 @@ export function createPoseidonOceanLayer({ canvas, onModeChange = () => {} }) {
     quality: 'med',
     initMs: 0,
     lastError: null,
+    cycleProfile: CYCLE_PROFILE,
+    cyclePhase: 'daylight',
+    cycleAmount: 0,
     wind: {
       profile: 'galevein-shared-wind-v1',
       skyProfile: 'webgpu-advected-clouds-v1',
@@ -104,10 +121,10 @@ export function createPoseidonOceanLayer({ canvas, onModeChange = () => {} }) {
       const c = params.colors;
       shading = {
         sunDir: uniform(new Vector3(-0.62, 0.46, 0.34).normalize()),
-        sunColor: uniform(new Color(0xffc48a).multiplyScalar(1.18)),
-        horizon: uniform(new Color(0x8b5871)),
-        zenith: uniform(new Color(0x19284f)),
-        ambient: uniform(new Color(0x665b76)),
+        sunColor: uniform(CYCLE.sun[0].clone().multiplyScalar(1.18)),
+        horizon: uniform(CYCLE.horizon[0].clone()),
+        zenith: uniform(CYCLE.zenith[0].clone()),
+        ambient: uniform(CYCLE.ambient[0].clone()),
         deepColor: uniform(new Color(c.deep)),
         scatterColor: uniform(new Color(c.scatter)),
         palette: uniform(1),
@@ -193,18 +210,22 @@ export function createPoseidonOceanLayer({ canvas, onModeChange = () => {} }) {
     const wl = Math.hypot(wx, wz) || 1;
     const windSpeed = clamp(Number(wind.speed ?? 10.5), 0, 30);
     const gust = clamp(Number(wind.gust ?? 0), 0, 1);
-    shading.horizon.value.set(0x8b5871).lerp(new Color(0x15172f), day);
-    shading.zenith.value.set(0x19284f).lerp(new Color(0x060a1b), day);
-    shading.ambient.value.set(0x665b76).lerp(new Color(0x17284a), day);
-    shading.sunColor.value.set(0xffc48a).lerp(new Color(0xaabfff), day).multiplyScalar(1.18 - day * 0.22);
-    shading.sunDir.value.set(-0.62, 0.46 - day * 0.22, 0.34).normalize();
+    cycleColor(shading.horizon.value, CYCLE.horizon, day);
+    cycleColor(shading.zenith.value, CYCLE.zenith, day);
+    cycleColor(shading.ambient.value, CYCLE.ambient, day);
+    cycleColor(shading.sunColor.value, CYCLE.sun, day);
+    shading.sunColor.value.multiplyScalar(day < .56 ? 1.22 - day * .08 : 1.18 - (day - .56) * .50);
+    const solarArc = Math.cos(day * Math.PI) * .44;
+    shading.sunDir.value.set(-0.62, .18 + solarArc, .34).normalize();
     shading.time.value = elapsed;
     shading.day.value = day;
     shading.windDir.value.set(wx / wl, wz / wl);
     shading.windSpeed.value = windSpeed;
     shading.gust.value = gust;
-    shading.hazeAir.value = 1 / (3800 - day * 900);
-    shading.hazeWater.value = 1 / (5200 - day * 900);
+    shading.hazeAir.value = 1 / (4200 - day * 1350);
+    shading.hazeWater.value = 1 / (5700 - day * 1300);
+    state.cyclePhase = cyclePhase(day);
+    state.cycleAmount = +day.toFixed(3);
 
     ocean.evolve(elapsed, dt * 0.72);
     const ox = Math.round(camera.position.x / innerSpacing) * innerSpacing;

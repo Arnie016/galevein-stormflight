@@ -36,6 +36,8 @@ This checklist applies only to the generated `release/` artifact. It does not cl
 - Stormscar r12 regression proof: the post-combat-change Story/WebGPU harness passed 24/24 checks, including WebGPU first-frame submission and the forced WebGL fallback; it reported no external requests or browser errors.
 - Server foundation r13 proof: a dependency-free loopback WebSocket server paired exactly two browser clients while both reported `authoritative: false` and `serverAuthoritative: true`. The 11/11 client run and three server assertions recorded one accepted Volt Lance, Arc Scatter, and Wingbreak Pulse with zero rejects, three objective captures, one death, one respawn, and one converged first-to-three winner. The unchanged BroadcastChannel fallback passed 10/10 and the Story/WebGPU regression passed 24/24.
 - Crownfall r14 visual proof: the terrain retains its 980 x 740 footprint, 560-unit height, five-draw-call ceiling, four collision proxies, and 65.1-unit protected-route clearance while changing to a connected twin-peak silhouette with a readable Stormscar shoulder. Slope-aware biomes and two generated 256 x 256 normal/roughness textures replace smooth altitude bands; the revised LODs measure 3,518 / 940 / 394 triangles. Three matched views passed the authored-runtime assertion. An earlier high-frequency surface candidate was rejected because it produced visible moire, so it is not release evidence. The exact final release then passed the Story/WebGPU harness 24/24 and the same-device Stormscar 1v1 harness 10/10, each with zero external requests and zero browser console problems.
+- Operations deck r15 proof: the preflight UI now exposes Story Campaign and Stormscar Duel as its two primary routes, with Practice Cove and Checkpoints as utilities. The local-duel selection explicitly reports `TWO TABS · SAME DEVICE`; it does not claim online matchmaking. The exact local release passed 25/25 Story/WebGPU assertions and 10/10 same-device duel assertions with zero external requests or browser console problems. The loopback server-authority run passed 11/11 browser assertions plus all three server assertions: two connections, one match, one accepted attack from each class, zero rejected attacks, three captures, one death, and one respawn. A build-only test proved that `GALEVEIN_DUEL_SERVER_URL` injects an author-pinned credential-free WSS endpoint, and the final public-bound build was rebuilt with no endpoint configured.
+- Bounded Reach r16 proof: the old 30-cone and ten-billboard horizon is absent. The replacement reports three deterministic mountain layers, 86 volumetric mountain instances, 220 forest instances, six dimensional sky monoliths, five draw calls, a forward valley corridor, and zero billboard silhouettes. Crownfall v3 reports 16,956 / 4,350 / 1,148 visible LOD triangles, seven maximum draw calls, 128 shore-talus rocks, 141 ledge trees, four collision proxies, and the unchanged 65.1-unit Story-route clearance. Poseidon reports `day-dusk-night-reflection-v2`, a submitted WebGPU first frame, and safe forced WebGL fallback. The exact release passed 27/27 Story/WebGPU assertions, 10/10 same-device duel assertions, and 11/11 server-routed browser assertions plus all three authority-server assertions with zero external requests or console problems. Three locally captured WebGL fallback views document daylight approach, fog-valley dusk, and night coast; Chrome's WebGPU surface readback timed out, so those image files are not claimed as WebGPU screenshots.
 - Current working-title web search did not reveal an exact game/product match, but that is not a trademark clearance or legal opinion.
 
 ## Release boundary
@@ -47,9 +49,11 @@ commercial release. A final human visual review is still required; the current
 procedural mid-flight architecture remains placeholder-quality, and a green
 harness or live URL does not establish store readiness or legal clearance.
 
-Crownfall fixes macro scale and navigational hierarchy, but its terrain
-materials and remaining distant silhouettes are still prototype-quality. It
-does not establish Fortnite-level art fidelity or a complete open-world RPG.
+Crownfall and the Bounded Reach now establish macro scale, coastal geology,
+forested depth, and a navigable valley hierarchy, but their code-generated
+vegetation, lighthouse architecture, and distant materials remain stylized
+prototype art. They do not establish Fortnite-level fidelity or a complete
+open-world RPG.
 
 The public Stormscar 1v1 Lab remains same-device/two-tab transport built on
 `BroadcastChannel`. The source workspace now contains a locally proven

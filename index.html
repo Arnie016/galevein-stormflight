@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-crownfall-biomes-r14">
+<meta name="galevein-build" content="stormflight-bounded-reach-r16">
+<meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
   :root{ --purple:#70cbbb; --teal:#59f0d5; --amber:#ffc27a; --warn:#ff6b68;
@@ -376,7 +377,7 @@
     box-shadow:0 0 18px rgba(150,100,255,.35); }
   #rigPicker .rig:disabled{ opacity:.35; cursor:default; }
 
-  /* Wake Perch route board: one primary journey, two quieter utility routes. */
+  /* Wake Perch operations deck: Campaign and Versus are the two primary promises. */
   #lobbyHub{ position:absolute; inset:0; z-index:4; display:flex; align-items:center; justify-content:flex-start;
     padding-left:clamp(24px,6vw,96px); box-sizing:border-box; pointer-events:none; opacity:0; transition:opacity .5s; }
   #lobbyHub.on{ opacity:1; pointer-events:auto; }
@@ -394,13 +395,24 @@
     border:1px solid rgba(112,203,187,.22); background:linear-gradient(180deg,rgba(19,28,34,.88),rgba(9,15,20,.82));
     box-shadow:0 8px 32px rgba(0,0,0,.45); transition:transform .15s, border-color .15s, background .15s;
     color:inherit; font:inherit; text-align:left; }
-  #lobbyHub .lobby-node:first-child{ grid-column:1/-1; padding:15px 16px; }
+  #lobbyHub .lobby-node[data-lobby-kind="primary"]{ min-height:132px; padding:15px 16px; position:relative; overflow:hidden; }
+  #lobbyHub .lobby-node[data-lobby-kind="primary"]::after{ content:''; position:absolute; inset:auto -25px -42px auto;
+    width:110px; height:110px; border:1px solid rgba(89,240,213,.12); border-radius:50%; }
+  #lobbyHub .lobby-node[data-lobby-kind="utility"]{ padding:9px 12px; background:rgba(8,14,19,.74); }
   #lobbyHub .lobby-node:hover{ transform:translateY(-2px); border-color:rgba(89,240,213,.72); }
   #lobbyHub .lobby-node.on{ transform:none; border-color:rgba(89,240,213,.88);
     background:linear-gradient(180deg,rgba(25,58,58,.94),rgba(11,29,31,.9)); box-shadow:inset 3px 0 0 var(--teal),0 10px 32px rgba(12,85,83,.2); }
   #lobbyHub .lobby-node:focus-visible{ outline:2px solid var(--teal); outline-offset:3px; }
   #lobbyHub .lobby-node b{ display:block; font-family:var(--display); font-size:15px; letter-spacing:.18em; color:#eaf1ff; }
   #lobbyHub .lobby-node i{ display:block; margin-top:6px; font-size:10px; color:#8fa0c2; font-style:normal; line-height:1.4; }
+  #lobbyHub .lobby-mode-kicker{ display:block; margin-bottom:9px; font:700 8px var(--mono); letter-spacing:.24em; color:var(--amber); }
+  #lobbyHub .lobby-mode-meta{ display:block; margin-top:13px; font:700 9px var(--mono); letter-spacing:.13em; color:#59f0d5; }
+  #lobbyHub .lobby-utilities{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  #lobbyTransport{ display:grid; grid-template-columns:auto 1fr; gap:5px 14px; align-items:center; padding:10px 12px;
+    border:1px solid rgba(255,194,122,.24); border-radius:9px; background:linear-gradient(90deg,rgba(54,39,29,.54),rgba(10,20,24,.5)); }
+  #lobbyTransport span{ grid-row:1/3; font:700 8px var(--mono); letter-spacing:.2em; color:var(--amber); }
+  #lobbyTransport b{ font:700 10px var(--display); letter-spacing:.14em; color:#eaf1ff; }
+  #lobbyTransport i{ font:9px var(--mono); line-height:1.35; color:#8fa0c2; font-style:normal; }
   #flightLoadout{ padding:8px 12px 7px; border-radius:9px; border:1px solid rgba(112,203,187,.18); background:rgba(5,11,15,.5); }
   #flightLoadout #rigPicker{ margin:6px 0 0; }
   #flightLoadout #rigPicker .rig{ cursor:default; }
@@ -419,6 +431,8 @@
   @media (max-width:760px){
     #lobbyHub{ justify-content:center; padding:18px; }
     #lobbyHub .preflight-console{ width:min(92vw,560px); padding:18px; }
+    #lobbyHub .lobby-nodes{ grid-template-columns:1fr; }
+    #lobbyHub .lobby-node[data-lobby-kind="primary"]{ min-height:112px; }
   }
   #menu.hub-open .card > div:first-child,#menu.hub-open .playwrap,#menu.hub-open .dock{ opacity:0; transform:translateY(10px) scale(.98); filter:blur(5px); pointer-events:none; }
   #menu.hub-open::before,#menu.hub-open::after,#menu.hub-open #sheen,#menu.hub-open .ripple{ opacity:0; animation:none; }
@@ -596,15 +610,18 @@
     </div>
     <div id="lobbyHub" class="hide">
       <div class="preflight-console">
-        <div class="lobby-hub-kicker">Wake Perch · first light</div>
-        <div class="lobby-promise"><b>One road through the storm.</b>Learn Galevein's weight in the cove, then follow twelve beacons to the Tempest Gate before nightfall.</div>
-        <div class="preflight-label">Choose how to fly</div>
+        <div class="lobby-hub-kicker">Wake Perch · flight operations</div>
+        <div class="lobby-promise"><b>Choose your promise.</b>Continue Rook's flight through the Sable Reach, or enter Stormscar for a focused 1v1 duel.</div>
+        <div class="preflight-label">Primary routes</div>
         <div class="lobby-nodes" aria-label="Flight route">
-          <button class="lobby-node" type="button" data-lobby-mode="story" aria-pressed="false"><b>CONTINUE THE STORY</b><i>Three cove rings · twelve-beacon escape · one clear ending</i></button>
-          <button class="lobby-node" type="button" data-lobby-mode="practice" aria-pressed="false"><b>PRACTICE</b><i>Learn the cove without keeper pursuit</i></button>
-          <button class="lobby-node" type="button" data-lobby-mode="duel" aria-pressed="false"><b>STORMSCAR 1V1 LAB</b><i>Two tabs · three attacks · contested Stormheart · respawn</i></button>
-          <button class="lobby-node" type="button" data-lobby-mode="chapter" aria-pressed="false"><b>CHECKPOINTS</b><i>Resume a chapter already reached</i></button>
+          <button class="lobby-node" type="button" data-lobby-kind="primary" data-lobby-mode="story" aria-pressed="false"><span class="lobby-mode-kicker">CAMPAIGN · SOLO</span><b>STORY FLIGHT</b><i>From Wake Perch through keeper territory to the Tempest Gate.</i><span class="lobby-mode-meta">5 CHAPTERS · 12 BEACONS · 1 ESCAPE</span></button>
+          <button class="lobby-node" type="button" data-lobby-kind="primary" data-lobby-mode="duel" aria-pressed="false"><span class="lobby-mode-kicker">VERSUS · 1V1</span><b>STORMSCAR DUEL</b><i>Three distinct attacks, a contested Stormheart, death and respawn.</i><span class="lobby-mode-meta">FIRST TO 3 · SERVER-READY COMBAT</span></button>
         </div>
+        <div class="lobby-utilities" aria-label="Flight utilities">
+          <button class="lobby-node" type="button" data-lobby-kind="utility" data-lobby-mode="practice" aria-pressed="false"><b>PRACTICE COVE</b><i>Three rings · no keeper pursuit</i></button>
+          <button class="lobby-node" type="button" data-lobby-kind="utility" data-lobby-mode="chapter" aria-pressed="false"><b>CHECKPOINTS</b><i>Resume a reached chapter</i></button>
+        </div>
+        <div id="lobbyTransport" aria-live="polite"><span data-lobby-status-label>SOLO CAMPAIGN</span><b data-lobby-status-value>FIVE CHAPTERS · 12 BEACONS</b><i data-lobby-status-note>One authored route from Wake Perch to the Tempest Gate.</i></div>
         <div id="flightLoadout">
           <div class="preflight-label">Player / mount</div>
           <div id="rigPicker" aria-label="Dragon mount"></div>
@@ -1458,10 +1475,16 @@ const duelLight=new THREE.PointLight(0x59f0d5,42,70,2); DUEL_OBJECTIVE.add(duelL
 const RIVAL={group:new THREE.Group(),model:null,mixer:null,flap:null,glide:null,loaded:false,target:new THREE.Vector3()};
 RIVAL.group.name='RivalGalevein'; RIVAL.group.visible=false; scene.add(RIVAL.group);
 const requestedDuelServer=new URLSearchParams(location.search).get('duelServer');
-const DUEL_SERVER_URL=(()=>{ if(!requestedDuelServer)return null; try{
-  const url=new URL(requestedDuelServer); const loopback=['127.0.0.1','localhost','[::1]'].includes(url.hostname);
-  const sameHostSecure=url.protocol==='wss:'&&url.hostname===location.hostname;
-  return (loopback||sameHostSecure)&&['ws:','wss:'].includes(url.protocol)?url.href:null;
+const configuredDuelServer=document.querySelector('meta[name="galevein-duel-server"]')?.content?.trim()||null;
+const DUEL_SERVER_URL=(()=>{ try{
+  // Query configuration is deliberately loopback-only for local proofs. A
+  // deployed cross-origin service must be explicitly pinned by the author in
+  // the build metadata and must use WSS, so shared links cannot exfiltrate
+  // player state to an arbitrary endpoint.
+  if(requestedDuelServer){ const local=new URL(requestedDuelServer);
+    return ['127.0.0.1','localhost','[::1]'].includes(local.hostname)&&['ws:','wss:'].includes(local.protocol)?local.href:null; }
+  if(configuredDuelServer){ const pinned=new URL(configuredDuelServer); return pinned.protocol==='wss:'?pinned.href:null; }
+  return null;
 }catch{return null;} })();
 const localDuel=new LocalDuelSession({
   serverUrl:DUEL_SERVER_URL,
@@ -3425,7 +3448,7 @@ function reset(){
 }
 /* ---- landing interactions ---- */
 const menuEl=$('menu');
-const lobby=new LobbyHub({ rootEl:$('lobbyHub'), markers:lobbyMarkers,
+const lobby=new LobbyHub({ rootEl:$('lobbyHub'), markers:lobbyMarkers, duelTransport:DUEL_SERVER_URL?'server':'local',
   onSelect:(mode, extra)=>{
     S.lobbyMode=mode;
     if(mode==='story') begin({mode:'story'});
@@ -3855,17 +3878,19 @@ window.SIM={
   triggerDetected:()=>{ detected(); return SIM.state(); },
   triggerNightfallLoss:()=>{ TOD.day=1; uDay.value=1; S.keepersWoke=false; driveTimeOfDay(0); return SIM.state(); },
   teleport:(x,y,z,yaw)=>{ D.group.position.set(x,y,z); if(yaw!=null)D.yaw=yaw; },
-  crownfallStage:(view='approach')=>{
+  crownfallStage:(view='approach',dayOverride=null)=>{
     const views={
-      approach:{position:[180,240,130],target:[-850,240,-250],day:.18},
-      shelf:{position:[-80,260,-40],target:[-700,245,-250],day:.28},
-      coast:{position:[-120,88,-520],target:[-690,155,-260],day:.38}
+      approach:{position:[180,240,130],target:[-850,240,-250],day:.08},
+      valley:{position:[110,150,490],target:[-650,170,-190],day:.54},
+      shelf:{position:[-80,260,-40],target:[-700,245,-250],day:.54},
+      coast:{position:[-120,88,-520],target:[-690,155,-260],day:.88}
     };
     const spec=views[view]||views.approach;
     simJumpChapter(2);S.finishToken++;
     S.started=true;S.done=true;S.finishing=false;S.captureKind=null;S.fpv=false;S.shake=0;S.boost=0;S.accel=0;
-    S.chapter=2;S.tutDone=true;S.score=4;S.grace=999;TOD.day=spec.day;uDay.value=TOD.day;
+    S.chapter=2;S.tutDone=true;S.score=4;S.grace=999;TOD.day=dayOverride==null?spec.day:THREE.MathUtils.clamp(Number(dayOverride),0,1);uDay.value=TOD.day;
     menuEl.classList.add('hide','live');$('hud').classList.add('on');$('over').classList.add('hide');$('ach').classList.remove('on');
+    for(const ring of rings)ring.visible=false;
     popEl.textContent='';popEl.style.animation='none';storyEl.textContent='';storyEl.style.animation='none';
     D.group.position.fromArray(spec.position);D.yaw=simHeadingTo(...spec.target);D.pitch=view==='coast'?.06:-.03;D.roll=0;D.speed=32;
     D.group.rotation.set(0,D.yaw,0);D.group.rotateX(D.pitch*.75);D.prevYaw=D.yaw;D.prevPitch=D.pitch;S.prevSpeed=D.speed;

@@ -8,20 +8,20 @@ import * as THREE from 'three';
 
 export const LOBBY_MODES = Object.freeze({
   story: {
-    id: 'story', label: 'Story', sub: 'Full beacon road · 12 rings before nightfall',
-    contract: 'Fly the beacon road · 12 beacons before nightfall'
+    id: 'story', label: 'Story Campaign', sub: 'Five chapters · 12 beacons · one escape',
+    contract: 'Fly the beacon road · 12 beacons before nightfall', kind: 'campaign'
   },
   practice: {
     id: 'practice', label: 'Practice', sub: 'Wake Cove rings · no keeper hunt',
-    contract: 'Fly the cove route · 3 rings · no keeper hunt'
+    contract: 'Fly the cove route · 3 rings · no keeper hunt', kind: 'utility'
   },
   duel: {
-    id: 'duel', label: 'Stormscar 1v1 Lab', sub: 'Two tabs · three attacks · contested Stormheart',
-    contract: 'Fight above Stormscar Shelf · X precision · Z spread · R objective break'
+    id: 'duel', label: 'Stormscar Duel', sub: '1v1 · three attacks · first to three',
+    contract: 'Fight above Stormscar Shelf · X precision · Z spread · R objective break', kind: 'versus'
   },
   chapter: {
     id: 'chapter', label: 'Chapter Select', sub: 'Jump to a saved chapter checkpoint',
-    contract: 'Resume a marked chapter checkpoint'
+    contract: 'Resume a marked chapter checkpoint', kind: 'utility'
   }
 });
 
@@ -153,6 +153,7 @@ export class LobbyHub {
     this.onSelect = options.onSelect ?? (() => {});
     this.onReturn = options.onReturn ?? (() => {});
     this.markers = options.markers ?? null;
+    this.duelTransport = options.duelTransport === 'server' ? 'server' : 'local';
     this.mode = null;
     this.selection = null;
     this.chapterPick = 0;
@@ -220,6 +221,9 @@ export class LobbyHub {
     const world = this.root.querySelector('[data-lobby-world]');
     const contract = this.root.querySelector('[data-lobby-contract]');
     const launch = this.root.querySelector('[data-lobby-launch]');
+    const statusLabel = this.root.querySelector('[data-lobby-status-label]');
+    const statusValue = this.root.querySelector('[data-lobby-status-value]');
+    const statusNote = this.root.querySelector('[data-lobby-status-note]');
     const definition = selected ? LOBBY_MODES[selected.mode] : null;
     if (world) {
       world.textContent = selected?.mode === 'chapter'
@@ -234,10 +238,22 @@ export class LobbyHub {
     if (launch) {
       launch.disabled = !selected;
       launch.textContent = selected?.mode === 'story'
-        ? 'LAUNCH FROM WAKE PERCH'
-        : (selected?.mode === 'duel' ? 'ENTER STORMSCAR SHELF'
+        ? 'LAUNCH STORY FLIGHT'
+        : (selected?.mode === 'duel' ? (this.duelTransport === 'server' ? 'FIND ONLINE RIVAL' : 'CREATE LOCAL 1V1')
         : (selected ? 'FLY THIS ROUTE' : 'CHOOSE A ROUTE'));
     }
+    const status = selected?.mode === 'duel'
+      ? (this.duelTransport === 'server'
+        ? ['ONLINE MATCHMAKING', 'SERVER AUTHORITY · FIFO 1V1', 'The match server owns damage, captures, victory, and respawn.']
+        : ['LOCAL RIVAL LINK', 'TWO TABS · SAME DEVICE', 'This public build has no internet match server attached yet.'])
+      : selected?.mode === 'story'
+        ? ['SOLO CAMPAIGN', 'FIVE CHAPTERS · 12 BEACONS', 'One authored route from Wake Perch to the Tempest Gate.']
+        : selected?.mode === 'practice'
+          ? ['TRAINING FLIGHT', 'THREE COVE RINGS · NO PURSUIT', 'Learn weight, climb, dive, and banking before the campaign.']
+          : ['CHECKPOINT ROUTE', `CHAPTER ${selected?.chapterIndex ?? 0} READY`, 'Resume an authored story checkpoint.'];
+    if (statusLabel) statusLabel.textContent = status[0];
+    if (statusValue) statusValue.textContent = status[1];
+    if (statusNote) statusNote.textContent = status[2];
   }
 
   show() {
@@ -264,9 +280,13 @@ export class LobbyHub {
 
   snapshot() {
     return {
+      profile: 'wake-perch-operations-v2',
       mode: this.mode,
       selection: this.selection ? { ...this.selection } : null,
       chapterPick: this.chapterPick,
+      duelTransport: this.duelTransport,
+      primaryModes: ['story', 'duel'],
+      utilityModes: ['practice', 'chapter'],
       visible: this.root ? !this.root.classList.contains('hide') : false,
       markers: this.markers?.snapshot?.() ?? null
     };

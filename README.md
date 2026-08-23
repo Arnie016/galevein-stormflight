@@ -57,6 +57,36 @@ extra terrain draw calls. The first high-frequency material candidate was
 rejected for visible moire; the retained calmer pass is still stylized
 prototype terrain, not Fortnite-level environment art.
 
+Build r15 replaces the flat four-button mode list with the **Wake Perch Flight
+Operations** deck. Story Campaign and Stormscar Duel are now the two primary
+promises; Practice Cove and Checkpoints are visibly secondary utilities. The
+selected route shows its objective and transport contract before launch. On the
+current public static build, Duel says `LOCAL RIVAL LINK · TWO TABS · SAME
+DEVICE` instead of implying internet matchmaking.
+
+The same deck is ready for an author-pinned server endpoint. A release operator
+can build a server-backed artifact without accepting an endpoint from a shared
+URL:
+
+```sh
+GALEVEIN_DUEL_SERVER_URL=wss://your-reviewed-host.example/match npm run build
+```
+
+Only credential-free `wss://` URLs are accepted. The checked-in and currently
+published build deliberately leaves this setting empty.
+
+Build r16 replaces the old circular cone-and-billboard horizon with the
+**Bounded Reach Basin**. Three deterministic mountain depth layers now frame a
+forward valley corridor, 220 instanced conifers form forest belts, and six
+volumetric sky monoliths preserve Galevein's floating-rock identity. Crownfall
+v3 raises the close terrain mesh to 16,956 visible triangles, keeps its 65.1-unit
+Story-route clearance, adds ridged coastal erosion, 128 shoreline talus rocks,
+and 141 ledge trees. Poseidon's WebGPU sky and ocean now share a piecewise
+daylight to gold-dusk to moonlit-night palette so the reflection changes with
+the world rather than merely darkening. This is a substantial authored-world
+pass, but the code-generated vegetation and architecture are still stylized;
+it is not photographic final art.
+
 ## Build the release artifact
 
 ```sh

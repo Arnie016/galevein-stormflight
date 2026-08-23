@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-22T14:01:32.846Z",
+  "generatedAt": "2026-08-23T03:59:15.847Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 240118,
-      "sha256": "e8d66caa2d51e6ebb3fae63c7f1de714e1b9a6f96e21004befc6c526b963ba9a"
+      "bytes": 242870,
+      "sha256": "14a1aba6dc45bad65d0ef400d574daccce7f3acab517d82c8c74f494420d57a0"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -85,13 +85,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 7233,
-      "sha256": "6161a9c347ed81997a0b59ca45542bd9c01a5c82bcdb31762c4c8f2be4d06144"
+      "bytes": 8871,
+      "sha256": "73fc149ac0c8b86b749cbf0b91129712798560a92fdce937e75f898f6d779bee"
     },
     {
       "path": "RELEASE_READINESS.md",
-      "bytes": 6995,
-      "sha256": "123258662f4ea403dc45e68c43167ecffc8e74ca1bb22df6988d42dee1673995"
+      "bytes": 8999,
+      "sha256": "397e64fadefed4ce6345a65049564c43c7b8742fe855919d554d20b3138ff06f"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -230,8 +230,8 @@
     },
     {
       "path": "world-expansion/modules/crownfallRange.js",
-      "bytes": 17030,
-      "sha256": "f44cba5f06112977c480f5cc3db3d3ae8b5a3897c48e7e39fa601dfaaa757d2c"
+      "bytes": 23320,
+      "sha256": "c99decc6dc8a2d520e5c69b5cd990db850e7376c1a9271b129b30138cf97fcc8"
     },
     {
       "path": "world-expansion/modules/dragonRigs.js",
@@ -250,8 +250,8 @@
     },
     {
       "path": "world-expansion/modules/horizonDirector.js",
-      "bytes": 7887,
-      "sha256": "4030a6b5b0d11dabdd0e7098de818a6d6edec802bfa8afbc3973beed7cf2796f"
+      "bytes": 13269,
+      "sha256": "9d170ecff79f783b0157a0f7854c2b38d17af2655d66f9c76aa718c6dba7e7e6"
     },
     {
       "path": "world-expansion/modules/landmarkPath.js",
@@ -260,8 +260,8 @@
     },
     {
       "path": "world-expansion/modules/lobbyHub.js",
-      "bytes": 9320,
-      "sha256": "8ff12e1ef10523a73aff2c6640e36d0d4f5e36a13aacdc944ae14c77a1292384"
+      "bytes": 10866,
+      "sha256": "02549baa80953305b23780a91761bf2e28248ca126ff51bf1356a662d61f6020"
     },
     {
       "path": "world-expansion/modules/localDuel.js",
@@ -270,8 +270,8 @@
     },
     {
       "path": "world-expansion/modules/poseidonOceanLayer.js",
-      "bytes": 9947,
-      "sha256": "1674b6133e9bd90a8308b0d3d60de2850007e29ec879b88b2b723a960ae0c6ff"
+      "bytes": 10918,
+      "sha256": "31bb64594896d38d2de44c0f24d48ad0a6523f5a9ccd1f14d4d45e1386a32a40"
     },
     {
       "path": "world-expansion/modules/proceduralLandmarks.js",
