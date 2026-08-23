@@ -4,10 +4,33 @@
 import * as THREE from 'three';
 
 const TAU = Math.PI * 2;
-const PROFILE = 'bounded-reach-island-v3';
-const LAYER_COUNTS = Object.freeze({ near: 24, mid: 34, far: 28, forest: 220, skyMonoliths: 6 });
+const PROFILE = 'bounded-reach-island-v4';
+const LAYER_COUNTS = Object.freeze({ forest: 320, skyMonoliths: 4 });
 const FIXED_WORLD_ANCHOR = Object.freeze({ x:-20, y:0, z:110 });
 const FIXED_ROUTE_HEADING = Math.atan2(-700, 530);
+const RIDGE_SPECS = Object.freeze([
+  Object.freeze({ id:'near', sections:48, inner:520, width:390, start:-980, end:1660, height:370, opening:185 }),
+  Object.freeze({ id:'mid', sections:56, inner:980, width:560, start:-1450, end:2320, height:545, opening:250 }),
+  Object.freeze({ id:'far', sections:64, inner:1580, width:780, start:-2100, end:3180, height:720, opening:340 })
+]);
+const CROSS_PROFILE = Object.freeze([
+  Object.freeze({ x:0, y:-.07, tone:'waterline' }),
+  Object.freeze({ x:.08, y:.015, tone:'waterline' }),
+  Object.freeze({ x:.17, y:.10, tone:'forest' }),
+  Object.freeze({ x:.29, y:.25, tone:'ledge' }),
+  Object.freeze({ x:.42, y:.57, tone:'stone' }),
+  Object.freeze({ x:.51, y:1, tone:'crown' }),
+  Object.freeze({ x:.62, y:.70, tone:'crown' }),
+  Object.freeze({ x:.75, y:.41, tone:'stone' }),
+  Object.freeze({ x:.88, y:.13, tone:'forest' }),
+  Object.freeze({ x:1, y:-.07, tone:'waterline' })
+]);
+
+function clamp01(value) { return Math.max(0, Math.min(1, value)); }
+function smoothstep(edge0, edge1, value) {
+  const t = clamp01((value - edge0) / (edge1 - edge0));
+  return t * t * (3 - 2 * t);
+}
 
 function seeded(index) {
   let value = (index + 1) * 0x9e3779b1;
@@ -74,16 +97,95 @@ function layeredConiferGeometry(radialSegments = 7) {
   return geometry;
 }
 
-function basinAngle(index, count, layer, forwardAngle) {
-  // Two dense valley walls with a deliberate open corridor ahead and a narrower
-  // opening behind. This avoids the old evenly random circular-lobby silhouette.
-  const side = index % 2 ? 1 : -1;
-  const row = Math.floor(index / 2);
-  const rows = Math.ceil(count / 2);
-  const progress = rows <= 1 ? .5 : row / (rows - 1);
-  const wallArc = .48 + progress * 1.42;
-  const jitter = (seeded(index + layer * 101) - .5) * .10;
-  return forwardAngle + side * wallArc + jitter;
+function ridgeShape(spec, along, side, layerIndex) {
+  const t = clamp01((along - spec.start) / (spec.end - spec.start));
+  const edge = Math.abs(t - .5) * 2;
+  const phase = layerIndex * 1.71 + side * .83;
+  const wander = Math.sin(t * Math.PI * 3.4 + phase) * (28 + layerIndex * 14)
+    + Math.sin(t * Math.PI * 8.2 - phase * .63) * (12 + layerIndex * 8);
+  const inner = spec.inner + spec.opening * smoothstep(.55, 1, edge) + wander;
+  const crest = spec.height * (.72
+    + .18 * Math.sin(t * Math.PI * 5.2 + phase)
+    + .10 * Math.sin(t * Math.PI * 13.4 - phase * .7));
+  const crownOffset = spec.width * (.49 + .06 * Math.sin(t * Math.PI * 6.6 + phase * 1.2));
+  return { inner, crest: Math.max(spec.height * .48, crest), crownOffset };
+}
+
+function ridgeSurfaceHeight(spec, shape, crossU) {
+  const u = clamp01(crossU);
+  for (let index = 0; index < CROSS_PROFILE.length - 1; index += 1) {
+    const a = CROSS_PROFILE[index], b = CROSS_PROFILE[index + 1];
+    if (u > b.x) continue;
+    const t = smoothstep(a.x, b.x, u);
+    return (a.y + (b.y - a.y) * t) * shape.crest;
+  }
+  return CROSS_PROFILE[CROSS_PROFILE.length - 1].y * shape.crest;
+}
+
+function ridgeTone(tone, layerIndex, target) {
+  const palette = {
+    waterline: 0x4c5a5d,
+    forest: 0x65786d,
+    ledge: 0x74847b,
+    crown: 0xd1d7d3,
+    stone: 0x6c777b
+  };
+  target.setHex(palette[tone] || palette.stone);
+  target.offsetHSL(layerIndex * .012, -layerIndex * .025, layerIndex * .035);
+  return target;
+}
+
+function continuousRidgeGeometry(spec, layerIndex, anchor, routeHeading) {
+  const positions = [], colors = [], indices = [];
+  const color = new THREE.Color();
+  const forwardX = Math.sin(routeHeading), forwardZ = Math.cos(routeHeading);
+  const sideX = Math.cos(routeHeading), sideZ = -Math.sin(routeHeading);
+  const columns = CROSS_PROFILE.length;
+  for (let sideIndex = 0; sideIndex < 2; sideIndex += 1) {
+    const side = sideIndex ? 1 : -1;
+    const sideOffset = positions.length / 3;
+    for (let segment = 0; segment <= spec.sections; segment += 1) {
+      const t = segment / spec.sections;
+      const along = spec.start + (spec.end - spec.start) * t;
+      const shape = ridgeShape(spec, along, side, layerIndex);
+      for (let column = 0; column < columns; column += 1) {
+        const profile = CROSS_PROFILE[column];
+        const crownBias = Math.sin(profile.x * Math.PI) * (shape.crownOffset - spec.width * .51);
+        const cross = shape.inner + spec.width * profile.x + crownBias;
+        const fracture = column > 0 && column < columns - 1
+          ? Math.sin(segment * 2.21 + column * 1.73 + side * 2.4 + layerIndex) * (3 + layerIndex * 2)
+          : 0;
+        positions.push(
+          anchor.x + forwardX * along + sideX * side * cross,
+          anchor.y + profile.y * shape.crest + fracture,
+          anchor.z + forwardZ * along + sideZ * side * cross
+        );
+        ridgeTone(profile.tone, layerIndex, color);
+        const strata = .92 + .08 * Math.sin(segment * .91 + column * 2.4 + sideIndex * 1.3);
+        colors.push(color.r * strata, color.g * strata, color.b * strata);
+      }
+    }
+    for (let segment = 0; segment < spec.sections; segment += 1) {
+      for (let column = 0; column < columns - 1; column += 1) {
+        const a = sideOffset + segment * columns + column;
+        const b = a + 1;
+        const c = a + columns;
+        const d = c + 1;
+        if ((segment + column + sideIndex) % 2) indices.push(a, c, b, b, c, d);
+        else indices.push(a, c, d, a, d, b);
+      }
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+  geometry.userData.ridgeWalls = 2;
+  geometry.userData.sections = spec.sections;
+  return geometry;
 }
 
 export class HorizonDirector {
@@ -115,23 +217,21 @@ export class HorizonDirector {
     this.root.userData.visualOnly = true;
     this.root.userData.profile = PROFILE;
 
-    const peakGeometries = [ruggedPeakGeometry(12, 7, 0), ruggedPeakGeometry(10, 6, 700), ruggedPeakGeometry(9, 5, 1400)];
-    const peakMaterials = [
-      new THREE.MeshStandardMaterial({ color: 0x263633, roughness: .98, flatShading: true, fog: true }),
-      new THREE.MeshStandardMaterial({ color: 0x28333a, roughness: 1, flatShading: true, fog: true }),
-      new THREE.MeshBasicMaterial({ color: 0x34404c, fog: true })
+    const ridgeMaterials = [
+      new THREE.MeshStandardMaterial({ color: 0x71807b, vertexColors:true, roughness:.97, metalness:.01, flatShading:true, fog:true, emissive:0x101b19, emissiveIntensity:.05 }),
+      new THREE.MeshStandardMaterial({ color: 0x78858a, vertexColors:true, roughness:.99, metalness:0, flatShading:true, fog:true, emissive:0x10171a, emissiveIntensity:.035 }),
+      new THREE.MeshBasicMaterial({ color: 0x89939a, vertexColors:true, fog:true })
     ];
-    this.layers = [
-      new THREE.InstancedMesh(peakGeometries[0], peakMaterials[0], LAYER_COUNTS.near),
-      new THREE.InstancedMesh(peakGeometries[1], peakMaterials[1], LAYER_COUNTS.mid),
-      new THREE.InstancedMesh(peakGeometries[2], peakMaterials[2], LAYER_COUNTS.far)
-    ];
+    this.layers = RIDGE_SPECS.map((spec, index) => new THREE.Mesh(
+      continuousRidgeGeometry(spec, index, this.anchor, this.routeHeading),
+      ridgeMaterials[index]
+    ));
     this.layers.forEach((layer, index) => {
       layer.name = `Galevein_BasinMountainLayer${index + 1}`;
       layer.frustumCulled = false;
       this.root.add(layer);
     });
-    // Compatibility handle used by the release harness for triangle accounting.
+    // Compatibility handle used by the release harness and day/night grading.
     this.masses = this.layers[0];
 
     const forestGeometry = layeredConiferGeometry();
@@ -185,35 +285,27 @@ export class HorizonDirector {
     this.camera.updateProjectionMatrix();
   }
 
-  _placeLayer(mesh, layerIndex, count, baseX, baseZ, forwardAngle) {
-    const nearBand = [this.near * .92, this.near * 1.52, this.near * 2.18][layerIndex];
-    const farBand = [Math.min(this.far * .57, this.near * 1.80), this.far * .80, this.far][layerIndex];
-    for (let index = 0; index < count; index += 1) {
-      const angle = basinAngle(index, count, layerIndex, forwardAngle);
-      const depth = seeded(index + 3100 + layerIndex * 317);
-      const radius = nearBand + depth * Math.max(80, farBand - nearBand);
-      const width = (layerIndex === 0 ? 120 : layerIndex === 1 ? 175 : 245) * (.72 + seeded(index + 3300) * .68);
-      const height = (layerIndex === 0 ? 245 : layerIndex === 1 ? 360 : 510) * (.62 + seeded(index + 3500) * .66) * this.silhouetteHeightMul;
-      const depthScale = width * (.46 + seeded(index + 3700) * .34);
-      this.position.set(baseX + Math.sin(angle) * radius, -28, baseZ + Math.cos(angle) * radius);
-      this.quaternion.setFromEuler(new THREE.Euler(0, angle + seeded(index + 3900) * .7, 0));
-      this.scale.set(width, height, depthScale);
-      this.matrix.compose(this.position, this.quaternion, this.scale);
-      mesh.setMatrixAt(index, this.matrix);
-    }
-    mesh.instanceMatrix.needsUpdate = true;
-  }
-
   _placeForest(baseX, baseZ, forwardAngle) {
+    const forwardX = Math.sin(forwardAngle), forwardZ = Math.cos(forwardAngle);
+    const sideX = Math.cos(forwardAngle), sideZ = -Math.sin(forwardAngle);
     for (let index = 0; index < LAYER_COUNTS.forest; index += 1) {
       const side = index % 2 ? 1 : -1;
+      const layerIndex = index % 7 === 0 ? 1 : 0;
+      const spec = RIDGE_SPECS[layerIndex];
       const progress = Math.floor(index / 2) / (LAYER_COUNTS.forest / 2 - 1);
-      const angle = forwardAngle + side * (.50 + progress * 1.30) + (seeded(index + 4100) - .5) * .12;
-      const radius = this.near * (.78 + seeded(index + 4300) * .72);
-      const height = 16 + seeded(index + 4500) * 29;
-      const width = height * (.82 + seeded(index + 4700) * .18);
-      const rise = 18 + seeded(index + 4900) * 105;
-      this.position.set(baseX + Math.sin(angle) * radius, rise, baseZ + Math.cos(angle) * radius);
+      const along = spec.start + (spec.end - spec.start) * (.08 + progress * .84)
+        + (seeded(index + 4100) - .5) * 105;
+      const shape = ridgeShape(spec, along, side, layerIndex);
+      const crossU = .19 + seeded(index + 4300) * .29;
+      const cross = shape.inner + spec.width * crossU;
+      const height = 12 + seeded(index + 4500) * 20;
+      const width = height * (.78 + seeded(index + 4700) * .19);
+      const rise = ridgeSurfaceHeight(spec, shape, crossU) + height * .01;
+      this.position.set(
+        baseX + forwardX * along + sideX * side * cross,
+        rise,
+        baseZ + forwardZ * along + sideZ * side * cross
+      );
       this.quaternion.setFromEuler(new THREE.Euler(0, seeded(index + 5100) * TAU, 0));
       this.scale.set(width, height, width);
       this.matrix.compose(this.position, this.quaternion, this.scale);
@@ -240,7 +332,13 @@ export class HorizonDirector {
 
   _calculatePlacementSignature() {
     let signature = 2166136261;
-    for (const mesh of [...this.layers, this.forest, this.monoliths]) {
+    for (const mesh of this.layers) {
+      for (const value of mesh.geometry.attributes.position.array) {
+        signature ^= Math.round(value * 1000);
+        signature = Math.imul(signature, 16777619);
+      }
+    }
+    for (const mesh of [this.forest, this.monoliths]) {
       for (const value of mesh.instanceMatrix.array) {
         signature ^= Math.round(value * 1000);
         signature = Math.imul(signature, 16777619);
@@ -253,9 +351,6 @@ export class HorizonDirector {
     const baseX = this.anchor.x;
     const baseZ = this.anchor.z;
     const forwardAngle = this.routeHeading;
-    this._placeLayer(this.layers[0], 0, LAYER_COUNTS.near, baseX, baseZ, forwardAngle);
-    this._placeLayer(this.layers[1], 1, LAYER_COUNTS.mid, baseX, baseZ, forwardAngle);
-    this._placeLayer(this.layers[2], 2, LAYER_COUNTS.far, baseX, baseZ, forwardAngle);
     this._placeForest(baseX, baseZ, forwardAngle);
     this._placeMonoliths(baseX, baseZ);
     this.placementRevision += 1;
@@ -265,9 +360,9 @@ export class HorizonDirector {
   update(_cameraPosition, time = 0, dayAmount = 0) {
     this.configureFog(this.scene.fog);
     const hue = 0.54 + dayAmount * .10 + (this._hueShift || 0);
-    this.layers[0].material.color.setHSL(hue, .20, .21 - dayAmount * .055);
-    this.layers[1].material.color.setHSL(hue + .018, .17, .24 - dayAmount * .065);
-    this.layers[2].material.color.setHSL(hue + .035, .16, .31 - dayAmount * .09);
+    this.layers[0].material.color.setHSL(hue, .17, .56 - dayAmount * .10);
+    this.layers[1].material.color.setHSL(hue + .018, .14, .62 - dayAmount * .12);
+    this.layers[2].material.color.setHSL(hue + .035, .12, .70 - dayAmount * .15);
     this.forest.material.color.setHSL(.40 + this._hueShift * .25, .34, .12 - dayAmount * .025);
     this.monoliths.material.color.setHSL(hue + .01, .18, .17 - dayAmount * .035);
     this.monoliths.rotation.y = Math.sin(time * .015) * .0025;
@@ -288,10 +383,18 @@ export class HorizonDirector {
       placementSignature: this.placementSignature,
       cameraFar: this.cameraFar,
       fogDensity: this.fogDensity,
-      instances: LAYER_COUNTS.near + LAYER_COUNTS.mid + LAYER_COUNTS.far,
+      instances: RIDGE_SPECS.reduce((sum, spec) => sum + spec.sections, 0),
       islandInstances: LAYER_COUNTS.skyMonoliths,
       mountainLayers: 3,
+      continuousRidgeWalls: 6,
+      detachedMountainInstances: 0,
+      ridgeGeometryMode: 'continuous-fixed-walls-v1',
+      ridgeSections: RIDGE_SPECS.map(spec => spec.sections),
+      ridgeTriangles: this.layers.reduce((sum, layer) => sum + (layer.geometry.index?.count || 0) / 3, 0),
+      valleyFloorWidth: RIDGE_SPECS[0].inner * 2,
+      longitudinalSpan: RIDGE_SPECS[2].end - RIDGE_SPECS[2].start,
       forestInstances: LAYER_COUNTS.forest,
+      forestAttachment: 'slope-sampled-v1',
       drawCalls: 5,
       valleyCorridor: true,
       fogBackdrop: true,

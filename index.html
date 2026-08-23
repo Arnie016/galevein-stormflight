@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-drowned-hearth-r24">
+<meta name="galevein-build" content="stormflight-continuous-ridges-r25">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -997,20 +997,6 @@ const poseidonOcean=createPoseidonOceanLayer({
 });
 poseidonOcean.start(localStorage.getItem('galevein_gfx')||'med');
 const horizonDirector = new HorizonDirector(scene, camera);
-function makeHorizonRidgeGeometry(){
-  const g=new THREE.IcosahedronGeometry(.64,2),p=g.attributes.position;
-  const colors=new Float32Array(p.count*3);
-  const low=new THREE.Color(0x101827),mid=new THREE.Color(0x293449),high=new THREE.Color(0x8b6c76),c=new THREE.Color();
-  for(let i=0;i<p.count;i++){ const x=p.getX(i),y=p.getY(i),z=p.getZ(i),ridge=.10*Math.sin(x*11+z*7)+.055*Math.sin(x*23-z*17);
-    p.setXYZ(i,x*(1.05+.10*Math.sin(z*9)),y*.92+ridge-.12,z*.72);
-    const t=THREE.MathUtils.clamp((y+.64)/1.28,0,1); c.copy(low).lerp(mid,Math.min(1,t*1.5)).lerp(high,Math.max(0,t-.62)*1.35);
-    colors[i*3]=c.r;colors[i*3+1]=c.g;colors[i*3+2]=c.b; }
-  g.setAttribute('color',new THREE.BufferAttribute(colors,3)); g.computeVertexNormals(); return g;
-}
-horizonDirector.masses.geometry.dispose();
-horizonDirector.masses.material.dispose();
-horizonDirector.masses.geometry=makeHorizonRidgeGeometry();
-horizonDirector.masses.material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.94,metalness:.02,flatShading:true,fog:true,emissive:0x161427,emissiveIntensity:.12});
 const refreshSeaFog=()=>{
   sea.material.uniforms.fogColor.value.copy(scene.fog.color);
   sea.material.uniforms.fogDensity.value=scene.fog.density;
@@ -4221,6 +4207,27 @@ window.SIM={
     $('spdV').textContent=Math.round(D.speed);$('altV').textContent=Math.round(D.group.position.y);
     camera.lookAt(new THREE.Vector3(...spec.target));render(1/60);
     return {view,position:spec.position,target:spec.target,map:crownfallRange.getSnapshot(),state:SIM.state()};
+  },
+  reachStage:(view='approach')=>{
+    const views={
+      approach:{position:[579,310,-343],target:[-818,235,713],day:.10},
+      valley:{position:[299,138,-131],target:[-898,190,773],day:.38},
+      coast:{position:[120,120,380],target:[520,190,760],day:.76}
+    };
+    const spec=views[view]||views.approach;
+    simJumpChapter(1);S.finishToken++;
+    S.started=true;S.done=true;S.finishing=false;S.captureKind=null;S.fpv=false;S.shake=0;S.boost=0;S.accel=0;
+    S.chapter=1;S.tutDone=true;S.score=2;S.grace=999;
+    TOD.day=spec.day;uDay.value=TOD.day;
+    menuEl.classList.add('hide','live');$('hud').classList.add('on');$('over').classList.add('hide');$('ach').classList.remove('on');
+    for(const ring of rings)ring.visible=false;
+    popEl.textContent='';popEl.style.animation='none';storyEl.textContent='';storyEl.style.animation='none';
+    D.group.position.fromArray(spec.position);D.yaw=simHeadingTo(...spec.target);D.pitch=-.025;D.roll=0;D.speed=31;
+    D.group.rotation.set(0,D.yaw,0);D.group.rotateX(D.pitch*.75);D.prevYaw=D.yaw;D.prevPitch=D.pitch;S.prevSpeed=D.speed;
+    camera.position.copy(D.group.position).add(new THREE.Vector3(Math.sin(D.yaw)*30,13,Math.cos(D.yaw)*30));
+    $('spdV').textContent=Math.round(D.speed);$('altV').textContent=Math.round(D.group.position.y);
+    camera.lookAt(new THREE.Vector3(...spec.target));render(1/60);
+    return {view,position:spec.position,target:spec.target,horizon:horizonDirector.getSnapshot(),anchorProof:SIM.horizonAnchorProof(),state:SIM.state()};
   },
   keeperStage:(view='shrine')=>{
     const views={

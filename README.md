@@ -161,6 +161,18 @@ recovery and stronger downstroke rather than an even oscillation. This is a
 project-owned original creature, not a Night Fury model or licensed DreamWorks
 asset, and remains stylized rather than a production sculpt.
 
+Build r25 replaces the 86 detached Bounded Reach peak instances with six
+**continuous fixed ridge walls** around one 1,040-unit flight corridor. The
+three depth layers span 5,280 units, use 6,048 terrain triangles, and keep the
+complete backdrop to five draw calls. A 320-tree forest belt is sampled onto
+the ridge slopes instead of scattered independently over the sea. The landscape
+retains its single `[-20, 0, 110]` world anchor and -52.9-degree route heading;
+camera-cell snapping, view-direction rebuilds, and runtime repositioning remain
+disabled. A displaced-camera regression must preserve placement signature
+`eae55bb3`. This makes the basin read as one enclosing landform rather than a
+lobby of mountain props, while the generated materials and vegetation remain
+stylized rather than photoreal.
+
 ## Build the release artifact
 
 ```sh
