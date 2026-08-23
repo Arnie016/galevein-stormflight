@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-atmosphere-r28">
+<meta name="galevein-build" content="stormflight-story-contract-r29">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -2686,6 +2686,21 @@ function driveTutorial(dt){
     for(const r of rings) r.visible=true;
   }
 }
+const SERPENT_OBJECTIVE_PROFILE='serpent-run-proof-contract-v1';
+const SERPENT_ALTITUDE_TARGET=120;
+function serpentObjectiveSnapshot(){
+  const hearth=hearthDecision?.snapshot?.()??{status:'dormant',choice:null};
+  const altitudeCollected=!!S.altitudeCollected;
+  const hearthResolved=hearth.status==='resolved';
+  const missing=[];
+  if(!altitudeCollected)missing.push(`MAP ${SERPENT_ALTITUDE_TARGET}M ALTITUDE`);
+  if(!hearthResolved)missing.push('RESOLVE LAST HEARTH');
+  return {profile:SERPENT_OBJECTIVE_PROFILE,beaconGate:8,routeIndex:7,
+    altitudeTarget:SERPENT_ALTITUDE_TARGET,altitudePeak:+(S.altitudePeak||0).toFixed(1),altitudeCollected,
+    hearthStatus:hearth.status,hearthChoice:hearth.choice||null,hearthResolved,
+    canyonGates:gates.filter(gate=>gate.userData.hit).length,canyonGatesOptional:true,
+    missing,sealed:S.chapter===2&&S.score===7&&missing.length>0};
+}
 function driveMissionsFallback(){
   if(S.chapter===0){ $('objText').textContent=`I · learn to fly — rings ${tutRings.filter(r=>r.userData.hit).length}/3`; return; }
   if(S.score<4) $('objText').textContent=`II · home waters — beacons ${S.score}/4 · echo at 1`;
@@ -3400,7 +3415,7 @@ function tick(dt){
   if(!S.duelMode && S.started && !S.done && S.tutDone && structure?.director?.chapter?.storyBeat==='thread_canyon'){
     const haw=D.group.position.y-waveH(D.group.position.x,D.group.position.z,S.t);
     S.altitudePeak=Math.max(S.altitudePeak||0,haw);
-    if(haw>=80 && !S.altitudeCollected){
+    if(haw>=SERPENT_ALTITUDE_TARGET && !S.altitudeCollected){
       S.altitudeCollected=true; AU.play('ring',0.55); popup('ALTITUDE COLLECTED');
       storyPop('Harbor stacks mapped from above — the serpent run reads clear.',4.5);
     }
@@ -3443,6 +3458,16 @@ function tick(dt){
       r.userData.flowArc.material.opacity=r.material.opacity*.48;
     }
     if(p.distanceTo(r.position)<BEACON_STYLE.mainHitRadius){
+      if(S.chapter===2&&r.userData.routeIndex===7){
+        const serpent=serpentObjectiveSnapshot();
+        if(serpent.missing.length){
+          if((S.storyGateWarnAt||0)<=S.t){
+            S.storyGateWarnAt=S.t+1.8;
+            popup(`BEACON SEALED · ${serpent.missing.join(' + ')}`);
+          }
+          continue;
+        }
+      }
       if(S.chapter===3&&r.userData.routeIndex===10&&keeperObjectiveSnapshot().destroyed<3){
         if((S.keeperGateWarnAt||0)<=S.t){
           S.keeperGateWarnAt=S.t+1.8;
@@ -3678,7 +3703,7 @@ function reset(){
   resetHearthEncounter();
   startAudio(); D.group.position.set(REST.x,REST.y+6,REST.z); D.yaw=Math.PI; D.pitch=0.18; D.roll=0; D.speed=30; input.flap=false;
   S.done=false; S.flightT=0; S.detection=0; S.score=0; S.shake=0; S.fpv=false; S.nextThunder=S.t+5; S.shootCd=0;
-  S.finishing=false; S.finishToken++; GATE.open=0; S.impactCd=0; S.alertStage=0; S.keeperGateWarnAt=0;
+  S.finishing=false; S.finishToken++; GATE.open=0; S.impactCd=0; S.alertStage=0; S.keeperGateWarnAt=0; S.storyGateWarnAt=0;
   S.boost=0; S.accel=0; S.prevSpeed=30; S.boomed=false; S.charges=3; S.chargeT=-1; S.scatterCd=0; S.pulseCd=0; S.grace=3; S.launching=true;
   TOD.day=0.0; S.keepersWoke=false; ROG.amp=0; ROG.life=0; ROG.next=6; uRA.value=0;
   if(D.model) D.model.scale.setScalar(9);
@@ -3908,7 +3933,13 @@ function simClearControls(){ for(const c of Object.values(SIM_KEYS)) key[c]=fals
 function simSteerObjective(){
   const nb=S.chapter===0?tutRings.find(r=>!r.userData.hit):rings.find(r=>!r.userData.hit);
   if(!nb){ simSetControls({accel:true,climb:false,dive:false,bankLeft:false,bankRight:false,turnLeft:false,turnRight:false,brake:false,flap:false}); return null; }
-  const p=D.group.position,t=nb.position;
+  const p=D.group.position;
+  // The proof pilot obeys the same objective the player sees: during Serpent
+  // Run it climbs above the beacon road to map the harbor, then resumes it.
+  const mapHarbor=S.chapter===2&&!S.altitudeCollected;
+  const t=mapHarbor
+    ? new THREE.Vector3(nb.position.x,Math.max(nb.position.y,SERPENT_ALTITUDE_TARGET+10),nb.position.z)
+    : nb.position;
   const dist=p.distanceTo(t), dy=t.y-p.y;
   let diff=Math.atan2(-(t.x-p.x),-(t.z-p.z))-D.yaw;
   while(diff>Math.PI)diff-=Math.PI*2;
@@ -4044,6 +4075,22 @@ function simLongNightObjectiveProof(){
   tick(1/60);
   return {blockedScore,blocked,combat,unlockedScore:S.score,objective:keeperObjectiveSnapshot(),state:SIM.state()};
 }
+function simSerpentObjectiveProof(){
+  reset();simJumpChapter(2);S.launching=false;S.done=false;S.grace=999;TOD.day=.32;uDay.value=TOD.day;
+  S.score=7;S.altitudePeak=0;S.altitudeCollected=false;hearthDecision.reset();
+  for(let index=0;index<rings.length;index++)setStormVaneState(rings[index],index<7);
+  const gateRing=rings[7];
+  D.group.position.copy(gateRing.position);D.speed=0;D.pitch=0;D.roll=0;
+  tick(1/60);
+  const blockedWithoutRequirements={score:S.score,objective:serpentObjectiveSnapshot()};
+  S.altitudePeak=SERPENT_ALTITUDE_TARGET;S.altitudeCollected=true;
+  tick(1/60);
+  const blockedWithoutHearth={score:S.score,objective:serpentObjectiveSnapshot()};
+  hearthDecision.forcePrompt(S.t);hearthDecision.choose('silent',{time:S.t});
+  tick(1/60);
+  return {profile:'serpent-run-gate-proof-v1',blockedWithoutRequirements,blockedWithoutHearth,
+    unlockedScore:S.score,objective:serpentObjectiveSnapshot(),state:SIM.state()};
+}
 function simStageHearth(kind='prompt'){
   clearAchievementUi(true); hearthDecision.reset(); markHearthGuide(false);
   S.started=true; S.done=false; S.launching=false; S.lobbyMode='story'; S.practiceMode=false; S.duelMode=false;
@@ -4133,6 +4180,8 @@ window.SIM={
   controls:simSetControls, clearControls:simClearControls, steerObjective:simSteerObjective,
   jumpBeacon:simJumpBeacon, jumpChapter:simJumpChapter, jumpState:simJumpState,
   runSteps:simRunSteps, runUntil:simRunUntil, snapshot:simSnapshot,
+  storyObjective:serpentObjectiveSnapshot,
+  chooseHearth:choice=>hearthDecision.choose(choice,{time:S.t}),
   atmosphere:()=>({...ATMOSPHERE_STATE,phase:atmospherePhase(TOD.day),sceneFog:+scene.fog.density.toFixed(7),
     exposure:+renderer.toneMappingExposure.toFixed(3),reflectionProfile:poseidonOcean.snapshot().cycleProfile}),
   achievementUI:achievementUiSnapshot, clearAchievements:()=>{clearAchievementUi(true);return achievementUiSnapshot();},
@@ -4170,6 +4219,7 @@ window.SIM={
   hearthStage:simStageHearth,
   hearthProof:simHearthDecisionProof,
   keeperObjective:keeperObjectiveSnapshot,
+  serpentObjectiveProof:simSerpentObjectiveProof,
   longNightObjectiveProof:simLongNightObjectiveProof,
   drownedVillage:drownedVillageSnapshot,
   objectiveStyle:()=>({

@@ -86,10 +86,10 @@
       "hud": {
         "chapterLabel": "Chapter III · Serpent Run",
         "objectiveTemplate": "III · Serpent Run — beacons {score}/8 · dive and flock",
-        "goalText": "Thread three canyon gates and reach beacon eight",
+        "goalText": "Map the harbor from 120m, resolve the Last Hearth, and reach beacon eight",
         "distanceLabel": "Next beacon",
         "showHeightAboveWater": true,
-        "subHints": ["Thread canyon gates for cover", "Climb over harbor works — collect altitude"]
+        "subHints": ["Canyon gates are optional cover rewards", "Beacon eight opens after 120m AGL and a Last Hearth choice"]
       },
       "storyLine": "The canyon tightens. Dive, pull out, and break their lock.",
       "popupOnEnter": "CHAPTER III · SERPENT RUN"

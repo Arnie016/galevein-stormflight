@@ -202,19 +202,19 @@ export class ChapterDirector {
       if (hearth?.status === 'prompted') {
         return '◈ Last Hearth — [1] answer the signal · [2] pass in shadow';
       }
+      const target = 120;
+      const peak = state.altitudePeak ?? 0;
+      if (!state.altitudeCollected) return `▲ Map the harbor — climb ${target}m AGL · peak ${Math.max(0, Math.round(peak))}m`;
       if (hearth?.status === 'resolved' && hearth.choice === 'answer') {
-        return '✓ Hearth answered — two amber vanes guide the passage · trust +1';
+        return '✓ Harbor mapped · Hearth answered · beacon eight is open';
       }
       if (hearth?.status === 'resolved' && hearth.choice === 'silent') {
-        return '◇ Signal unanswered — six seconds of shadow grace';
+        return '✓ Harbor mapped · passed in shadow · beacon eight is open';
       }
       if ((state.score ?? 0) >= 6) {
-        return '◇ Read the last hearth beneath beacon seven — its rhythm may be a survivor or a trap';
+        return '◇ Altitude mapped · resolve the Last Hearth beneath beacon seven';
       }
-      const target = 80;
-      const peak = state.altitudePeak ?? 0;
-      if (state.altitudeCollected) return '✓ Altitude collected — harbor stacks mapped from above';
-      return `▲ Collect altitude — climb ${target}m AGL · peak ${Math.max(0, Math.round(peak))}m`;
+      return '✓ Altitude mapped · follow the storm vanes to the Last Hearth';
     }
     if (beat === 'destroy_tower') {
       const td = vars.towersDestroyed ?? 0;

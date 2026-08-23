@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-23T10:54:36.588Z",
+  "generatedAt": "2026-08-23T11:12:47.537Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 274357,
-      "sha256": "2b1f27599f5247f39282c9e65cfd98b54d9bf3151c635babe7c6538e64250905"
+      "bytes": 277071,
+      "sha256": "308a2ba83b558fce64286f34a589466b73c073bcc3c682f7c7d1c1bbc4f6156b"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -210,8 +210,8 @@
     },
     {
       "path": "world-expansion/data/chapters.json",
-      "bytes": 6131,
-      "sha256": "693dac6e062d8eea05072467374ea2e5407f937ede0d4d86d4a344ed888b360c"
+      "bytes": 6180,
+      "sha256": "180da3408f65745a95ebff9377679b8f5200216881369ef9c16bc9bab02ab9bc"
     },
     {
       "path": "world-expansion/data/regions.json",
@@ -225,8 +225,8 @@
     },
     {
       "path": "world-expansion/modules/chapterDirector.js",
-      "bytes": 12026,
-      "sha256": "51ca2e253a5caa2ca8aa4027d10eb231a949f27f7fe89c5358d8e61f34fbf6fe"
+      "bytes": 12010,
+      "sha256": "b3f11b99a8963cf8165f700c6d40ca30aaf1b95642fc807f91c35614981ce157"
     },
     {
       "path": "world-expansion/modules/cinematicDof.js",
