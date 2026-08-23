@@ -15,11 +15,14 @@ export const DRAGON_RIGS = Object.freeze([
     loreName: 'Stormlance',
     epithet: 'Warden of the Sable Reach',
     note: 'A clean-room Galevein: power-body chest, crescent wings, deep keel, and a split storm-rudder tail.',
-    geometryProfile: 'stormlance-power-body-v3',
-    flapProfile: 'loaded-downstroke-v1',
+    geometryProfile: 'stormlance-flight-body-v4',
+    flapProfile: 'aeroelastic-powerstroke-v2',
+    brakeProfile: 'held-airbrake-v1',
+    aliveProfile: 'inertial-flight-response-v2',
     scale: 10.0,
     flapClip: 'Flap',
     glideClip: 'Glide',
+    brakeClip: 'Brake',
     default: true,
     original: true
   }

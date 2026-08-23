@@ -173,6 +173,16 @@ disabled. A displaced-camera regression must preserve placement signature
 lobby of mountain props, while the generated materials and vegetation remain
 stylized rather than photoreal.
 
+Build r26 makes Stormlance flight animation state-driven instead of ambient.
+Uncommanded cruise now holds the authored `Glide` action; Space alone blends in
+the asymmetric `aeroelastic-powerstroke-v2` flap, and S blends to a new held
+75-channel `Brake` action rather than speeding up the flap loop. Tail, neck,
+head, chest, hips, wings, wind, load, launch, and g-force remain coupled through
+ten spring response channels. The original 25-joint skin, rider clearance,
+clean-room silhouette, and one-skinned-mesh contract are unchanged. This is a
+more legible original Galevein flight rig, not a licensed Night Fury asset,
+facial-performance rig, or final production sculpt.
+
 ## Build the release artifact
 
 ```sh
@@ -200,7 +210,7 @@ then creates `release/` from an explicit allowlist. It does not include
 
 ## Prototype boundary
 
-This is a free, non-commercial prototype under a working title. It uses an original locally generated Stormlance Galevein, procedural landmarks, synthesized project audio, a documented CC0 menu track, vendored Three.js, and an MIT-licensed Poseidon spectral-ocean adaptation. Stormlance v2 retains the 25-bone rig and Flap/Glide clips while adding a higher-density crescent membrane, broader torso and neck, split lightning crown, jaw keel, sensory barbs, and a clear rider-seat gap. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), [OCEAN_PROVENANCE.md](OCEAN_PROVENANCE.md), and [RELEASE_READINESS.md](RELEASE_READINESS.md).
+This is a free, non-commercial prototype under a working title. It uses an original locally generated Stormlance Galevein, procedural landmarks, synthesized project audio, a documented CC0 menu track, vendored Three.js, and an MIT-licensed Poseidon spectral-ocean adaptation. Stormlance retains its 25-bone rig, higher-density crescent membrane, broad torso and neck, split lightning crown, jaw keel, sensory barbs, and rider-seat clearance; r26 exports named Flap, Glide, and Brake clips. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), [OCEAN_PROVENANCE.md](OCEAN_PROVENANCE.md), and [RELEASE_READINESS.md](RELEASE_READINESS.md).
 
 The r24 Story route adds one fixed Drowned Hearth decision at beacon seven.
 The prompt is triggered by authored world position and campaign progress, then

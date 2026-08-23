@@ -1524,7 +1524,7 @@ function updateTempestGate(dt){
 
 /* ============================ DRAGON ============================ */
 const START=new THREE.Vector3(0,58,250);
-const D={ group:new THREE.Group(), model:null, mixer:null, flap:null, glide:null,
+const D={ group:new THREE.Group(), model:null, mixer:null, flap:null, glide:null, brake:null,
   yaw:Math.PI, pitch:0, roll:0, speed:20, flapping:false, headNode:null, glow:null,
   turn:0, pTurn:0, pPitch:0, bones:null, mouth:null, mouthLt:null,
   motion:{longAccel:0,yawRate:0,pitchRate:0,gLoad:1}, prevYaw:Math.PI, prevPitch:0,
@@ -1746,12 +1746,16 @@ function attachDragonAccessories(model){
 function setupDragonClips(g, rig){
   const flap=findClip(g.animations, rig.flapClip);
   const glide=findClip(g.animations, rig.glideClip);
+  const brake=findClip(g.animations, rig.brakeClip);
   D.flap=flap?D.mixer.clipAction(flap):null;
   D.glide=glide?D.mixer.clipAction(glide):null;
+  D.brake=brake?D.mixer.clipAction(brake):null;
   if(D.flap) D.flap.play();
   if(D.glide) D.glide.play();
+  if(D.brake){ D.brake.play(); D.brake.timeScale=0; D.brake.time=D.brake.getClip().duration*.5; }
   if(D.flap) D.flap.setEffectiveWeight(0);
   if(D.glide) D.glide.setEffectiveWeight(1);
+  if(D.brake) D.brake.setEffectiveWeight(0);
   if(D.glide) D.glide.timeScale=1;
 }
 function onDragonLoaded(g, rig){
@@ -1793,7 +1797,7 @@ function stageRest(){
   D.group.position.copy(REST); D.yaw=Math.PI; D.pitch=0; D.roll=0;
   D.group.rotation.set(0,D.yaw,0);
   if(D.model) D.model.rotation.x=-0.12;                 // settled, not prone
-  if(D.glide){ D.glide.timeScale=0.12; D.flap.setEffectiveWeight(0); D.glide.setEffectiveWeight(1); }
+  if(D.glide){ D.glide.timeScale=0.12; D.flap?.setEffectiveWeight(0); D.glide.setEffectiveWeight(1); D.brake?.setEffectiveWeight(0); }
   for(const r of rings) r.visible=false;
   for(const r of tutRings) r.visible=false;
   landmarkPath.root.visible=false;
@@ -3268,19 +3272,17 @@ function tick(dt){
 
   /* ---- animation blend + procedural alive layer ---- */
   if(D.mixer){
-    // faster, deeper flapping while climbing/boosting; AIR-BRAKE flare when shedding speed
-    // EXPANSIVE by default: wings stay spread in a slow majestic glide;
-    // flap ONLY on demand (space) or air-brake — no auto-flap chaos on every climb
-    // NOTE: braking must NOT drive the flap clip — the folded-wing frames shatter into
-    // shards on this envelope-weighted mesh. Braking is body-lean only; wings stay spread.
+    // Player/state-driven body language: stable glide by default, loaded flap only on
+    // command, and a held authored air-brake pose while shedding speed.
     const braking=key['KeyS']&&D.speed>16;
-    // Wings ALWAYS beat — steady cruise flap that deepens on climb; weight capped
-    // below the deep-fold frames that shatter this envelope-weighted mesh.
-    const wTarget = input.flap ? 1.0 : (braking ? 0.85 : 0.55);   // full beat: the re-skin holds
-    const w=THREE.MathUtils.lerp(D.flap.getEffectiveWeight(), wTarget, fdamp(5,dt));
-    D.flap.setEffectiveWeight(w); D.glide.setEffectiveWeight(1-w);
-    D.flap.timeScale = input.flap ? 1.55+D.boost*0.7 : (braking ? 1.9 : 1.0+D.boost*0.5);
-    D.glide.timeScale = 0.7;
+    const flapTarget=input.flap?1:0, brakeTarget=braking&&D.brake?1:0;
+    const flapWeight=THREE.MathUtils.lerp(D.flap?.getEffectiveWeight()||0,flapTarget,fdamp(6,dt));
+    const brakeWeight=THREE.MathUtils.lerp(D.brake?.getEffectiveWeight()||0,brakeTarget,fdamp(7,dt));
+    const glideWeight=Math.max(0,1-Math.max(flapWeight,brakeWeight));
+    D.flap?.setEffectiveWeight(flapWeight); D.glide?.setEffectiveWeight(glideWeight); D.brake?.setEffectiveWeight(brakeWeight);
+    if(D.flap)D.flap.timeScale=1.35+D.boost*.65;
+    if(D.glide)D.glide.timeScale=.45;
+    if(D.brake){ D.brake.timeScale=0; D.brake.time=D.brake.getClip().duration*.5; }
     D.mixer.update(dt);
     applyAlive(dt);
     // surge & brake body language, clamped so the silhouette always stays a readable prone glide
@@ -4255,26 +4257,35 @@ window.SIM={
       glide:{action:'glide',phase:.08,pitch:-.08,speed:38},
       wingUp:{action:'flap',phase:.24,pitch:0,speed:28},
       wingDown:{action:'flap',phase:.72,pitch:0,speed:28},
+      brake:{action:'brake',phase:.50,pitch:.12,speed:24},
       leap:{action:'flap',phase:.48,pitch:.52,speed:36},
       dive:{action:'glide',phase:.50,pitch:-.78,speed:58}};
     const pose=poses[name]; if(!pose||!D.mixer)return null;
     S.started=true; S.done=true; S.captureKind=name; S.fpv=false; S.shake=0; S.boost=0; S.accel=0; D.roll=0; D.yaw=Math.PI; D.pitch=pose.pitch; D.speed=pose.speed;
     D.group.position.set(900,220,900); D.group.rotation.set(0,D.yaw,0); D.group.rotateX(D.pitch*.75);
     D.model.rotation.x=THREE.MathUtils.clamp(-.85-D.pitch*.3,-1.2,-.45); D.model.rotation.z=0;
-    D.flap.setEffectiveWeight(pose.action==='flap'?1:0); D.glide.setEffectiveWeight(pose.action==='glide'?1:0);
-    D.mixer.timeScale=1; const action=pose.action==='flap'?D.flap:D.glide; D.mixer.setTime(action.getClip().duration*pose.phase); D.mixer.timeScale=0;
-    menuEl.classList.add('hide','live'); $('hud').classList.add('on');
+    D.flap?.setEffectiveWeight(pose.action==='flap'?1:0); D.glide?.setEffectiveWeight(pose.action==='glide'?1:0); D.brake?.setEffectiveWeight(pose.action==='brake'?1:0);
+    D.mixer.timeScale=1; const action=pose.action==='flap'?D.flap:pose.action==='brake'?D.brake:D.glide; if(!action)return null;
+    D.mixer.setTime(action.getClip().duration*pose.phase); D.mixer.update(0); D.mixer.timeScale=0; D.model.updateMatrixWorld(true);
+    menuEl.classList.add('hide','live'); $('hud').classList.add('on'); $('shutter').classList.remove('closed'); $('shutter').style.display='none';
     const back=new THREE.Vector3(Math.sin(D.yaw),0,Math.cos(D.yaw));
     const right=new THREE.Vector3(Math.cos(D.yaw),0,-Math.sin(D.yaw));
     const cameraSpec=name==='wingUp'
-      ? {back:8,right:6,up:5}
-      : name==='wingDown' ? {back:-9,right:-5,up:4.5} : {back:10,right:0,up:5};
-    camera.position.copy(D.group.position)
+      ? {back:32,right:20,up:5}
+      : name==='wingDown' ? {back:-32,right:-18,up:5}
+      : name==='brake' ? {back:34,right:-19,up:6} : {back:34,right:19,up:6};
+    const bounds=new THREE.Box3().setFromObject(D.model), center=bounds.getCenter(new THREE.Vector3()), size=bounds.getSize(new THREE.Vector3());
+    camera.position.copy(center)
       .addScaledVector(back,cameraSpec.back)
       .addScaledVector(right,cameraSpec.right)
       .add(new THREE.Vector3(0,cameraSpec.up,0));
-    camera.lookAt(D.group.position.clone().add(new THREE.Vector3(0,-1,0))); render();
-    return {name,action:pose.action,phase:pose.phase,pitch:pose.pitch,speed:pose.speed}; },
+    camera.lookAt(center); render();
+    const tipPositions=D.bones.wingTips.map(b=>b.getWorldPosition(new THREE.Vector3()));
+    const tailTip=D.bones.tail.at(-1)?.getWorldPosition(new THREE.Vector3()), head=D.bones.head?.getWorldPosition(new THREE.Vector3());
+    const metrics={bounds:size.toArray().map(v=>+v.toFixed(2)),wingTipMeanY:+(tipPositions.reduce((sum,p)=>sum+p.y,0)/tipPositions.length).toFixed(2),
+      wingTipRangeY:+(Math.max(...tipPositions.map(p=>p.y))-Math.min(...tipPositions.map(p=>p.y))).toFixed(2),
+      headTailDistance:head&&tailTip?+head.distanceTo(tailTip).toFixed(2):null};
+    return {name,action:pose.action,phase:pose.phase,pitch:pose.pitch,speed:pose.speed,metrics}; },
   bones:()=>D.boneReport, alive:v=>{ALIVE=v;}, setTurn:v=>{D.turn=v;}, day:v=>{TOD.day=v;uDay.value=v;},
   motion:()=>({accel:+D.motion.longAccel.toFixed(2),yawRate:+D.motion.yawRate.toFixed(3),
     pitchRate:+D.motion.pitchRate.toFixed(3),gLoad:+D.motion.gLoad.toFixed(2),
@@ -4377,7 +4388,11 @@ window.SIM={
   chapterHud:()=>structure?.director?.lastHud??null,
   structureSnapshot:()=>structure?.snapshot()??null,
   rig:()=>({id:activeRig?.id,loreName:activeRig?.loreName,
-    geometryProfile:activeRig?.geometryProfile,flapProfile:activeRig?.flapProfile}),
+    geometryProfile:activeRig?.geometryProfile,flapProfile:activeRig?.flapProfile,
+    brakeProfile:activeRig?.brakeProfile,aliveProfile:activeRig?.aliveProfile}),
+  rigMotion:()=>({profile:activeRig?.aliveProfile,clips:{
+      flap:D.flap?.getClip().name||null,glide:D.glide?.getClip().name||null,brake:D.brake?.getClip().name||null},
+    responseChannels:Object.keys(D.springs||{}),cruiseMode:'stable-glide',flapAuthority:'player-command',brakeMode:'held-authored-pose'}),
   rigSurface:stormlanceSurfaceSnapshot,
   pickerRigs:()=>rigCatalog().map(r=>({id:r.id,loreName:r.loreName,epithet:r.epithet,default:!!r.default})),
   lobby:()=>lobby.snapshot(),
