@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-bounded-reach-r16">
+<meta name="galevein-build" content="stormflight-keeper-shrines-r17">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -601,7 +601,7 @@
       <div class="kicker">STORM WARDEN · SABLE REACH</div>
       <h1>GALE<span class="galevein">VEIN: STORMFLIGHT</span></h1>
       <div class="ornament" style="justify-content:center">◈</div>
-      <div class="sub">The keepers sweep the black water with searchlights.<br>
+      <div class="sub">Keeper wind shrines read every wake across the black water.<br>
         Guide Rook through the storm-lashed reach to the Tempest Gate — <b>never be seen.</b></div>
     </div>
     <div class="playwrap">
@@ -1281,31 +1281,73 @@ for(const gi of [0,2,4]){ const [cx,cz]=CAN[gi];
   gates.push(gm); scene.add(gm);
 }
 
-/* ---- lighthouse + 3 sweeping searchlights ---- */
+/* ---- three Keeper wind shrines: ancient stone apertures that read the gale ---- */
 const searchlights = [];
+const KEEPER_THREAT_PROFILE=Object.freeze({
+  profile:'keeper-wind-shrine-v1', count:3, modernStripes:0,
+  architecture:'fractured-basalt-tripod-bronze-wind-crown',
+  beamProfile:'segmented-wind-shear-v1', beamSegments:18, volumetricConeMaxOpacity:.045
+});
+const keeperStoneMat=new THREE.MeshStandardMaterial({color:0x202d30,roughness:.97,metalness:.015,flatShading:true});
+const keeperWetStoneMat=new THREE.MeshStandardMaterial({color:0x101a1d,roughness:.82,metalness:.04,flatShading:true});
+const keeperBronzeMat=new THREE.MeshStandardMaterial({color:0x536661,emissive:0x102d2a,emissiveIntensity:.26,roughness:.52,metalness:.38,flatShading:true});
+const keeperCoreMat=new THREE.MeshStandardMaterial({color:0xadc7bd,emissive:0x75b7aa,emissiveIntensity:1.35,
+  transparent:true,opacity:.76,roughness:.22,metalness:.12,flatShading:true});
+function keeperPillarGeometry(){
+  const g=new THREE.CylinderGeometry(2.8,5.2,22,7,4),p=g.attributes.position;
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i),y=p.getY(i),z=p.getZ(i),rad=Math.hypot(x,z)||1;
+    const fracture=1+Math.sin(y*.71+x*1.7-z*1.2)*.07+Math.sin(y*1.9+z*2.3)*.035;
+    p.setX(i,x/rad*rad*fracture);p.setZ(i,z/rad*rad*fracture);
+  }
+  g.computeVertexNormals();return g;
+}
+const keeperPillarGeo=keeperPillarGeometry();
+const keeperFootGeo=new THREE.IcosahedronGeometry(7,1);
+const keeperCrownGeo=new THREE.TorusGeometry(5.8,.48,7,32);
+const keeperBladeGeo=new THREE.ConeGeometry(.9,8,5);
+function keeperShearGeometry(phase=0){
+  const ribbons=3,segments=6,pos=new Float32Array(ribbons*segments*6);
+  for(let ribbon=0;ribbon<ribbons;ribbon++)for(let segment=0;segment<segments;segment++){
+    const a=segment/segments,b=(segment+1)/segments,base=(ribbon*segments+segment)*6;
+    const point=(t)=>{const x=12+t*308,w=Math.sin(t*8+phase+ribbon*2.1)*(1.4+t*4.2);
+      return [x,(ribbon-1)*1.4+w*.22,w];};
+    pos.set([...point(a),...point(b)],base);
+  }
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));return g;
+}
 function beacon(x,z,baseH,yaw0,rate,warm){
   const G=new THREE.Group(); G.position.set(x,0,z); scene.add(G);
-  const stripes = warm;
-  for(let i=0;i<6;i++){
-    const seg=new THREE.Mesh(new THREE.CylinderGeometry(4.6-i*.42,4.9-i*.42,6.5,20),
-      new THREE.MeshStandardMaterial({ color:i%2?0xb8b0a4:0x7c1f18, roughness:.65 }));
-    seg.position.y=baseH+3.2+i*6.5; G.add(seg);
+  G.name='Keeper_WindShrine';
+  const foot=new THREE.Mesh(keeperFootGeo,keeperWetStoneMat);foot.position.y=baseH+1.5;foot.scale.set(1.12,.46,1.04);G.add(foot);
+  for(let i=0;i<3;i++){
+    const a=i/3*Math.PI*2+yaw0*.18;
+    const pillar=new THREE.Mesh(keeperPillarGeo,keeperStoneMat);
+    pillar.position.set(Math.cos(a)*4.8,baseH+11.2,Math.sin(a)*4.8);
+    pillar.rotation.set(Math.sin(a)*.09,-a,Math.cos(a)*.13);pillar.castShadow=true;pillar.receiveShadow=true;G.add(pillar);
   }
-  const lampY=baseH+42;
-  const lamp=new THREE.Mesh(new THREE.CylinderGeometry(3,3,5,14,1,true),
-    new THREE.MeshStandardMaterial({ color:0xffe9b0, emissive:0xffcf70, emissiveIntensity:2.4, transparent:true, opacity:.85 }));
-  lamp.position.y=lampY; G.add(lamp);
-  const roof=new THREE.Mesh(new THREE.ConeGeometry(3.9,5,14), new THREE.MeshStandardMaterial({color:0x0e1016,roughness:.5}));
-  roof.position.y=lampY+3.2; G.add(roof);
-  const lampGlow=new THREE.PointLight(0xffd080,500,220,2); lampGlow.position.set(0,lampY,0); G.add(lampGlow);
+  const crown=new THREE.Mesh(keeperCrownGeo,keeperBronzeMat);crown.position.y=baseH+23.4;crown.rotation.x=Math.PI/2;G.add(crown);
+  for(let i=0;i<4;i++){
+    const a=i/4*Math.PI*2;
+    const blade=new THREE.Mesh(keeperBladeGeo,keeperBronzeMat);blade.position.set(Math.cos(a)*3.3,baseH+27.2,Math.sin(a)*3.3);
+    blade.rotation.set(Math.sin(a)*.28,a,Math.cos(a)*-.28);G.add(blade);
+  }
+  const lampY=baseH+30.5;
+  const lamp=new THREE.Mesh(new THREE.DodecahedronGeometry(2.2,1),keeperCoreMat.clone());
+  lamp.scale.y=1.8;lamp.position.y=lampY;G.add(lamp);
+  const lampGlow=new THREE.PointLight(0x8fc9bc,210,135,2); lampGlow.position.set(0,lampY,0); G.add(lampGlow);
 
   const pivot=new THREE.Group(); pivot.position.set(0,lampY,0); G.add(pivot);
-  const spot=new THREE.SpotLight(0xffe0a0,3200,760,0.19,0.5,1.1); pivot.add(spot,spot.target);
+  const spot=new THREE.SpotLight(0xa9c7c4,760,760,0.16,0.78,1.5); pivot.add(spot,spot.target);
   spot.target.position.set(220,-26,0);
-  const cg=new THREE.ConeGeometry(34,360,26,1,true); cg.translate(0,-180,0); cg.rotateZ(Math.PI/2);
-  const cone=new THREE.Mesh(cg,new THREE.MeshBasicMaterial({ color:0xffe6b8, transparent:true, opacity:.09,
-    blending:THREE.AdditiveBlending, side:THREE.DoubleSide, depthWrite:false, fog:false }));
+  const cg=new THREE.ConeGeometry(24,360,20,1,true); cg.translate(0,-180,0); cg.rotateZ(Math.PI/2);
+  const cone=new THREE.Mesh(cg,new THREE.MeshBasicMaterial({ color:0xb7d1ce, transparent:true, opacity:.012,
+    blending:THREE.AdditiveBlending, side:THREE.DoubleSide, depthWrite:false, fog:true }));
   cone.rotation.z=-0.09; pivot.add(cone);
+  const ribbons=new THREE.LineSegments(keeperShearGeometry(yaw0),new THREE.LineBasicMaterial({
+    color:0xbcd6d2,transparent:true,opacity:.13,blending:THREE.AdditiveBlending,depthWrite:false,fog:true
+  }));
+  ribbons.name='Keeper_SegmentedWindShear';ribbons.rotation.z=-.09;pivot.add(ribbons);
   // floating damage bar above the lamp (hidden until first hit)
   const hbW=14, hbBg=new THREE.Mesh(new THREE.PlaneGeometry(hbW,1.6),
     new THREE.MeshBasicMaterial({color:0x220608,transparent:true,opacity:0,depthTest:false}));
@@ -1313,7 +1355,7 @@ function beacon(x,z,baseH,yaw0,rate,warm){
     new THREE.MeshBasicMaterial({color:0xff5a4a,transparent:true,opacity:0,depthTest:false}));
   hbBg.position.set(x,lampY+8,z); hbFill.position.set(x,lampY+8,z); hbFill.renderOrder=999; hbBg.renderOrder=998;
   scene.add(hbBg); scene.add(hbFill);
-  const sl={ group:G, lampGlow, pivot, cone, lamp, spot, lampPos:new THREE.Vector3(x,lampY,z),
+  const sl={ group:G, lampGlow, pivot, cone, ribbons, lamp, spot, lampPos:new THREE.Vector3(x,lampY,z),
     baseH, yaw0, rate, range:720, coneHalf:0.30, lit:0, disabled:0, destroyed:false, fall:0,
     hp:4, maxHp:4, hbBg, hbFill, hbW, hbT:0, fireCd:1.5+Math.random(), alerted:0 };
   searchlights.push(sl); return sl;
@@ -1322,7 +1364,7 @@ beacon(0,0,42,0,0.42,true);
 beacon(120,90,26,2.1,-0.34,true);
 beacon(-140,60,30,4.0,0.29,true);
 
-/* ---- menu patrol skiff: a searchlight on the water that finds the resting dragon ---- */
+/* ---- menu patrol skiff: keeper sight on the water finds the resting dragon ---- */
 // Wake Perch sits inside the declared cove and faces the three-ring launch corridor.
 const REST=new THREE.Vector3(700,28,250);
 const lobbyMarkers=new LobbyMarkers(scene, REST);
@@ -1384,17 +1426,17 @@ const streakSeed=Array.from({length:STREAK_N},()=>[worldRandom(),worldRandom(),w
 
 /* ---- storm vanes (waypoint beacons) : a winding route ---- */
 const BEACON_STYLE=Object.freeze({
-  profile:'storm-vane-v1', mainRadius:10.5, mainTube:.42, mainHitRadius:15,
-  mainMinOpacity:.28, mainMaxOpacity:.64, doneOpacity:.2,
+  profile:'storm-vane-v2', mainRadius:10.5, mainTube:.28, mainHitRadius:15,
+  mainArc:4.96, flowArc:3.72, mainMinOpacity:.14, mainMaxOpacity:.42, doneOpacity:.10,
   tutorialRadius:9, tutorialTube:.38, tutorialHitRadius:13, tutorialMaxOpacity:.7
 });
 const rings=[]; const RING_R=BEACON_STYLE.mainRadius; const N_RINGS=12;
 const ringBase=new THREE.MeshBasicMaterial({
-  color:0xe1a765, transparent:true, opacity:.42, depthWrite:false,
+  color:0xb9cdbf, transparent:true, opacity:.24, depthWrite:false,
   side:THREE.DoubleSide, fog:true, toneMapped:true
 });
 const ringDone=new THREE.MeshBasicMaterial({
-  color:0x4d9e88, transparent:true, opacity:BEACON_STYLE.doneOpacity,
+  color:0x365f58, transparent:true, opacity:BEACON_STYLE.doneOpacity,
   depthWrite:false, side:THREE.DoubleSide, fog:true, toneMapped:true
 });
 const route=[[520,58,340],[400,68,180],[260,68,20],[-60,72,-150],            // authored cove exit + canyon turn
@@ -1402,12 +1444,22 @@ const route=[[520,58,340],[400,68,180],[260,68,20],[-60,72,-150],            // 
   [180,80,-560],[-320,90,-420],[-560,96,240],                                 // under the Bone Arches
   [-260,110,560],[0,120,780]];                                                // north to the Tempest Gate
 crownfallRange.setRoute(route);
+function stormVaneMesh(){
+  const vane=new THREE.Mesh(new THREE.TorusGeometry(RING_R,BEACON_STYLE.mainTube,7,52,BEACON_STYLE.mainArc),ringBase.clone());
+  const flow=new THREE.Mesh(new THREE.TorusGeometry(RING_R*.74,BEACON_STYLE.mainTube*.58,6,36,BEACON_STYLE.flowArc),ringBase.clone());
+  flow.name='StormVane_InnerShear';flow.rotation.set(.16,.10,.28);flow.material.opacity=.12;vane.add(flow);
+  vane.userData.flowArc=flow;return vane;
+}
+function setStormVaneState(vane,hit){
+  vane.userData.hit=!!hit;vane.material=(hit?ringDone:ringBase).clone();
+  if(vane.userData.flowArc){vane.userData.flowArc.material=(hit?ringDone:ringBase).clone();vane.userData.flowArc.material.opacity=hit?.06:.12;}
+}
 for(let i=0;i<N_RINGS;i++){
   const [x,y,z]=route[i];
-  const m=new THREE.Mesh(new THREE.TorusGeometry(RING_R,BEACON_STYLE.mainTube,8,48), ringBase.clone());
+  const m=stormVaneMesh();
   m.position.set(x,y,z);
   const nx = route[(i+1)%N_RINGS][0], nz=route[(i+1)%N_RINGS][2];
-  m.lookAt(new THREE.Vector3(nx,y,nz)); m.userData.hit=false; m.visible=false;
+  m.lookAt(new THREE.Vector3(nx,y,nz)); setStormVaneState(m,false); m.visible=false;
   rings.push(m); scene.add(m);
 }
 const gateGroup=new THREE.Group(); gateGroup.position.set(0,120,780); scene.add(gateGroup);
@@ -2154,7 +2206,7 @@ function fillBolt(b){
 }
 function destroyTower(sl,power){
   if(sl.destroyed) return; addViolence(3.2); S.scales=(S.scales||0)+5; sl.destroyed=true; sl.disabled=1e9; sl.lit=0;
-  sl.fall=1; sl.spot.intensity=0; sl.cone.visible=false; sl.lampGlow.intensity=0;
+  sl.fall=1; sl.spot.intensity=0; sl.cone.visible=false; sl.ribbons.visible=false; sl.lampGlow.intensity=0;
   sl.hbT=0; sl.hbBg.material.opacity=0; sl.hbFill.material.opacity=0;
   sl.lamp.material.emissiveIntensity=0;
   bigExplosion(sl.lampPos, 0xffb060);
@@ -2169,7 +2221,7 @@ function destroyTower(sl,power){
       spin:new THREE.Vector3(Math.random()*6,Math.random()*6,Math.random()*6), life:3.5});
   }
   S.flash=Math.max(S.flash,0.85); S.shake=Math.max(S.shake,0.9); AU.play('crash',0.7);
-  popup('TOWER DOWN'); if(D.glow) D.glow.intensity=140;
+  popup('SHRINE BROKEN'); if(D.glow) D.glow.intensity=140;
 }
 const debris=[];
 function updateDebris(dt){
@@ -2233,7 +2285,7 @@ function updateBolts(dt){
         smallBurst(sl.lampPos.x,sl.lampPos.y,sl.lampPos.z,0xffd070);
         sl.lamp.material.emissiveIntensity=6;                       // hit flash
         S.flash=Math.max(S.flash,0.4); S.shake=Math.max(S.shake,0.3); AU.play('crash',0.35);
-        popup(sl.hp<=0?'TOWER DOWN':'−'+dmg.toFixed(0)+'  ('+Math.max(0,Math.ceil(sl.hp))+' left)');
+        popup(sl.hp<=0?'SHRINE BROKEN':'−'+dmg.toFixed(0)+'  ('+Math.max(0,Math.ceil(sl.hp))+' left)');
         if(sl.hp<=0) destroyTower(sl,b.power||1);
         hit=true; break; }
     }
@@ -2440,7 +2492,7 @@ function driveTutorial(dt){
     S.tutDone=true;
     structure?.director?.enterChapter(1);
     achievement('First Flight','the cove is behind you — the beacon road waits','CHAPTER II');
-    storyPop('She answers you now. Out past the stacks, the keepers are lighting their lamps.',6);
+    storyPop('She answers you now. Out past the stacks, the Keeper wind shrines begin to sing.',6);
     for(const r of rings) r.visible=true;
   }
 }
@@ -3098,11 +3150,16 @@ function tick(dt){
   /* ---- STEALTH detection ---- */
   let litNow=0;
   for(const sl of searchlights){
-    if(sl.disabled>0){ sl.disabled-=dt; sl.lit=0; sl.cone.material.opacity=0.02; sl.cone.material.color.setHex(0x7a3cff);
-      sl.lamp.material.emissiveIntensity=0.25; sl.spot.intensity=0; continue; }
-    sl.cone.material.color.setHex(0xffe6b8); sl.lamp.material.emissiveIntensity=2.4; sl.spot.intensity=3200;
+    sl.ribbons.scale.x=sl.range/320;
+    sl.ribbons.rotation.x=Math.sin(S.t*.42+sl.yaw0)*.012*(1+CURRENT_WIND.gust*2);
+    if(sl.disabled>0){ sl.disabled-=dt; sl.lit=0; sl.cone.material.opacity=.003; sl.cone.material.color.setHex(0x55738a);
+      sl.ribbons.material.color.setHex(0x6f8fa0);sl.ribbons.material.opacity=.018;
+      sl.lamp.material.emissiveIntensity=.18; sl.spot.intensity=0; continue; }
+    sl.cone.material.color.setHex(0xa9c7c4); sl.ribbons.material.color.setHex(0xbcd6d2);
+    sl.lamp.material.emissiveIntensity=1.35; sl.spot.intensity=760;
     _toD.copy(p).sub(sl.lampPos); const dist=_toD.length();
-    if(dist>sl.range){ sl.lit*= (1-Math.min(1,dt*4)); sl.cone.material.opacity=0.07; continue; }
+    if(dist>sl.range){ sl.lit*= (1-Math.min(1,dt*4)); sl.cone.material.opacity=.008;
+      sl.ribbons.material.opacity=.055+CURRENT_WIND.gust*.05;continue; }
     const bd=beamDir(sl); const ang=bd.angleTo(_toD.normalize());
     let lit=0;
     if(ang<sl.coneHalf && !occluded(sl.lampPos,p)){
@@ -3110,7 +3167,8 @@ function tick(dt){
     }
     sl.lit += (lit-sl.lit)*Math.min(1,dt*8);
     litNow=Math.max(litNow, sl.lit);
-    sl.cone.material.opacity = 0.07 + sl.lit*0.14;
+    sl.cone.material.opacity = .008 + sl.lit*.037;
+    sl.ribbons.material.opacity=.06+CURRENT_WIND.gust*.055+sl.lit*.10;
   }
   if(S.grace>0){ S.grace-=dt; litNow=0; }              // takeoff grace: the armour bought you time
   const flockHide = S.flockT>0 ? 0.25 : 1, danger=routeDifficulty();
@@ -3182,8 +3240,12 @@ function tick(dt){
     r.material.opacity=THREE.MathUtils.clamp(
       BEACON_STYLE.mainMinOpacity+proximity*.27+Math.sin(S.t*2+r.position.x*.03)*.045,
       BEACON_STYLE.mainMinOpacity,BEACON_STYLE.mainMaxOpacity);             // quiet near-field breathe
+    if(r.userData.flowArc){
+      r.userData.flowArc.rotation.z=.28+Math.sin(S.t*.55+r.position.z*.01)*.12;
+      r.userData.flowArc.material.opacity=r.material.opacity*.48;
+    }
     if(p.distanceTo(r.position)<BEACON_STYLE.mainHitRadius){
-      r.userData.hit=true; r.userData.pop=1; r.material=ringDone; S.score++;
+      setStormVaneState(r,true); r.userData.pop=1; S.score++;
       const clean=S.detection<.18, rewards=[2,2,3,2,3,2,3,3,4,3,4,5];
       const earned=rewards[S.score-1]+(clean?1:0);
       AU.play('ring',0.75); shockwave(r.position,0xffc27a);
@@ -3318,7 +3380,7 @@ function returnToHub(reason=''){
 }
 function detected(){ if(S.done)return; S.cause='DETECTED'; TONE.snap=1; TONE.threat=1;
   AU.play('detected',0.9); showOver('DETECTED','SPOTTED','bad',
-  'The searchlight found you. The keepers loose their bolts into the dark.'); }
+  'A wind shrine reads your wake. The keepers loose their bolts into the dark.'); }
 function crash(reason){ if(S.done)return; S.cause=reason; AU.play('crash',0.9); S.shake=1; showOver('WRECKED',reason,'bad',
   'Even a Galevein cannot fly through stone.'); }
 function escaped(){ if(S.done)return;
@@ -3413,10 +3475,10 @@ function reset(){
   TOD.day=0.0; S.keepersWoke=false; ROG.amp=0; ROG.life=0; ROG.next=6; uRA.value=0;
   if(D.model) D.model.scale.setScalar(9);
   if(D.glide) D.glide.timeScale=1;
-  for(const r of rings){ r.userData.hit=false; r.userData.pop=0; r.scale.setScalar(1); r.material=ringBase.clone(); }
+  for(const r of rings){ setStormVaneState(r,false); r.userData.pop=0; r.scale.setScalar(1); }
   for(const sl of searchlights){ sl.lit=0; sl.disabled=0; sl.destroyed=false; sl.fall=0;
-    sl.group.rotation.z=0; sl.group.position.y=0; sl.spot.intensity=3200; sl.cone.visible=true;
-    sl.lampGlow.intensity=500; sl.lamp.material.emissiveIntensity=2.4; }
+    sl.group.rotation.z=0; sl.group.position.y=0; sl.spot.intensity=760; sl.cone.visible=true; sl.ribbons.visible=true;
+    sl.lampGlow.intensity=210; sl.lamp.material.emissiveIntensity=1.35; }
   for(const b of bolts){ scene.remove(b.m); scene.remove(b.line); } bolts.length=0;
   for(const s of shocks){ scene.remove(s.m); } shocks.length=0;
   for(const d of debris){ scene.remove(d.m); } debris.length=0;
@@ -3683,8 +3745,7 @@ function simJumpBeacon(n, opts={}){
     for(const r of rings) r.visible=true;
     S.score=score;
     for(let j=0;j<rings.length;j++){
-      rings[j].userData.hit=j<score;
-      rings[j].material=j<score?ringDone:ringBase.clone();
+      setStormVaneState(rings[j],j<score);
     }
     structure?.director?.syncChapterFromProgress(S.score,true);
     const hud=structure?.tick({tutorialDone:3});
@@ -3705,19 +3766,19 @@ function simJumpChapter(n){
   if(chapter===0){
     S.chapter=0; S.tutDone=false; S.altitudePeak=0; S.altitudeCollected=false; S.score=0;
     for(const r of tutRings){ r.userData.hit=false; r.material.opacity=.52; r.visible=true; }
-    for(const r of rings){ r.visible=false; r.userData.hit=false; }
+    for(const r of rings){ r.visible=false; setStormVaneState(r,false); }
     D.group.position.set(REST.x,REST.y+6,REST.z); D.yaw=2.83; D.pitch=0.22; D.roll=0; D.speed=28;
     S.gustNext=999; S.gustPow=0; input.flap=false;
   } else {
     S.chapter=chapter; S.tutDone=true;
     for(const r of tutRings) r.userData.hit=true;
-    for(const r of rings){ r.visible=true; r.userData.hit=false; r.material=ringBase.clone(); }
+    for(const r of rings){ r.visible=true; setStormVaneState(r,false); }
     // The public selector uses ChapterDirector indices, not the former
     // hand-maintained six-row menu. These scores are the data contract's
     // `unlockAtScore` thresholds, so the HUD, region, and checkpoint agree.
     const target=[0,0,4,8,11][chapter];
     S.score=target;
-    for(let j=0;j<target;j++){ rings[j].userData.hit=true; rings[j].material=ringDone; }
+    for(let j=0;j<target;j++)setStormVaneState(rings[j],true);
     simJumpBeacon(target,{speed:34,setupRun:false});
     structure?.director?.syncChapterFromProgress(S.score,true);
     const hud=structure?.tick({tutorialDone:3});
@@ -3731,7 +3792,7 @@ function simJumpState(patch={}){
   if(patch.chapter!=null) S.chapter=patch.chapter;
   if(patch.score!=null){
     S.score=THREE.MathUtils.clamp(patch.score,0,rings.length);
-    for(let i=0;i<rings.length;i++){ rings[i].userData.hit=i<S.score; rings[i].material=(i<S.score?ringDone:ringBase.clone()); }
+    for(let i=0;i<rings.length;i++)setStormVaneState(rings[i],i<S.score);
     rings.forEach(r=>r.visible=S.tutDone||S.chapter>0);
   }
   if(patch.detection!=null) S.detection=THREE.MathUtils.clamp(patch.detection,0,1);
@@ -3829,7 +3890,8 @@ window.SIM={
       radius:rings[0]?.geometry?.parameters?.radius??null,
       tube:rings[0]?.geometry?.parameters?.tube??null,
       radialSegments:rings[0]?.geometry?.parameters?.radialSegments??null,
-      tubularSegments:rings[0]?.geometry?.parameters?.tubularSegments??null
+      tubularSegments:rings[0]?.geometry?.parameters?.tubularSegments??null,
+      arc:rings[0]?.geometry?.parameters?.arc??null
     },
     tutorialGeometry:{
       radius:tutRings[0]?.geometry?.parameters?.radius??null,
@@ -3838,6 +3900,15 @@ window.SIM={
     material:ringBase.type,
     depthWrite:ringBase.depthWrite,
     transparent:ringBase.transparent
+  }),
+  keeperThreat:()=>({
+    ...KEEPER_THREAT_PROFILE,
+    active:searchlights.length,
+    detectionAuthority:'unchanged-angular-occlusion-v1',
+    ranges:searchlights.map(shrine=>+shrine.range.toFixed(1)),
+    health:searchlights.map(shrine=>shrine.maxHp),
+    windCoupled:searchlights.every(shrine=>shrine.ribbons?.name==='Keeper_SegmentedWindShear'),
+    destroyable:searchlights.every(shrine=>shrine.maxHp===4)
   }),
   openingScene:()=>{
     const openingIds=new Set(['wake-arch']);
@@ -3864,7 +3935,7 @@ window.SIM={
       defaultMode:lobby.snapshot().selection?.mode||null,
       primaryAction:document.querySelector('[data-lobby-launch]')?.textContent||'',
       materialDirection:'stormlance-v2 split-crown wet-hide',
-      palette:['basalt','weathered-bronze','warm-keeper-lamp','beacon-cyan']
+      palette:['basalt','weathered-bronze','cold-keeper-core','wind-shear-cyan']
     };
   },
   win:()=>{ simJumpState({started:true,done:false,chapter:5,score:11,detection:0,day:0.2});
@@ -3898,6 +3969,26 @@ window.SIM={
     $('spdV').textContent=Math.round(D.speed);$('altV').textContent=Math.round(D.group.position.y);
     camera.lookAt(new THREE.Vector3(...spec.target));render(1/60);
     return {view,position:spec.position,target:spec.target,map:crownfallRange.getSnapshot(),state:SIM.state()};
+  },
+  keeperStage:(view='shrine')=>{
+    const views={
+      shrine:{position:[145,96,158],target:[0,70,0],day:.12,tower:0},
+      shear:{position:[286,104,210],target:[120,58,90],day:.58,tower:1},
+      storm:{position:[-286,122,186],target:[-140,62,60],day:.90,tower:2}
+    };
+    const spec=views[view]||views.shrine;simJumpChapter(3);S.finishToken++;
+    S.started=true;S.done=true;S.finishing=false;S.captureKind=null;S.fpv=false;S.shake=0;S.boost=0;S.accel=0;
+    S.chapter=3;S.tutDone=true;S.score=8;S.grace=999;TOD.day=spec.day;uDay.value=TOD.day;
+    menuEl.classList.add('hide','live');$('hud').classList.add('on');$('over').classList.add('hide');$('ach').classList.remove('on');
+    for(const ring of rings)ring.visible=false;popEl.textContent='';popEl.style.animation='none';storyEl.textContent='';storyEl.style.animation='none';
+    searchlights.forEach((shrine,index)=>{shrine.group.visible=true;shrine.destroyed=false;shrine.cone.visible=true;shrine.ribbons.visible=true;
+      shrine.pivot.rotation.y=shrine.yaw0+(index===spec.tower ? .22 : -.48);shrine.ribbons.scale.x=shrine.range/320;
+      shrine.ribbons.material.opacity=index===spec.tower ? .17 : .055;shrine.cone.material.opacity=index===spec.tower ? .025 : .006;});
+    D.group.position.fromArray(spec.position);D.yaw=simHeadingTo(...spec.target);D.pitch=-.02;D.roll=0;D.speed=30;
+    D.group.rotation.set(0,D.yaw,0);D.group.rotateX(D.pitch*.75);D.prevYaw=D.yaw;D.prevPitch=D.pitch;S.prevSpeed=D.speed;
+    camera.position.copy(D.group.position).add(new THREE.Vector3(Math.sin(D.yaw)*27,11,Math.cos(D.yaw)*27));
+    camera.lookAt(new THREE.Vector3(...spec.target));$('spdV').textContent=Math.round(D.speed);$('altV').textContent=Math.round(D.group.position.y);render(1/60);
+    return {view,position:spec.position,target:spec.target,keeper:SIM.keeperThreat(),state:SIM.state()};
   },
   warp:(dt,steps=60)=>{ for(let i=0;i<steps;i++) tick(dt); render(); },
   capturePose:name=>{ const poses={

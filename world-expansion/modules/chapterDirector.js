@@ -207,7 +207,7 @@ export class ChapterDirector {
       const td = vars.towersDestroyed ?? 0;
       const need = Math.min(3, state.towerTarget ?? 3);
       if (td >= need) return `✓ ${need} towers shattered — the wastes open ahead`;
-      return `⚔ Destroy towers — ${td}/${need} searchlights down · hold X to charge plasma`;
+      return `⚔ Silence wind shrines — ${td}/${need} broken · hold X to charge plasma`;
     }
     const meta = this.metaObjectives[beat];
     if (meta && chapter.index > 0 && chapter.index < 4) return meta;

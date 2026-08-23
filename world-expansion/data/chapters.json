@@ -107,7 +107,7 @@
       "win": {
         "condition": "beacons_reached",
         "threshold": 11,
-        "narrative": "Towers fall. The bone arches fade in the rear mirror of rain."
+        "narrative": "The wind shrines fall silent. The bone arches fade behind the rain."
       },
       "loss": {
         "conditions": ["shot_down", "nightfall_before_beacon_11"],
@@ -116,10 +116,10 @@
       "hud": {
         "chapterLabel": "Chapter IV · The Long Night",
         "objectiveTemplate": "IV · the long night — beacons {score}/11",
-        "goalText": "Cross the rib wastes and destroy keeper towers",
+        "goalText": "Cross the rib wastes and silence the Keeper wind shrines",
         "distanceLabel": "Next beacon",
         "showHeightAboveWater": false,
-        "subHints": ["Hold X to charge plasma — shatter searchlights", "Press F to hide in the flock"]
+        "subHints": ["Hold X to charge plasma — break Keeper wind shrines", "Press F to hide in the flock"]
       },
       "storyLine": "No more shelter. The keepers turn faster now.",
       "popupOnEnter": "CHAPTER IV · THE LONG NIGHT"
@@ -160,6 +160,6 @@
     "rebuild": "Cross home waters without losing the Codex to reckless violence.",
     "rescue": "Find the spared torch in the drowned village — someone still tends a hearth.",
     "collect_at_altitude": "Climb above harbor masts and cinder stacks to read the coast.",
-    "destroy_tower": "Charge plasma (X) and shatter keeper searchlights blocking the road."
+    "destroy_tower": "Charge plasma (X) and break the Keeper wind shrines reading your wake."
   }
 }

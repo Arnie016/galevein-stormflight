@@ -87,6 +87,15 @@ the world rather than merely darkening. This is a substantial authored-world
 pass, but the code-generated vegetation and architecture are still stylized;
 it is not photographic final art.
 
+Build r17 replaces the modern red-white lighthouse kit and broad opaque
+searchlight cones with **Keeper wind shrines**: fractured basalt tripods,
+weathered-bronze wind crowns, cold cores, and thin segmented shear ribbons that
+move with the shared wind field. The main route markers are now incomplete
+storm-vane arcs with lower opacity instead of bright complete hoops. Detection,
+cover, shrine health, plasma destruction, Story routing, and multiplayer combat
+authority are unchanged. This improves cultural coherence and flight
+readability; it does not make the procedural architecture photorealistic.
+
 ## Build the release artifact
 
 ```sh
@@ -140,6 +149,11 @@ The duel verifier opens two independent Chrome tabs, proves one temporary host a
 ```sh
 npm run verify:duel
 ```
+
+The default regression run skips CDP screenshot readback because background-tab
+GPU capture can stall independently of duel state. Add `-- --capture true` for
+faceoff/objective/downed images; the dedicated environment pass supplies the
+three required release visuals.
 
 To try it manually, open the same served game URL in two tabs and choose **Stormscar 1v1 Lab** in both. A public-origin proof can be run with `node scripts/duel-harness.mjs --url <game-url>`. Remote internet matchmaking remains a separate backend milestone.
 
