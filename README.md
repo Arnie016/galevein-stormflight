@@ -118,6 +118,16 @@ path to prove the gate. This fixes an objective-placement bug and makes the
 chapter feel like a bounded flight-and-combat valley, but its faceted procedural
 geology is still stylized rather than photoreal.
 
+Build r20 replaces that faceted cliff finish with a deterministic
+**coastal-strata surface**. Seam-safe cylindrical UVs, smooth vertex normals,
+one generated 128 x 128 albedo texture, and thirteen subtle instance tints make
+the same cliff geometry read as weathered coastal masses without importing art.
+The route, camera, lighting, collision proxies, 69.4-unit clearance, five draw
+calls, and 88,612 Keeper Hollow triangles remain fixed. In a matched forced-WebGL
+shrine view, r20 measured 8.4 ms median / 17.3 ms p95 frame time versus r19 at
+8.3 ms / 25.9 ms. The retained treatment is still deliberately stylized rather
+than a claim of photoreal terrain.
+
 ## Build the release artifact
 
 ```sh
