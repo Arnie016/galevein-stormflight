@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-fixed-world-r27">
+<meta name="galevein-build" content="stormflight-atmosphere-r28">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -741,6 +741,7 @@ import { createPoseidonOceanLayer } from './world-expansion/modules/poseidonOcea
 import { GaleveinWindField } from './world-expansion/modules/windField.js';
 import { CrownfallRange } from './world-expansion/modules/crownfallRange.js';
 import { DrownedHearthDecision } from './world-expansion/modules/hearthDecision.js';
+import { ATMOSPHERE_PROFILE, ATMOSPHERE_STOPS, atmospherePhase, sampleAtmosphere } from './world-expansion/modules/atmosphereProfile.js';
 
 const $ = id => document.getElementById(id);
 // Structural world variation is reproducible. Runtime VFX can still vary, but terrain,
@@ -793,9 +794,9 @@ AU.load('wind','audio/wind.mp3',true,0.0);
 const TONE={ threat:0, lastStage:0, snap:0, mode:'hub',
   fogHunt:new THREE.Color(0x1a0610), ambHunt:new THREE.Color(0x3a1828) };
 function driveThreatTone(dt){
-  if(!AU.on||S.muted){
+  const audioReady=AU.on&&!S.muted;
+  if(!audioReady){
     for(const n of ['menu','music','amb']){ const a=AU.el[n]; if(a) a.volume=0; }
-    return;
   }
   let target=0, mode='hub';
   if(S.done){
@@ -821,33 +822,37 @@ function driveThreatTone(dt){
   const d=TOD.day;
 
   const menu=AU.el.menu, mus=AU.el.music, ambA=AU.el.amb;
-  if(menu){
+  if(audioReady&&menu){
     const want = !S.started ? 0.36 : Math.max(0,(0.28*(1-th))*(1-d*0.75));
     menu.volume += (want-menu.volume)*Math.min(1,dt*(TONE.snap>0?8:3));
     if(want>0.02 && menu.paused) menu.play().catch(()=>{});
     if(want<=0.02 && !menu.paused && S.started) menu.pause();
   }
-  if(mus){
+  if(audioReady&&mus){
     const want = S.started ? (0.10+th*0.52+d*0.16) : 0;
     mus.volume += (want-mus.volume)*Math.min(1,dt*(TONE.snap>0?9:3.2));
     try{ mus.playbackRate = 1+th*0.16+(S.alertStage>=2?0.06:0); }catch(e){}
     if(want>0.02 && mus.paused) mus.play().catch(()=>{});
     if(want<=0.02 && !mus.paused && !S.started) mus.pause();
   }
-  if(ambA){
+  if(audioReady&&ambA){
     const want = S.started ? 0.22+th*0.18 : 0.28;
     ambA.volume += (want-ambA.volume)*Math.min(1,dt*2.5);
     if(want>0.02 && ambA.paused) ambA.play().catch(()=>{});
   }
 
   if(S.started && !S.done){
-    renderer.toneMappingExposure *= (1-th*0.22);
-    renderer.toneMappingExposure += Math.sin(S.t*(12+th*16))*th*0.045;
-    scene.fog.density *= (1+th*0.75);
+    // Threat now arrives as a slow weather grade. The former 12–28 Hz global
+    // exposure flicker and 75% fog multiplier made fixed scenery look unstable.
+    const atmosphere=sampleAtmosphere(d,{threat:th,valley:S.chapter===3});
+    renderer.toneMappingExposure=atmosphere.exposure;
+    horizonDirector.fogDensity=atmosphere.fogDensity;
+    scene.fog.density=atmosphere.fogDensity;
+    ATMOSPHERE_STATE={...atmosphere,threat:+th.toFixed(3),globalFlickerHz:0};
     if(th>0.35){
-      const k=(th-0.35)*0.55;
+      const k=(th-0.35)*0.16;
       scene.fog.color.lerp(TONE.fogHunt, k);
-      amb.color.lerp(TONE.ambHunt, k*0.75);
+      amb.color.lerp(TONE.ambHunt, k*0.45);
       if(typeof rimP!=='undefined' && rimP) rimP.intensity = Math.max(rimP.intensity, 0.9+th*1.4);
     }
   }
@@ -3067,11 +3072,12 @@ function occluded(lamp,drag){
 }
 
 /* ============================ SIM ============================ */
-const _sun=new THREE.Color(0xffd9a0), _moonC=new THREE.Color(0x9fb4ff), _sunWhite=new THREE.Color(0xfff2df);
-const _fogSet=new THREE.Color(0x24151f), _fogNight=new THREE.Color(0x0a0a1a), _fogDay=new THREE.Color(0x9fb6cf);
-const _ambSet=new THREE.Color(0x4a2c30), _ambNight=new THREE.Color(0x242847), _ambDay=new THREE.Color(0x6b7690);
+const _sun=new THREE.Color(ATMOSPHERE_STOPS[1].sun), _moonC=new THREE.Color(ATMOSPHERE_STOPS[2].sun), _sunWhite=new THREE.Color(ATMOSPHERE_STOPS[0].sun);
+const _fogSet=new THREE.Color(ATMOSPHERE_STOPS[1].fog), _fogNight=new THREE.Color(ATMOSPHERE_STOPS[2].fog), _fogDay=new THREE.Color(ATMOSPHERE_STOPS[0].fog);
+const _ambSet=new THREE.Color(ATMOSPHERE_STOPS[1].ambient), _ambNight=new THREE.Color(ATMOSPHERE_STOPS[2].ambient), _ambDay=new THREE.Color(ATMOSPHERE_STOPS[0].ambient);
 const _hemiSkyDay=new THREE.Color(0x9bb9d8),_hemiSkyNight=new THREE.Color(0x52669c);
 const _hemiGroundDay=new THREE.Color(0x31202a),_hemiGroundNight=new THREE.Color(0x100a18);
+let ATMOSPHERE_STATE={...sampleAtmosphere(0),threat:0,globalFlickerHz:0};
 function driveTimeOfDay(dt){
   // flight begins in daylight and the sun sinks over NIGHTFALL seconds; menu holds a golden dusk
   if(S.started && !S.done && S.flightT>S.dayHold) TOD.day=Math.min(1, TOD.day + dt/S.nightfall);
@@ -3084,10 +3090,11 @@ function driveTimeOfDay(dt){
   hemi.color.copy(_hemiSkyDay).lerp(_hemiSkyNight,d); hemi.groundColor.copy(_hemiGroundDay).lerp(_hemiGroundNight,d); hemi.intensity=.78+.18*d;
   rimP.intensity=.82+.82*d; fillT.intensity=.58+.42*d;
   scene.fog.color.copy(_fogSet).lerp(_fogNight, d).lerp(_fogDay, dayW);
-  const keeperValleyFog=S.started&&S.chapter===3?.00018:0;
-  horizonDirector.fogDensity=.00058+.00032*d+.00010*THREE.MathUtils.smoothstep(d,.78,1)+keeperValleyFog;
+  const atmosphere=sampleAtmosphere(d,{valley:S.started&&S.chapter===3});
+  horizonDirector.fogDensity=atmosphere.fogDensity;
   scene.fog.density=horizonDirector.fogDensity;
-  renderer.toneMappingExposure=1.62-.12*d + dayW*.14;
+  renderer.toneMappingExposure=atmosphere.exposure;
+  ATMOSPHERE_STATE={...atmosphere,threat:0,globalFlickerHz:0};
   landmarkPath.setNightfall(d,S.t);
   horizonDirector.masses.material.emissiveIntensity=.08+.16*d;
   // music beds are owned by driveThreatTone (alert / hub / night), not TOD alone
@@ -4126,6 +4133,8 @@ window.SIM={
   controls:simSetControls, clearControls:simClearControls, steerObjective:simSteerObjective,
   jumpBeacon:simJumpBeacon, jumpChapter:simJumpChapter, jumpState:simJumpState,
   runSteps:simRunSteps, runUntil:simRunUntil, snapshot:simSnapshot,
+  atmosphere:()=>({...ATMOSPHERE_STATE,phase:atmospherePhase(TOD.day),sceneFog:+scene.fog.density.toFixed(7),
+    exposure:+renderer.toneMappingExposure.toFixed(3),reflectionProfile:poseidonOcean.snapshot().cycleProfile}),
   achievementUI:achievementUiSnapshot, clearAchievements:()=>{clearAchievementUi(true);return achievementUiSnapshot();},
   duel:()=>localDuel.snapshot(),
   duelScene:()=>({objectiveVisible:DUEL_OBJECTIVE.visible,objectivePosition:DUEL_OBJECTIVE.position.toArray(),
@@ -4241,7 +4250,7 @@ window.SIM={
     const spec=views[view]||views.approach;
     simJumpChapter(2);S.finishToken++;
     S.started=true;S.done=true;S.finishing=false;S.captureKind=null;S.fpv=false;S.shake=0;S.boost=0;S.accel=0;
-    S.chapter=2;S.tutDone=true;S.score=4;S.grace=999;TOD.day=dayOverride==null?spec.day:THREE.MathUtils.clamp(Number(dayOverride),0,1);uDay.value=TOD.day;
+    S.chapter=2;S.tutDone=true;S.score=4;S.grace=999;TOD.day=dayOverride==null?spec.day:THREE.MathUtils.clamp(Number(dayOverride),0,1);uDay.value=TOD.day;driveTimeOfDay(0);
     menuEl.classList.add('hide','live');$('hud').classList.add('on');$('over').classList.add('hide');$('ach').classList.remove('on');
     for(const ring of rings)ring.visible=false;
     popEl.textContent='';popEl.style.animation='none';storyEl.textContent='';storyEl.style.animation='none';
@@ -4262,7 +4271,7 @@ window.SIM={
     simJumpChapter(1);S.finishToken++;
     S.started=true;S.done=true;S.finishing=false;S.captureKind=null;S.fpv=false;S.shake=0;S.boost=0;S.accel=0;
     S.chapter=1;S.tutDone=true;S.score=2;S.grace=999;
-    TOD.day=spec.day;uDay.value=TOD.day;
+    TOD.day=spec.day;uDay.value=TOD.day;driveTimeOfDay(0);
     menuEl.classList.add('hide','live');$('hud').classList.add('on');$('over').classList.add('hide');$('ach').classList.remove('on');
     for(const ring of rings)ring.visible=false;
     popEl.textContent='';popEl.style.animation='none';storyEl.textContent='';storyEl.style.animation='none';

@@ -10,15 +10,16 @@ import { createRadialGrid } from '../../vendor/poseidon-ocean/oceanGrid.js';
 import { createOceanSurfaceMaterial } from '../../vendor/poseidon-ocean/oceanSurfaceMaterial.js';
 import { params as upstreamParams } from '../../vendor/poseidon-ocean/params.js';
 import { createSkyDome } from './galeveinPoseidonSky.js';
+import { ATMOSPHERE_PROFILE, ATMOSPHERE_STOPS, atmospherePhase, sampleAtmosphere } from './atmosphereProfile.js';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const query = new URLSearchParams(location.search);
-const CYCLE_PROFILE = 'day-dusk-night-reflection-v2';
+const CYCLE_PROFILE = `${ATMOSPHERE_PROFILE}-reflection-v1`;
 const CYCLE = Object.freeze({
-  horizon: [new Color(0x8fb6c3), new Color(0xb76b72), new Color(0x11172c)],
-  zenith: [new Color(0x315c83), new Color(0x29345c), new Color(0x050917)],
-  ambient: [new Color(0x9db7b1), new Color(0x705f70), new Color(0x16243e)],
-  sun: [new Color(0xfff1cf), new Color(0xffb474), new Color(0x9eb9ff)]
+  horizon: ATMOSPHERE_STOPS.map(stop => new Color(stop.horizon)),
+  zenith: ATMOSPHERE_STOPS.map(stop => new Color(stop.zenith)),
+  ambient: ATMOSPHERE_STOPS.map(stop => new Color(stop.ambient)),
+  sun: ATMOSPHERE_STOPS.map(stop => new Color(stop.sun))
 });
 
 function ease(value) { return value * value * (3 - 2 * value); }
@@ -26,7 +27,6 @@ function cycleColor(target, colors, day) {
   if (day <= .56) target.copy(colors[0]).lerp(colors[1], ease(day / .56));
   else target.copy(colors[1]).lerp(colors[2], ease((day - .56) / .44));
 }
-function cyclePhase(day) { return day < .40 ? 'daylight' : day < .73 ? 'dusk' : 'night'; }
 
 export function createPoseidonOceanLayer({ canvas, onModeChange = () => {} }) {
   const state = {
@@ -222,9 +222,10 @@ export function createPoseidonOceanLayer({ canvas, onModeChange = () => {} }) {
     shading.windDir.value.set(wx / wl, wz / wl);
     shading.windSpeed.value = windSpeed;
     shading.gust.value = gust;
-    shading.hazeAir.value = 1 / (4200 - day * 1350);
-    shading.hazeWater.value = 1 / (5700 - day * 1300);
-    state.cyclePhase = cyclePhase(day);
+    const atmosphere = sampleAtmosphere(day);
+    shading.hazeAir.value = atmosphere.airHaze;
+    shading.hazeWater.value = atmosphere.waterHaze;
+    state.cyclePhase = atmospherePhase(day);
     state.cycleAmount = +day.toFixed(3);
 
     ocean.evolve(elapsed, dt * 0.72);
