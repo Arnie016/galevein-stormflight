@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-power-body-r23">
+<meta name="galevein-build" content="stormflight-drowned-hearth-r24">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -231,6 +231,27 @@
     text-shadow:0 2px 14px rgba(0,0,0,.9), 0 0 30px rgba(150,100,255,.35); pointer-events:none; }
   @keyframes storyfade{ 0%{opacity:0; transform:translateX(-50%) translateY(10px);} 12%{opacity:1; transform:translateX(-50%);}
     80%{opacity:1;} 100%{opacity:0; transform:translateX(-50%) translateY(-8px);} }
+  #hearthChoice{ position:fixed; left:50%; bottom:18%; width:min(680px,calc(100vw - 32px)); z-index:9;
+    transform:translate(-50%,16px); opacity:0; pointer-events:none; transition:opacity .2s,transform .2s;
+    border:1px solid rgba(255,194,122,.48); border-left:3px solid rgba(255,194,122,.9); border-radius:10px;
+    background:linear-gradient(135deg,rgba(9,15,22,.94),rgba(17,25,27,.9));
+    box-shadow:0 18px 54px rgba(0,0,0,.58),0 0 36px rgba(255,174,92,.08); padding:12px 14px 14px; }
+  #hearthChoice.on{ opacity:1; transform:translate(-50%,0); pointer-events:auto; }
+  #hearthChoice .hearth-kicker{ font:700 8px var(--mono); letter-spacing:.28em; color:#d9a968; }
+  #hearthChoice .hearth-question{ margin-top:5px; font:italic clamp(15px,1.7vw,20px) var(--body); color:#eef8f7; }
+  #hearthOptions{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  #hearthOptions button{ min-height:48px; cursor:pointer; text-align:left; padding:8px 10px; color:#cfe0f5;
+    border:1px solid rgba(89,240,213,.22); border-radius:7px; background:rgba(7,17,23,.72);
+    font:700 10px var(--mono); letter-spacing:.08em; }
+  #hearthOptions button:hover,#hearthOptions button:focus-visible{ border-color:rgba(255,194,122,.78); outline:none;
+    background:rgba(46,37,27,.78); }
+  #hearthOptions button b{ display:inline-grid; place-items:center; width:20px; height:20px; margin-right:7px;
+    border:1px solid rgba(255,194,122,.55); border-radius:4px; color:#ffe0b2; }
+  #hearthOptions button i{ display:block; margin:4px 0 0 29px; color:#879bab; font:italic 11px var(--body); letter-spacing:0; }
+  #hearthResult{ display:none; margin-top:8px; color:#d7e6e3; font:11px var(--mono); letter-spacing:.04em; }
+  #hearthChoice.resolved #hearthOptions{ display:none; }
+  #hearthChoice.resolved #hearthResult{ display:block; }
+  @media (max-width:620px){ #hearthOptions{ grid-template-columns:1fr; } #hearthChoice{ bottom:13%; } }
   .gfxrow{ display:flex; gap:6px; align-items:center; font-size:10px; letter-spacing:2px; color:#7f90b3; flex-wrap:wrap; justify-content:center; }
   .gfxrow b{ cursor:pointer; padding:3px 10px; border-radius:12px; border:1px solid rgba(140,110,220,.3); color:#aab8d6; }
   .gfxrow b.on{ color:#fff; background:rgba(120,90,200,.35); border-color:rgba(180,150,255,.7); }
@@ -556,6 +577,15 @@
   <div id="arrow"></div>
   <div id="popup"></div>
   <div id="storyline"></div>
+  <section id="hearthChoice" aria-live="polite" aria-label="Drowned Hearth decision">
+    <div class="hearth-kicker">DROWNED VILLAGE · SIGNAL INTERPRETATION</div>
+    <div class="hearth-question" id="hearthQuestion">One hearth answers your echo. Survivor, or Keeper bait?</div>
+    <div id="hearthOptions">
+      <button type="button" data-hearth-choice="answer"><b>1</b>ANSWER THE HEARTH<i>Reveal your line · gain a guide</i></button>
+      <button type="button" data-hearth-choice="silent"><b>2</b>PASS IN SHADOW<i>Preserve stealth · leave the signal</i></button>
+    </div>
+    <div id="hearthResult">—</div>
+  </section>
   <div id="shop"><div id="shopInner">
     <div class="bk-head"><div class="bk-rune">⚒</div>
       <div class="bk-title">THE FORGE</div>
@@ -710,6 +740,7 @@ import { LocalDuelSession } from './world-expansion/modules/localDuel.js';
 import { createPoseidonOceanLayer } from './world-expansion/modules/poseidonOceanLayer.js';
 import { GaleveinWindField } from './world-expansion/modules/windField.js';
 import { CrownfallRange } from './world-expansion/modules/crownfallRange.js';
+import { DrownedHearthDecision } from './world-expansion/modules/hearthDecision.js';
 
 const $ = id => document.getElementById(id);
 // Structural world variation is reproducible. Runtime VFX can still vary, but terrain,
@@ -1224,6 +1255,16 @@ finishVillageInstances(mooringPosts);
 const lastHearth=new THREE.Mesh(new THREE.OctahedronGeometry(.9,0),villageEmberMat);
 lastHearth.name='last-hearth'; lastHearth.position.set(spared.x,10.2,spared.z); drownedVillageRoot.add(lastHearth);
 const lastTorch=new THREE.PointLight(0xffa34c,420,105,2); lastTorch.position.copy(lastHearth.position); drownedVillageRoot.add(lastTorch);
+const hearthSignalRoot=new THREE.Group(); hearthSignalRoot.name='last-hearth-return-signal';
+hearthSignalRoot.position.copy(lastHearth.position); drownedVillageRoot.add(hearthSignalRoot);
+const hearthSignalRings=[];
+for(let i=0;i<3;i++){
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(2.2+i*1.7,.07,5,40),
+    new THREE.MeshBasicMaterial({color:0xffbf78,transparent:true,opacity:0,depthWrite:false,
+      blending:THREE.AdditiveBlending,fog:true}));
+  ring.rotation.x=Math.PI/2; ring.position.y=i*3.4; ring.visible=false;
+  hearthSignalRings.push(ring); hearthSignalRoot.add(ring);
+}
 function drownedVillageSnapshot(){
   const villageColliders=colliders.filter(c=>c.village),beacon={x:520,y:64,z:-470};
   const minHorizontalClearance=Math.min(...villageColliders.map(c=>Math.hypot(beacon.x-c.x,beacon.z-c.z)-c.r));
@@ -1236,7 +1277,8 @@ function drownedVillageSnapshot(){
   return {contract:'drowned-hearth-crescent-v1',houses:DROWNED_VILLAGE_HOUSES.length,charred:burned.length,spared:1,
     hearths:1,sharedShoal:true,jettyPlanks:jettyPlanks.count,drawCalls:renderables.length,triangles:Math.round(triangles),
     externalAssets:0,beacon:[beacon.x,beacon.y,beacon.z],minHorizontalClearance:+minHorizontalClearance.toFixed(1),
-    verticalClearance:+(beacon.y-maxTop).toFixed(1),positions:DROWNED_VILLAGE_HOUSES.map(h=>[h.id,h.x,h.z,h.yaw,h.state])};
+    verticalClearance:+(beacon.y-maxTop).toFixed(1),decisionAnchor:lastHearth.position.toArray(),
+    returnSignalRings:hearthSignalRings.length,positions:DROWNED_VILLAGE_HOUSES.map(h=>[h.id,h.x,h.z,h.yaw,h.state])};
 }
 // THE BONE ARCHES — the ribs of something vast, bleached over the sea
 const boneMat=new THREE.MeshStandardMaterial({color:0xcfc8ba,roughness:.85,flatShading:true});
@@ -1852,6 +1894,7 @@ function applyAlive(dt){
 /* ============================ INPUT ============================ */
 const key={};
 const input={ flap:false };
+let hearthDecision=null;
 const fdamp=(l,dt)=>1-Math.exp(-l*dt);          // frame-rate independent smoothing
 function springAxis(axis,target,dt,frequency,damping=1){
   dt=Math.min(dt,.033); const omega=Math.PI*2*frequency;
@@ -1868,6 +1911,12 @@ addEventListener('mousedown',()=>{ if(S.started&&!S.done) input.flap=true; });
 addEventListener('mouseup',()=>{ input.flap=false; });
 addEventListener('keydown',e=>{
   key[e.code]=true;
+  if(!e.repeat && e.code==='Digit1' && hearthDecision?.snapshot().status==='prompted'){
+    hearthDecision.choose('answer',{time:S.t}); e.preventDefault(); return;
+  }
+  if(!e.repeat && e.code==='Digit2' && hearthDecision?.snapshot().status==='prompted'){
+    hearthDecision.choose('silent',{time:S.t}); e.preventDefault(); return;
+  }
   if(e.code==='Space'){ if(S.started&&!S.done){ input.flap=true;
       if(!e.repeat){ S.lift=Math.min(20,(S.lift||0)+9+upLv('stirrup')*2.2); S.beatCd=0.30;   // every TAP lifts you
         S.shake=Math.max(S.shake,0.2); AU.play('flap',0.55);
@@ -1903,9 +1952,90 @@ const S={ t:0, flightT:0, started:false, done:false, detection:0, score:0, fpv:f
   dive:0, stormbreakFired:false,                    // stormbreak dive -> sonic boom
   turn:0, pTurn:0, pPitch:0, muted:false, impactCd:0, alertStage:0,
   finishing:false, finishToken:0, lobbyMode:null, practiceMode:false,
-  duelMode:false, duelDead:false, duelRespawnAt:0, duelLastKiller:null };
+  duelMode:false, duelDead:false, duelRespawnAt:0, duelLastKiller:null,
+  hearthTrust:0, hearthGuide:0, hearthResultUntil:0, hearthCapture:false };
 const routeDifficulty=()=>THREE.MathUtils.clamp((S.score-1)/(rings.length-2),0,1);
 const chargeSeconds=()=>Math.max(.54,.9-upLv('gland')*.12);
+
+const HEARTH_OUTCOMES=Object.freeze({
+  answer:{title:'THE HEARTH ANSWERS BACK',detail:'Trust +1 · plasma restored · two beacons guided · +18% detection · night advances'},
+  silent:{title:'THE SIGNAL FALLS BEHIND',detail:'Detection −18% · six seconds of grace · no guide · trust unchanged'}
+});
+function hearthUiSnapshot(){
+  const root=$('hearthChoice'),rect=root?.getBoundingClientRect(),style=root?getComputedStyle(root):null;
+  const area=rect&&innerWidth&&innerHeight?(rect.width*rect.height)/(innerWidth*innerHeight):0;
+  return {visible:root?.classList.contains('on')||false,resolved:root?.classList.contains('resolved')||false,
+    choices:[...document.querySelectorAll('[data-hearth-choice]')].map(button=>({id:button.dataset.hearthChoice,key:button.querySelector('b')?.textContent||''})),
+    rect:rect?{top:+rect.top.toFixed(1),left:+rect.left.toFixed(1),width:+rect.width.toFixed(1),height:+rect.height.toFixed(1)}:null,
+    screenCoverage:+area.toFixed(4),pointerEvents:style?.pointerEvents||null};
+}
+function markHearthGuide(active){
+  for(const index of [7,8]){
+    const vane=rings[index]; if(!vane) continue;
+    vane.userData.hearthGuided=!!active;
+    if(active&&!vane.userData.hit){
+      vane.material.color.setHex(0xffbf78); vane.material.opacity=Math.max(vane.material.opacity,.36);
+      if(vane.userData.flowArc) vane.userData.flowArc.material.color.setHex(0xffbf78);
+    }
+  }
+}
+function renderHearthDecision(snapshot=hearthDecision?.snapshot()){
+  if(!snapshot) return;
+  const root=$('hearthChoice');
+  const show=snapshot.status==='prompted'||(snapshot.status==='resolved'&&(S.hearthCapture||S.t<S.hearthResultUntil));
+  root.classList.toggle('on',show); root.classList.toggle('resolved',snapshot.status==='resolved');
+  $('hearthQuestion').textContent=snapshot.status==='resolved'
+    ? HEARTH_OUTCOMES[snapshot.choice].title : snapshot.prompt;
+  if(snapshot.status==='resolved') $('hearthResult').textContent=HEARTH_OUTCOMES[snapshot.choice].detail;
+}
+function updateHearthVisual(snapshot=hearthDecision?.snapshot(),dt=1/60){
+  if(!snapshot) return;
+  const answered=snapshot.choice==='answer',silent=snapshot.choice==='silent',prompted=snapshot.status==='prompted';
+  const targetIntensity=answered?920:silent?55:prompted?560:420;
+  lastTorch.intensity+=(targetIntensity-lastTorch.intensity)*fdamp(5,dt);
+  lastTorch.color.setHex(answered?0xffd198:silent?0x6f716f:0xffa34c);
+  villageEmberMat.color.setHex(answered?0xffd198:silent?0x5c6260:0xffb45f);
+  for(let i=0;i<hearthSignalRings.length;i++){
+    const ring=hearthSignalRings[i],visible=answered||(prompted&&i===0); ring.visible=visible;
+    if(!visible) continue;
+    ring.position.y=i*3.4+((S.t*.9+i*2.1)%3.4);
+    ring.scale.setScalar(1+Math.sin(S.t*1.7+i)*.08);
+    ring.material.opacity=answered?.22+Math.sin(S.t*2+i)*.055:.14;
+  }
+}
+function applyHearthConsequence(result){
+  const consequence=result.selectedConsequence;
+  S.detection=THREE.MathUtils.clamp(S.detection+consequence.detectionDelta,0,1);
+  TOD.day=THREE.MathUtils.clamp(TOD.day+consequence.dayDelta,0,1); uDay.value=TOD.day;
+  if(consequence.plasmaSet!=null) S.charges=consequence.plasmaSet;
+  S.hearthTrust+=consequence.trustDelta; S.hearthGuide=consequence.guideBeacons;
+  S.grace=Math.max(S.grace,consequence.graceSeconds); S.hearthResultUntil=S.t+4.8;
+  markHearthGuide(result.choice==='answer'); renderHearthDecision(result); updateHearthVisual(result,1);
+  if(result.choice==='answer'){
+    achievement('HEARTHBOUND','you risked the line; a stranger lights the next passage','TRUST +1','CHOICE REMEMBERED');
+  }else{
+    achievement('NO WITNESS','you kept Galevein hidden; the unanswered light recedes','STEALTH +','CHOICE REMEMBERED');
+  }
+}
+function updateHearthDecision(dt){
+  if(!hearthDecision) return null;
+  const snapshot=S.started&&!S.done
+    ? hearthDecision.update({mode:S.lobbyMode||'story',practice:S.practiceMode,duel:S.duelMode,
+      chapter:S.chapter,score:S.score,position:D.group.position,time:S.t})
+    : hearthDecision.snapshot();
+  renderHearthDecision(snapshot); updateHearthVisual(snapshot,dt); return snapshot;
+}
+hearthDecision=new DrownedHearthDecision({
+  onPrompt:(snapshot)=>{ renderHearthDecision(snapshot); AU.play('ring',.28); },
+  onResolve:applyHearthConsequence
+});
+for(const button of document.querySelectorAll('[data-hearth-choice]')){
+  button.addEventListener('click',()=>hearthDecision.choose(button.dataset.hearthChoice,{time:S.t}));
+}
+function resetHearthEncounter(){
+  hearthDecision.reset(); S.hearthTrust=0; S.hearthGuide=0; S.hearthResultUntil=0; S.hearthCapture=false;
+  markHearthGuide(false); renderHearthDecision(hearthDecision.snapshot()); updateHearthVisual(hearthDecision.snapshot(),1);
+}
 
 function duelSpawn(role=localDuel.role){
   const spawn=DUEL_SPAWNS[role]||DUEL_SPAWNS.host;
@@ -2397,7 +2527,7 @@ function achievementUiSnapshot(){
   const area=rect&&innerWidth&&innerHeight?(rect.width*rect.height)/(innerWidth*innerHeight):0;
   return {profile:ACHIEVEMENT_UI.profile,position:'top-right',blocking:false,
     maxVisibleMs:ACHIEVEMENT_UI.maxVisibleMs,maxConcurrent:ACHIEVEMENT_UI.maxConcurrent,batching:ACHIEVEMENT_UI.batching,
-    active:ACHIEVEMENT_UI.active?{name:ACHIEVEMENT_UI.active.name,key:ACHIEVEMENT_UI.active.key}:null,
+    active:ACHIEVEMENT_UI.active?{name:ACHIEVEMENT_UI.active.name,key:ACHIEVEMENT_UI.active.key,kicker:ACHIEVEMENT_UI.active.kicker}:null,
     queueDepth:ACHIEVEMENT_UI.queue.length,shown:ACHIEVEMENT_UI.shown.slice(-8),
     unlockOrder:SKILLS.filter(sk=>sk.unlockAt!=null).map(sk=>({name:sk.name,at:sk.unlockAt,key:sk.k})),
     rect:rect?{top:+rect.top.toFixed(1),right:+(innerWidth-rect.right).toFixed(1),width:+rect.width.toFixed(1),height:+rect.height.toFixed(1)}:null,
@@ -2407,6 +2537,7 @@ function pumpAchievementQueue(){
   if(ACHIEVEMENT_UI.active||!ACHIEVEMENT_UI.queue.length) return;
   const item=ACHIEVEMENT_UI.queue.shift(),el=$('ach'); ACHIEVEMENT_UI.active=item;
   ACHIEVEMENT_UI.shown.push({name:item.name,key:item.key});
+  el.querySelector('.ach-k').textContent=item.kicker||'SKILL LEARNED';
   $('achName').textContent=item.name; $('achDesc').textContent=item.desc; $('achKey').textContent=item.key;
   el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
   AU.play('ring',.38); S.flash=Math.max(S.flash,.06);
@@ -2422,8 +2553,8 @@ function clearAchievementUi(resetHistory=false){
   $('ach').style.animationPlayState='';
   if(resetHistory) ACHIEVEMENT_UI.shown.length=0;
 }
-function achievement(name,desc,key){
-  const item={id:key+'|'+name,name,desc,key};
+function achievement(name,desc,key,kicker='SKILL LEARNED'){
+  const item={id:key+'|'+name,name,desc,key,kicker};
   if(ACHIEVEMENT_UI.active?.id===item.id||ACHIEVEMENT_UI.queue.some(entry=>entry.id===item.id)) return false;
   ACHIEVEMENT_UI.queue.push(item); pumpAchievementQueue(); return true;
 }
@@ -3239,12 +3370,14 @@ function tick(dt){
       storyPop('Harbor stacks mapped from above — the serpent run reads clear.',4.5);
     }
   }
+  const hearth=updateHearthDecision(dt);
   if(!S.duelMode&&structure){
     const hud=structure.tick({
       tutorialDone:tutRings.filter(r=>r.userData.hit).length,
       altitudePeak:S.altitudePeak||0,
       altitudeCollected:!!S.altitudeCollected,
-      towerTarget:3
+      towerTarget:3,
+      hearthDecision:hearth
     });
     structure.applyHud(hud);
   } else if(!S.duelMode) driveMissionsFallback();
@@ -3406,6 +3539,7 @@ function showOver(kick,title,cls,sub){
 }
 function returnToHub(reason=''){
   clearAchievementUi();
+  $('hearthChoice').classList.remove('on','resolved');
   if(S.duelMode) leaveDuel();
   $('over').classList.add('hide'); $('hud').classList.remove('on');
   menuEl.classList.remove('hide'); menuEl.classList.add('live','hub-open');
@@ -3464,6 +3598,7 @@ function setMuted(muted){
 function begin(opts={}){
   if(S.launching||S.started) return; S.launching=true;
   clearAchievementUi();
+  resetHearthEncounter();
   S.lobbyMode=opts.mode||S.lobbyMode||'story';
   S.duelMode=S.lobbyMode==='duel'; S.duelDead=false; S.duelSpawned=false;
   S.practiceMode=!!opts.practice||S.lobbyMode==='practice'||S.duelMode;
@@ -3505,6 +3640,7 @@ function begin(opts={}){
 }
 function reset(){
   clearAchievementUi(true);
+  resetHearthEncounter();
   startAudio(); D.group.position.set(REST.x,REST.y+6,REST.z); D.yaw=Math.PI; D.pitch=0.18; D.roll=0; D.speed=30; input.flap=false;
   S.done=false; S.flightT=0; S.detection=0; S.score=0; S.shake=0; S.fpv=false; S.nextThunder=S.t+5; S.shootCd=0;
   S.finishing=false; S.finishToken++; GATE.open=0; S.impactCd=0; S.alertStage=0; S.keeperGateWarnAt=0;
@@ -3873,6 +4009,43 @@ function simLongNightObjectiveProof(){
   tick(1/60);
   return {blockedScore,blocked,combat,unlockedScore:S.score,objective:keeperObjectiveSnapshot(),state:SIM.state()};
 }
+function simStageHearth(kind='prompt'){
+  clearAchievementUi(true); hearthDecision.reset(); markHearthGuide(false);
+  S.started=true; S.done=false; S.launching=false; S.lobbyMode='story'; S.practiceMode=false; S.duelMode=false;
+  S.chapter=2; S.tutDone=true; S.score=6; S.detection=.24; S.charges=1.25; S.grace=0;
+  S.hearthTrust=0; S.hearthGuide=0; S.hearthCapture=true; S.hearthResultUntil=Infinity;
+  TOD.day=.4; uDay.value=TOD.day; D.group.visible=true; D.group.position.set(521,62,-350);
+  D.yaw=0; D.pitch=-.04; D.roll=0; D.speed=0; S.prevSpeed=0;
+  menuEl.classList.add('hide','live'); $('lobbyHub').classList.remove('on'); $('hud').classList.add('on');
+  $('over').classList.add('hide'); $('shutter').classList.remove('closed'); $('storyline').textContent='';
+  landmarkPath.root.visible=true; horizonDirector.root.visible=true; drownedVillageRoot.visible=true;
+  for(let index=0;index<rings.length;index++){
+    setStormVaneState(rings[index],index<6); rings[index].visible=index===6;
+  }
+  structure?.director?.syncChapterFromProgress(S.score,true);
+  hearthDecision.forcePrompt(S.t);
+  if(kind==='answer'||kind==='silent') hearthDecision.choose(kind,{time:S.t});
+  const decision=hearthDecision.snapshot();
+  const hudPayload=structure?.tick({tutorialDone:3,altitudePeak:0,altitudeCollected:false,towerTarget:3,hearthDecision:decision});
+  if(hudPayload) structure.applyHud(hudPayload);
+  S.done=true; $('storyline').textContent=''; $('storyline').style.animation='none';
+  $('popup').style.animation='none'; $('popup').style.opacity=0;
+  renderHearthDecision(decision); updateHearthVisual(decision,1); hud(0);
+  return {kind,decision,state:SIM.state(),ui:hearthUiSnapshot(),objective:$('missionBeat')?.textContent||'',
+    visual:{torchIntensity:+lastTorch.intensity.toFixed(1),torchColor:'#'+lastTorch.color.getHexString(),
+      signalRings:hearthSignalRings.filter(ring=>ring.visible).length,guidedVanes:rings.filter(ring=>ring.userData.hearthGuided).length}};
+}
+function simHearthDecisionProof(){
+  hearthDecision.reset();
+  const beforeTrigger=hearthDecision.update({mode:'story',practice:false,duel:false,chapter:2,score:6,
+    position:[700,62,-210],time:S.t});
+  const automaticTrigger=hearthDecision.update({mode:'story',practice:false,duel:false,chapter:2,score:6,
+    position:[521,62,-350],time:S.t});
+  const prompt=simStageHearth('prompt');
+  const answer=simStageHearth('answer');
+  const silent=simStageHearth('silent');
+  return {profile:'drowned-hearth-choice-proof-v1',beforeTrigger,automaticTrigger,prompt,answer,silent};
+}
 async function simRunSteps({dt=1/60, steps=1, controls=null, reseat=null}={}){
   if(controls) simSetControls(controls);
   if(reseat) reseat();
@@ -3916,6 +4089,8 @@ window.SIM={
     charges:+S.charges.toFixed(2), chargeT:+(S.chargeT||0).toFixed(2),
     attackCooldowns:{scatter:+S.scatterCd.toFixed(2),pulse:+S.pulseCd.toFixed(2)},
     bolts:bolts.length, disabled:searchlights.filter(s=>s.disabled>0).length,
+    hearth:{status:hearthDecision?.snapshot().status||'dormant',choice:hearthDecision?.snapshot().choice||null,
+      trust:S.hearthTrust,guideBeacons:S.hearthGuide,grace:+S.grace.toFixed(2)},
     duel:S.duelMode?{dead:S.duelDead,respawnIn:+Math.max(0,S.duelRespawnAt-duelClock()).toFixed(2),...localDuel.snapshot()}:null}),
   start:()=>{ startAudio(); S.started=true; S.grace=3; menuEl.classList.add('hide','live');
     $('hud').classList.add('on'); },
@@ -3952,6 +4127,9 @@ window.SIM={
     achievement('4 SKILLS MAPPED',SKILLS.filter(sk=>sk.unlockAt!=null).map(sk=>sk.name).join(' · '),'CODEX');
     return achievementUiSnapshot(); },
   route:()=>route.map((p,i)=>({beacon:i+1,x:p[0],y:p[1],z:p[2]})),
+  hearthDecision:()=>({...hearthDecision.snapshot(),ui:hearthUiSnapshot()}),
+  hearthStage:simStageHearth,
+  hearthProof:simHearthDecisionProof,
   keeperObjective:keeperObjectiveSnapshot,
   longNightObjectiveProof:simLongNightObjectiveProof,
   drownedVillage:drownedVillageSnapshot,

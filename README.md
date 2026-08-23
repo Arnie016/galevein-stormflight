@@ -184,10 +184,17 @@ then creates `release/` from an explicit allowlist. It does not include
 - Dive then pull up: Stormbreak Dive
 - `Q` / `E`: look; `V`: chase/rider view
 - `Tab`: Flight Codex; `B`: Forge; `M`: sound
+- At the Drowned Hearth: `1` answers the signal; `2` passes in shadow
 
 ## Prototype boundary
 
 This is a free, non-commercial prototype under a working title. It uses an original locally generated Stormlance Galevein, procedural landmarks, synthesized project audio, a documented CC0 menu track, vendored Three.js, and an MIT-licensed Poseidon spectral-ocean adaptation. Stormlance v2 retains the 25-bone rig and Flap/Glide clips while adding a higher-density crescent membrane, broader torso and neck, split lightning crown, jaw keel, sensory barbs, and a clear rider-seat gap. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), [OCEAN_PROVENANCE.md](OCEAN_PROVENANCE.md), and [RELEASE_READINESS.md](RELEASE_READINESS.md).
+
+The r24 Story route adds one fixed Drowned Hearth decision at beacon seven.
+The prompt is triggered by authored world position and campaign progress, then
+records one of two run-persistent consequences: answer at a stealth/daylight
+cost to gain trust, plasma, and two guided vanes, or remain silent to lower
+detection and gain brief grace. It is not a random encounter or a new lobby.
 
 ## Flight harness
 

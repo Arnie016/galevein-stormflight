@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-23T08:09:58.851Z",
+  "generatedAt": "2026-08-23T08:34:33.803Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 254824,
-      "sha256": "66ec3244e8d0e3832b5b370d7cc92cf601043e3fd4c153dd19683662c38cf56b"
+      "bytes": 266520,
+      "sha256": "080fbd56bd9095f1e34236032f971645440fd3bd692aca3ff4d644e4114bf7db"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -85,13 +85,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 14230,
-      "sha256": "859804b92824b518cc81b784eb118fd71886e47c941c2ce1f03c3e25af49735f"
+      "bytes": 14686,
+      "sha256": "52dda1f0e55492ee055a51330caf9c32d6a816d98ef6ee0a6e294597c708bfa8"
     },
     {
       "path": "RELEASE_READINESS.md",
-      "bytes": 17697,
-      "sha256": "6bfe7fac5608df337d85d5e27a2be8def40022aa5b2f50270f637da178b18cdf"
+      "bytes": 18817,
+      "sha256": "06bea1fff7256908e6091f26d6fedd7c7f14c640584750428c2356fbb66b8c0f"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -220,8 +220,8 @@
     },
     {
       "path": "world-expansion/modules/chapterDirector.js",
-      "bytes": 11376,
-      "sha256": "b19c95310bf8d6e39c92f9e03632f71a143fad2979733470707ee822b50ce621"
+      "bytes": 12026,
+      "sha256": "51ca2e253a5caa2ca8aa4027d10eb231a949f27f7fe89c5358d8e61f34fbf6fe"
     },
     {
       "path": "world-expansion/modules/cinematicDof.js",
@@ -247,6 +247,11 @@
       "path": "world-expansion/modules/gameStructure.js",
       "bytes": 7145,
       "sha256": "150288982d5786c55aceb962d05058f7998a419ebdac05c25a2a84178bc63373"
+    },
+    {
+      "path": "world-expansion/modules/hearthDecision.js",
+      "bytes": 4649,
+      "sha256": "bf9dad232e66d02b6cfaec5586459b2dd833dc5a3fb657a88a27607037217261"
     },
     {
       "path": "world-expansion/modules/horizonDirector.js",

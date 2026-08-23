@@ -198,6 +198,19 @@ export class ChapterDirector {
   buildMissionBeat(chapter, state, vars) {
     const beat = chapter.storyBeat;
     if (beat === 'thread_canyon') {
+      const hearth = state.hearthDecision;
+      if (hearth?.status === 'prompted') {
+        return '◈ Last Hearth — [1] answer the signal · [2] pass in shadow';
+      }
+      if (hearth?.status === 'resolved' && hearth.choice === 'answer') {
+        return '✓ Hearth answered — two amber vanes guide the passage · trust +1';
+      }
+      if (hearth?.status === 'resolved' && hearth.choice === 'silent') {
+        return '◇ Signal unanswered — six seconds of shadow grace';
+      }
+      if ((state.score ?? 0) >= 6) {
+        return '◇ Read the last hearth beneath beacon seven — its rhythm may be a survivor or a trap';
+      }
       const target = 80;
       const peak = state.altitudePeak ?? 0;
       if (state.altitudeCollected) return '✓ Altitude collected — harbor stacks mapped from above';
