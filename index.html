@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-stormlance-r31">
+<meta name="galevein-build" content="stormflight-stormlance-r32">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -1537,7 +1537,8 @@ const D={ group:new THREE.Group(), model:null, mixer:null, flap:null, glide:null
   yaw:Math.PI, pitch:0, roll:0, speed:20, flapping:false, headNode:null, glow:null,
   turn:0, pTurn:0, pPitch:0, bones:null, mouth:null, mouthLt:null,
   motion:{longAccel:0,yawRate:0,pitchRate:0,gLoad:1}, prevYaw:Math.PI, prevPitch:0,
-  springs:null, rigOverride:null };
+  springs:null, rigOverride:null, eyeRigs:[], rider:null, riderHood:null, riderScarf:null,
+  presentationReport:null };
 D.group.position.copy(START); scene.add(D.group);
 const draco=new DRACOLoader().setDecoderPath('./vendor/draco/');
 const loader=new GLTFLoader(); loader.setDRACOLoader(draco);
@@ -1651,7 +1652,7 @@ function findClip(animations, name){
   return THREE.AnimationClip.findByName(animations, name)
     || animations.find(c=>c.name===name||c.name.endsWith(name)||c.name.includes(name));
 }
-const STORMLANCE_SURFACE='stormlance-uv-hide-v4';
+const STORMLANCE_SURFACE='stormlance-uv-hide-v5';
 let STORMLANCE_HIDE_MAPS=null;
 function stormlanceHideMaps(){
   if(STORMLANCE_HIDE_MAPS)return STORMLANCE_HIDE_MAPS;
@@ -1762,6 +1763,7 @@ function stormlanceSurfaceSnapshot(){
   return out;
 }
 function attachDragonAccessories(model){
+  D.eyeRigs=[];D.rider=null;D.riderHood=null;D.riderScarf=null;D.presentationReport=null;
   D.mixer=new THREE.AnimationMixer(model);
   D.headNode=model.getObjectByName('head')||model.getObjectByName('Head');
   const glow=new THREE.PointLight(0x59f0d5, 0, 60, 2); D.group.add(glow); glow.position.set(0,4,0); D.glow=glow;
@@ -1775,25 +1777,70 @@ function attachDragonAccessories(model){
   D.mouth=mouth; D.mouthLt=mlt;
   const chest=model.getObjectByName('chest')||model.getObjectByName('Body');
   if(D.headNode){
-    const eyeGeo=new THREE.SphereGeometry(.018,18,12),pupilGeo=new THREE.SphereGeometry(.009,14,9);
-    const eyeMat=new THREE.MeshPhysicalMaterial({color:0x8fffe7,emissive:0x1f9f87,emissiveIntensity:1.1,roughness:.28,clearcoat:.45});
-    const pupilMat=new THREE.MeshStandardMaterial({color:0x020607,roughness:.38});
+    const eyeGeo=new THREE.SphereGeometry(.023,22,14),pupilGeo=new THREE.SphereGeometry(.011,16,10);
+    const eyeMat=new THREE.MeshPhysicalMaterial({color:0x17393b,emissive:0x0a2928,emissiveIntensity:.42,roughness:.22,clearcoat:.64});
+    const pupilMat=new THREE.MeshStandardMaterial({color:0xb8fff0,emissive:0x39d8bd,emissiveIntensity:1.25,roughness:.24});
     for(const side of [-1,1]){ const eye=new THREE.Mesh(eyeGeo,eyeMat);eye.name=`Stormlance_Eye_${side<0?'L':'R'}`;
-      eye.position.set(side*.054,.018,-.038);eye.scale.set(1,.72,1.18);
-      const pupil=new THREE.Mesh(pupilGeo,pupilMat);pupil.position.set(0,-.006,-.012);pupil.scale.set(.52,.72,1.05);eye.add(pupil);D.headNode.add(eye); }
+      // Author in glTF model space first: Blender (x,y,z) maps to Three
+      // (x,z,y), so the creature's -Y flight direction is model -Z.
+      // Object3D.attach then retains this visual placement
+      // while making the head bone authoritative for animation.
+      eye.position.set(side*.070,.570,-.450);eye.scale.set(.90,.48,.40);model.add(eye);
+      const pupil=new THREE.Mesh(pupilGeo,pupilMat);pupil.name=`Stormlance_Pupil_${side<0?'L':'R'}`;
+      pupil.position.set(0,0,-.022);pupil.scale.set(.24,1.24,.36);eye.add(pupil);
+      model.updateWorldMatrix(true,true);D.headNode.updateWorldMatrix(true,false);D.headNode.attach(eye);
+      D.eyeRigs.push({eye,pupil,side}); }
   }
   if(chest){ const rider=new THREE.Group();
-    const cloth=new THREE.MeshStandardMaterial({color:0x2a2119,roughness:.9});
-    const leather=new THREE.MeshStandardMaterial({color:0x17120c,roughness:.8});
-    const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.026,.05,4,8),cloth); torso.position.y=.055; torso.rotation.x=.25;
-    const hood=new THREE.Mesh(new THREE.ConeGeometry(.024,.045,8),cloth); hood.position.set(0,.105,-.004); hood.rotation.x=-.2;
-    const legL=new THREE.Mesh(new THREE.CapsuleGeometry(.011,.05,3,6),leather); legL.position.set(.033,.016,.004); legL.rotation.z=1.05;
-    const legR=legL.clone(); legR.position.x=-.033; legR.rotation.z=-1.05;
-    rider.add(torso,hood,legL,legR);
-    chest.updateWorldMatrix(true,false);
-    const pw=new THREE.Vector3(0,.675,.03).applyMatrix4(model.matrixWorld);
-    rider.position.copy(chest.worldToLocal(pw)); chest.add(rider);
+    rider.name='Stormwarden_RiderRig';
+    const cloth=new THREE.MeshStandardMaterial({color:0x26333a,roughness:.88});
+    const leather=new THREE.MeshStandardMaterial({color:0x211712,roughness:.82});
+    const armor=new THREE.MeshStandardMaterial({color:0x34484d,roughness:.72,metalness:.08});
+    const metal=new THREE.MeshStandardMaterial({color:0x8ab8ae,emissive:0x143f39,emissiveIntensity:.25,roughness:.34,metalness:.48});
+    const glowMat=new THREE.MeshStandardMaterial({color:0x9ffff0,emissive:0x39d8bd,emissiveIntensity:1.8,roughness:.22});
+    const add=(name,geometry,material,position,rotation=null)=>{const mesh=new THREE.Mesh(geometry,material);mesh.name=name;mesh.position.fromArray(position);
+      if(rotation)mesh.rotation.set(...rotation);mesh.castShadow=true;rider.add(mesh);return mesh;};
+    const limb=(name,a,b,radius,material)=>{const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start);
+      const mesh=add(name,new THREE.CapsuleGeometry(radius,Math.max(.008,delta.length()-radius*2),4,8),material,start.clone().add(end).multiplyScalar(.5).toArray());
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());return mesh;};
+    const saddlePad=add('Stormlance_SaddlePad',new THREE.SphereGeometry(.10,14,9),leather,[0,-.020,.010]);
+    saddlePad.scale.set(1.08,.18,.74);
+    add('Stormlance_SaddleFront',new THREE.CylinderGeometry(.010,.014,.085,8),armor,[0,.010,-.047],[0,0,Math.PI/2]);
+    add('Stormlance_SaddleCantle',new THREE.CylinderGeometry(.012,.016,.095,8),armor,[0,.012,.052],[0,0,Math.PI/2]);
+    add('Stormlance_SaddleStrapL',new THREE.CylinderGeometry(.005,.005,.090,6),leather,[.062,-.021,.010],[Math.PI/2,0,0]);
+    add('Stormlance_SaddleStrapR',new THREE.CylinderGeometry(.005,.005,.090,6),leather,[-.062,-.021,.010],[Math.PI/2,0,0]);
+    add('Stormwarden_Hips',new THREE.SphereGeometry(.040,10,8),leather,[0,.030,.025]);
+    add('Stormwarden_Torso',new THREE.CapsuleGeometry(.039,.088,5,10),cloth,[0,.095,.005],[-.16,0,0]);
+    add('Stormwarden_Breastplate',new THREE.BoxGeometry(.078,.082,.016),armor,[0,.098,-.026],[-.12,0,0]);
+    const hood=add('Stormwarden_Hood',new THREE.IcosahedronGeometry(.045,1),cloth,[0,.170,-.008]);
+    add('Stormwarden_Visor',new THREE.BoxGeometry(.057,.015,.026),glowMat,[0,.153,-.040],[-.16,0,0]);
+    limb('Stormwarden_ArmL',[.032,.112,-.005],[.062,.055,-.080],.013,armor);
+    limb('Stormwarden_ArmR',[-.032,.112,-.005],[-.062,.055,-.080],.013,armor);
+    limb('Stormwarden_ThighL',[.028,.035,.025],[.076,-.012,.025],.016,leather);
+    limb('Stormwarden_ThighR',[-.028,.035,.025],[-.076,-.012,.025],.016,leather);
+    limb('Stormwarden_BootL',[.076,-.012,.025],[.070,-.050,-.050],.014,armor);
+    limb('Stormwarden_BootR',[-.076,-.012,.025],[-.070,-.050,-.050],.014,armor);
+    const scarf=add('Stormwarden_WindScarf',new THREE.ConeGeometry(.024,.13,7),cloth,[0,.108,.105],[1.28,0,0]);
+    const reinMat=new THREE.LineBasicMaterial({color:0x8ab8ae,transparent:true,opacity:.75});
+    for(const side of [-1,1]){const rein=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(side*.055,.055,-.074),new THREE.Vector3(side*.074,.030,-.180)]),reinMat);
+      rein.name=`Stormwarden_Rein_${side<0?'L':'R'}`;rider.add(rein);}
+    rider.position.set(0,.675,-.03);model.add(rider);model.updateWorldMatrix(true,true);
+    chest.updateWorldMatrix(true,false);chest.attach(rider);
+    rider.userData.basePosition=rider.position.clone();D.rider=rider;D.riderHood=hood;D.riderScarf=scarf;
+    D.presentationReport={profile:'stormwarden-seated-flight-v1',faceProfile:'lightning-crown-orbital-v1',
+      riderParts:rider.children.filter(o=>o.isMesh).length,saddleParts:5,reins:2,eyes:D.eyeRigs.length,
+      pupils:D.eyeRigs.filter(e=>e.pupil).length,chestAnchored:rider.parent===chest,windReactive:true,gazeReactive:true};
   }
+}
+function stormlancePresentationSnapshot(){
+  const report={...(D.presentationReport||{})},chest=D.bones?.chest;
+  const riderWorld=D.rider?.getWorldPosition(new THREE.Vector3()),chestWorld=chest?.getWorldPosition(new THREE.Vector3());
+  const eyeWorld=(D.eyeRigs||[]).map(e=>e.eye.getWorldPosition(new THREE.Vector3()));
+  report.riderToChest=riderWorld&&chestWorld?+riderWorld.distanceTo(chestWorld).toFixed(3):null;
+  report.eyeSpan=eyeWorld.length===2?+eyeWorld[0].distanceTo(eyeWorld[1]).toFixed(3):null;
+  report.riderAttachedTo=D.rider?.parent?.name||null;
+  return report;
 }
 function setupDragonClips(g, rig){
   const flap=findClip(g.animations, rig.flapClip);
@@ -1945,6 +1992,22 @@ function applyAlive(dt){
   if(D.bones.thighs) for(const b of D.bones.thighs){ if(b) b.rotateOnWorldAxis(_ART,(-.30-q.downwash.value*.035)*tuck); }
   if(D.bones.shins)  for(const b of D.bones.shins){ if(b) b.rotateOnWorldAxis(_ART,(.48+q.downwash.value*.045)*tuck); }
   if(D.bones.feet)   for(const b of D.bones.feet){ if(b) b.rotateOnWorldAxis(_ART,-.28*tuck); }
+  // The rider is a chest-bone passenger, not a floating world-space prop. The
+  // small counter-lean, hood look and scarf lag communicate inertia without
+  // taking control authority away from the player's dragon pose.
+  if(D.rider){
+    const riderPitch=-.08-q.load.value*.10-q.pitch.velocity*.012+q.downwash.value*.025;
+    const riderRoll=-q.torsion.value*.22-q.turn.value*.08-q.slip.value*.05;
+    D.rider.rotation.x+=(riderPitch-D.rider.rotation.x)*fdamp(7,dt);
+    D.rider.rotation.z+=(riderRoll-D.rider.rotation.z)*fdamp(7,dt);
+    if(D.rider.userData.basePosition){D.rider.position.copy(D.rider.userData.basePosition);D.rider.position.y+=Math.sin(t*2.1)*.002;}
+    if(D.riderHood)D.riderHood.rotation.z=q.head.value*.16+q.slip.value*.08;
+    if(D.riderScarf)D.riderScarf.rotation.x=1.28+q.wind.value*.22+q.load.value*.10;
+  }
+  if(D.eyeRigs?.length){
+    const blink=Math.pow(Math.max(0,Math.sin(t*.73+1.25)),24),gaze=THREE.MathUtils.clamp(q.head.value*.08+q.slip.value*.018,-.016,.016);
+    for(const rig of D.eyeRigs){rig.eye.scale.y=.48*(1-blink*.82);rig.pupil.position.x=gaze*rig.side;rig.pupil.position.y=-q.pitch.value*.004;}
+  }
 }
 
 /* ============================ INPUT ============================ */
@@ -3852,6 +3915,10 @@ function updateStreaks(){
   streakGeo.attributes.position.needsUpdate=true;
 }
 function render(dt=1/60){
+  // Deterministic creature proof owns its camera until the next authored pose.
+  // The ordinary render loop used to overwrite a correctly staged close-up
+  // with the chase camera before CDP could read the frame.
+  if(S.captureKind){updateStreaks();renderWorld(dt);return;}
   if(!S.started||S.done){ S.boost*=0.93; S.accel*=0.9; }
   const accelLoad=THREE.MathUtils.clamp(D.motion.longAccel/24,0,1);
   const brakeLoad=THREE.MathUtils.clamp(-D.motion.longAccel/20,0,1);
@@ -4396,7 +4463,8 @@ window.SIM={
   warp:(dt,steps=60)=>{ for(let i=0;i<steps;i++) tick(dt); render(); },
   capturePose:name=>{ const poses={
       glide:{action:'glide',phase:.08,pitch:-.08,speed:38,view:'rear',crosswind:0,gust:.18},
-      portrait:{action:'glide',phase:.18,pitch:-.02,speed:32,view:'front',crosswind:.12,gust:.24},
+      portrait:{action:'glide',phase:.18,pitch:-.02,speed:32,view:'face',crosswind:.12,gust:.24},
+      rider:{action:'glide',phase:.18,pitch:-.02,speed:34,view:'riderQuarter',crosswind:-.34,gust:.48,roll:-.12},
       wingUp:{action:'flap',phase:.24,pitch:0,speed:28,view:'side',crosswind:-.18,gust:.32,flap:1},
       wingDown:{action:'flap',phase:.72,pitch:0,speed:28,view:'sideReverse',crosswind:.18,gust:.32,flap:1},
       brake:{action:'brake',phase:.50,pitch:.12,speed:24,view:'rear',crosswind:.2,gust:.38},
@@ -4431,11 +4499,22 @@ window.SIM={
     const side=forward.clone().cross(up).normalize();
     const cameraViews={
       rear:{forward:-27,side:9,up:9},rearPort:{forward:-27,side:12,up:9},rearStarboard:{forward:-27,side:-12,up:9},
-      front:{forward:12,side:8,up:4,targetHead:true},side:{forward:-3,side:27,up:8},sideReverse:{forward:-3,side:-27,up:8}
+      side:{forward:-3,side:27,up:8},sideReverse:{forward:-3,side:-27,up:8}
     };
-    const view=cameraViews[pose.view]||cameraViews.rear,target=view.targetHead&&head?head:center;
-    camera.position.copy(view.targetHead&&head?head:center).addScaledVector(forward,view.forward).addScaledVector(side,view.side).addScaledVector(up,view.up);
-    camera.fov=view.targetHead?46:52;camera.updateProjectionMatrix();camera.lookAt(target); render();
+    const eyePoints=(D.eyeRigs||[]).map(e=>e.eye.getWorldPosition(new THREE.Vector3()));
+    const pupilPoints=(D.eyeRigs||[]).map(e=>e.pupil.getWorldPosition(new THREE.Vector3()));
+    const eyeCenter=eyePoints.length?eyePoints.reduce((sum,p)=>sum.add(p),new THREE.Vector3()).multiplyScalar(1/eyePoints.length):head;
+    const faceOut=eyePoints.length===pupilPoints.length&&eyePoints.length?pupilPoints.reduce((sum,p,i)=>sum.add(p.clone().sub(eyePoints[i])),new THREE.Vector3()).normalize():forward;
+    const riderWorld=D.rider?.getWorldPosition(new THREE.Vector3());
+    if(pose.view==='face'&&eyeCenter){camera.position.copy(eyeCenter).addScaledVector(faceOut,5.6).addScaledVector(side,1.75).addScaledVector(up,.75);
+      camera.fov=34;camera.updateProjectionMatrix();camera.lookAt(eyeCenter.clone().addScaledVector(up,-.10));}
+    else if(pose.view==='riderQuarter'&&riderWorld){const riderTarget=riderWorld.clone().addScaledVector(forward,1.15).addScaledVector(up,.15);
+      camera.position.copy(riderWorld).addScaledVector(forward,-5.2).addScaledVector(side,8.8).addScaledVector(up,4.6);
+      camera.fov=44;camera.updateProjectionMatrix();camera.lookAt(riderTarget);}
+    else {const view=cameraViews[pose.view]||cameraViews.rear;
+      camera.position.copy(center).addScaledVector(forward,view.forward).addScaledVector(side,view.side).addScaledVector(up,view.up);
+      camera.fov=52;camera.updateProjectionMatrix();camera.lookAt(center);}
+    render();
     const tipPositions=D.bones.wingTips.map(b=>({side:b.side,position:b.getWorldPosition(new THREE.Vector3())}));
     const meanTipY=sideValue=>{const a=tipPositions.filter(p=>p.side===sideValue);return a.reduce((sum,p)=>sum+p.position.y,0)/Math.max(1,a.length);};
     const rightMean=meanTipY(1),leftMean=meanTipY(-1);
@@ -4444,11 +4523,15 @@ window.SIM={
     const metrics={bounds:size.toArray().map(v=>+v.toFixed(2)),wingTipMeanY:+(tipPositions.reduce((sum,p)=>sum+p.position.y,0)/tipPositions.length).toFixed(2),
       wingTipRangeY:+(Math.max(...tipPositions.map(p=>p.position.y))-Math.min(...tipPositions.map(p=>p.position.y))).toFixed(2),
       wingTipAsymmetry:+(rightMean-leftMean).toFixed(2),headTailDistance:head&&tailTip?+head.distanceTo(tailTip).toFixed(2):null,
-      footTuck:hips&&feet.length?+(hips.y-feet.reduce((sum,p)=>sum+p.y,0)/feet.length).toFixed(2):null};
+      footTuck:hips&&feet.length?+(hips.y-feet.reduce((sum,p)=>sum+p.y,0)/feet.length).toFixed(2):null,
+      eyeSpan:eyePoints.length===2?+eyePoints[0].distanceTo(eyePoints[1]).toFixed(2):null,
+      riderToChest:stormlancePresentationSnapshot().riderToChest};
     metrics.wingTipMeanY=+(tipPositions.reduce((sum,p)=>sum+p.position.y,0)/tipPositions.length).toFixed(2);
     return {name,action:pose.action,phase:pose.phase,pitch:pose.pitch,speed:pose.speed,view:pose.view,
-      response:{crosswind:D.rigOverride.crosswind,gust:D.rigOverride.gust,flap:D.rigOverride.flap},metrics}; },
-  bones:()=>D.boneReport, alive:v=>{ALIVE=v;}, setTurn:v=>{D.turn=v;}, day:v=>{TOD.day=v;uDay.value=v;},
+      response:{crosswind:D.rigOverride.crosswind,gust:D.rigOverride.gust,flap:D.rigOverride.flap},metrics,
+      presentation:stormlancePresentationSnapshot()}; },
+  bones:()=>D.boneReport, presentation:()=>stormlancePresentationSnapshot(),
+  alive:v=>{ALIVE=v;}, setTurn:v=>{D.turn=v;}, day:v=>{TOD.day=v;uDay.value=v;},
   motion:()=>({accel:+D.motion.longAccel.toFixed(2),yawRate:+D.motion.yawRate.toFixed(3),
     pitchRate:+D.motion.pitchRate.toFixed(3),gLoad:+D.motion.gLoad.toFixed(2),
     camera:{pull:+CAM.pull.value.toFixed(2),drop:+CAM.drop.value.toFixed(2),fov:+CAM.fov.value.toFixed(2),

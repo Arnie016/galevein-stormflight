@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-23T12:09:15.617Z",
+  "generatedAt": "2026-08-28T17:27:14.568Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -10,8 +10,8 @@
     },
     {
       "path": "assets/galevein_stormlance.glb",
-      "bytes": 179724,
-      "sha256": "5a9143526ef5b509803a761541d4c85fd0fd92f3f757d82436c47037a2bf1b7c"
+      "bytes": 183700,
+      "sha256": "2d4c61d7f92c4ccf778d3daa98869ea7ad42ad4bfbe835b5da0c2fe2ffc351ee"
     },
     {
       "path": "audio/amb_sea.mp3",
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 282828,
-      "sha256": "a5d871f1101903c76badc41e85253adeb095d98d24a9551a05b4cd5036d12c0f"
+      "bytes": 289982,
+      "sha256": "c8a0e4cad972539d9d263efcf5deae26370d9e5ae458aa463e35062b48bcc791"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -240,8 +240,8 @@
     },
     {
       "path": "world-expansion/modules/dragonRigs.js",
-      "bytes": 1188,
-      "sha256": "d2e29cfd2dbc1f6f64e06671a518755e0bbe70ccf9c0c051f4f82d2cf35d0a60"
+      "bytes": 1210,
+      "sha256": "748fce91c529ac16108de465d895c2bd9215838029c5f71149a2ca7a0ba50ee3"
     },
     {
       "path": "world-expansion/modules/galeveinPoseidonSky.js",
