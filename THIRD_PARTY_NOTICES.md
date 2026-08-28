@@ -1,8 +1,18 @@
 # Third-party notices and asset provenance
 
-## Stormlance creature
+## Sablewing creature
 
-`assets/galevein_stormlance.glb` is generated locally from the project-owned parametric Blender source in `tools/original-creature/`. Its editable `.blend` source and build metrics are retained outside this public artifact in the project's production-evidence folder. The generator makes geometry and animation from code and does not import a third-party creature asset.
+`assets/galevein_sablewing.glb` is an original Galevein silhouette and material
+remodel of **Wyvern animated** by Charlie catling, obtained from Fab under
+Creative Commons Attribution 4.0 International. The source listing is
+<https://www.fab.com/listings/d1faa655-b744-40d1-af90-ff8748f4398d> and the
+license is <https://creativecommons.org/licenses/by/4.0/>. The shipped asset
+changes the snout, neck, tail, wings, dorsal profile, material palette, selected
+control-bone names, and web compression. The full attribution/change receipt is
+retained at `licenses/wyvern-animated-CC-BY-4.0.txt`.
+
+Sablewing is an original-IP Galevein character. It is not Night Fury and is not
+presented as an official DreamWorks Animation character, asset, or product.
 
 ## Audio
 

@@ -6,7 +6,7 @@ This checklist applies only to the generated `release/` artifact. It does not cl
 
 ## Included runtime inputs
 
-- Original project-generated Stormlance creature: `assets/galevein_stormlance.glb`.
+- Original-IP Sablewing character remodel: `assets/galevein_sablewing.glb`, with CC BY 4.0 attribution and modifications documented in `licenses/wyvern-animated-CC-BY-4.0.txt`.
 - Procedural code-only landmarks; no legacy world GLB is fetched.
 - Project-authored Crownfall terrain system; no external terrain asset is fetched.
 - Project-generated audio plus one documented CC0 menu track.
@@ -16,12 +16,14 @@ This checklist applies only to the generated `release/` artifact. It does not cl
 
 ## Excluded by construction
 
-- Legacy/derivative dragon rigs and any rig-picker query route to them.
+- Retired prototype rigs and any public rig-picker route to them. The Stormlance incumbent remains source-only for loopback A/B regression.
 - Previous prototype media folders, source packs, reports, VisionOS work, and production Blender source.
 - Any external network dependency; local smoke observed no external requests.
 - Poseidon GUI, capture tools, development dependencies, and all upstream sky panorama files.
 
 ## Validation completed
+
+- Sablewing r33 promotion proof: the 4,278,588-byte Draco/WebP GLB cleanly re-imports with 28,786 triangles, 17,906 decoded vertices, one 183-bone armature, all eleven retained source clips, named `Flap`, `Glide`, and `Brake` actions, and every required Galevein control bone. Four skinned runtime meshes contain 14,732 weighted vertices with zero unweighted vertices, zero invalid joint references, and zero weight-sum deviations above 1e-3. The rider is attached to `chest` at 1.35 world units; two source eye/iris pairs remain available to the gaze layer. Matched incumbent/candidate runs both passed four creature assertions with zero external requests or console problems. The exact promoted release passed 38/38 high-quality Story/WebGPU/fallback assertions, 10/10 same-device duel assertions, and 11/11 loopback server-routed browser assertions plus all three authority-server checks. Poseidon submitted a real high-quality WebGPU frame with compute size 128 and 40,088,447 reported renderer bytes. Visual review promoted Sablewing for materially stronger anatomy, wing articulation, limb structure, and surface detail while retaining the explicit boundary that it is a CC BY 4.0 original-IP remodel, not Night Fury or an official DreamWorks asset. Public internet matchmaking remains unconfigured.
 
 - Stormlance v2 GLB: Draco-compressed, one skin, 25-bone runtime contract, named `Flap` and `Glide` actions. The clean-room generator reports 2,880 Blender vertices, 2,787 polygons, a 1.5325-unit wingspan, and a positive rider-seat gap after the v2 rebuild.
 - Local browser smoke: game booted, the Stormlance loaded, procedural landmarks built, no console problems, and no external requests.

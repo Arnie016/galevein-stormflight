@@ -1,31 +1,36 @@
 /**
  * Public-demo creature catalogue.
  *
- * This is intentionally a one-creature catalogue.  The demo must not expose
- * the old prototype's legacy rigs through URLs, localStorage, or its picker.
- * Stormlance is generated from the clean-room Blender source retained outside
- * this served artifact; its 25-bone contract preserves the existing flight,
- * rider, mouth-charge, and animation systems.
+ * This is intentionally a one-creature catalogue. The demo must not expose
+ * retired prototype rigs through URLs, localStorage, or its picker. Sablewing
+ * is an original Galevein silhouette remodel of Charlie catling's CC BY 4.0
+ * "Wyvern animated" rig; attribution and change history ship with the build.
  */
 
 export const DRAGON_RIGS = Object.freeze([
   {
-    id: 'stormlance',
-    asset: 'assets/galevein_stormlance.glb',
-    loreName: 'Stormlance',
-    epithet: 'Warden of the Sable Reach',
-    note: 'A clean-room Galevein: lightning-crown face, power-body chest, crescent wings, deep keel, and a split storm-rudder tail.',
-    geometryProfile: 'stormlance-uv-flight-body-v7',
-    flapProfile: 'aeroelastic-powerstroke-v3',
-    brakeProfile: 'held-airbrake-v1',
+    id: 'sablewing',
+    asset: 'assets/galevein_sablewing.glb',
+    loreName: 'Sablewing',
+    epithet: 'Tempest-Bound Galevein',
+    note: 'A black aerial predator with compacted head and tail, broadened storm wings, source facial rig, and a wind-reactive chest saddle.',
+    geometryProfile: 'sablewing-original-remodel-v2',
+    flapProfile: 'fab-authored-powerstroke-v1',
+    brakeProfile: 'fab-authored-idle-brake-v1',
     aliveProfile: 'control-layered-flight-response-v3',
-    surfaceProfile: 'stormlance-uv-hide-v5',
-    scale: 10.0,
+    surfaceProfile: 'sablewing-authored-hide-v1',
+    materialProfile: 'sablewing-authored-hide-v1',
+    eyeProfile: 'source-face-rig-v1',
+    riderProfile: 'scaled-chest-anchor-v1',
+    licenseProfile: 'CC-BY-4.0-remodel',
+    attribution: 'Wyvern animated by Charlie catling, CC BY 4.0; modified for Galevein: Stormflight',
+    scale: 0.47,
     flapClip: 'Flap',
     glideClip: 'Glide',
     brakeClip: 'Brake',
     default: true,
-    original: true
+    originalIP: true,
+    derivativeAsset: true
   }
 ]);
 

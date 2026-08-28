@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-stormlance-r32">
+<meta name="galevein-build" content="stormflight-sablewing-r33">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -1600,15 +1600,7 @@ function loadRivalDragon(){
   if(RIVAL.loaded||RIVAL.loading) return RIVAL.loading;
   RIVAL.loading=new Promise((resolve,reject)=>loader.load(activeRig.asset,g=>{
     const model=g.scene; model.scale.setScalar(activeRig.scale||9); model.rotation.y=Math.PI;
-    const maps=stormlanceHideMaps();
-    model.traverse(o=>{ if(!o.isMesh||!o.material)return;
-      paintStormlanceHide(o); const old=o.material;
-      o.material=new THREE.MeshPhysicalMaterial({name:'Rival_Stormlance_Hide',color:0xb88a82,vertexColors:true,
-        map:maps.albedo,normalMap:maps.normal,roughnessMap:maps.roughness,normalScale:new THREE.Vector2(.24,.24),
-        roughness:.63,metalness:.02,clearcoat:.2,clearcoatRoughness:.66,sheen:.3,
-        sheenRoughness:.8,sheenColor:new THREE.Color(0xef9c89),emissive:new THREE.Color(0x210908),
-        emissiveIntensity:.08,side:THREE.DoubleSide,fog:true}); old.dispose?.(); o.castShadow=true;
-    });
+    applyDragonMaterials(model,activeRig,{rival:true});
     RIVAL.model=model; RIVAL.group.add(model); RIVAL.mixer=new THREE.AnimationMixer(model);
     const flap=findClip(g.animations,activeRig.flapClip),glide=findClip(g.animations,activeRig.glideClip);
     RIVAL.flap=flap?RIVAL.mixer.clipAction(flap):null; RIVAL.glide=glide?RIVAL.mixer.clipAction(glide):null;
@@ -1647,7 +1639,16 @@ landmarkReady.then(async ()=>{
   $('wakehint').textContent='LANDMARK BUILD FAILED';
   $('startBtn').disabled=true;
 });
-let activeRig=defaultRig();
+const LOCAL_HERO_PARAMS=new URLSearchParams(location.search);
+const LOCAL_STORMLANCE_ENABLED=['127.0.0.1','localhost','[::1]'].includes(location.hostname)
+  && LOCAL_HERO_PARAMS.get('hero')==='stormlance';
+const STORMLANCE_INCUMBENT=Object.freeze({
+  id:'stormlance-incumbent',asset:'assets/galevein_stormlance.glb',loreName:'Stormlance',epithet:'Retired A/B Incumbent',
+  note:'Local comparison only; the public picker and default route expose Sablewing.',geometryProfile:'stormlance-uv-flight-body-v7',
+  flapProfile:'aeroelastic-powerstroke-v3',brakeProfile:'held-airbrake-v1',aliveProfile:'control-layered-flight-response-v3',
+  surfaceProfile:'stormlance-uv-hide-v5',scale:10,flapClip:'Flap',glideClip:'Glide',brakeClip:'Brake'
+});
+let activeRig=LOCAL_STORMLANCE_ENABLED?STORMLANCE_INCUMBENT:defaultRig();
 function findClip(animations, name){
   return THREE.AnimationClip.findByName(animations, name)
     || animations.find(c=>c.name===name||c.name.endsWith(name)||c.name.includes(name));
@@ -1730,7 +1731,22 @@ function paintStormlanceHide(mesh){
   mesh.userData.surfaceProfile={id:STORMLANCE_SURFACE,vertices:pos.count,regions:counts};
   return mesh.userData.surfaceProfile;
 }
-function applyDragonMaterials(model, rig){
+function applyDragonMaterials(model, rig, options={}){
+  if(rig.materialProfile==='sablewing-authored-hide-v1'){
+    model.traverse(o=>{ if(!o.isMesh||!o.material)return;
+      const materials=Array.isArray(o.material)?o.material:[o.material];
+      const mapped=materials.map(source=>{const material=source.clone();
+        if(material.name.includes('Sable_Hide')){material.color.set(options.rival?0x4b3034:0x101f24);
+          material.map=null;material.emissiveMap=null;material.roughnessMap=null;material.roughness=.82;material.metalness=0;
+          material.emissive?.set(0x000000);material.emissiveIntensity=0;material.envMapIntensity=.32;}
+        else if(material.name.includes('Iris_Glow')){material.color.set(options.rival?0xff8b71:0x5de7d3);material.emissive?.set(options.rival?0x6d180f:0x0d776b);material.emissiveIntensity=1.35;}
+        else if(material.name.includes('Eye_Glass')){material.color.set(options.rival?0x241211:0x091b1d);material.roughness=.2;}
+        else {material.color.multiplyScalar(options.rival ? .72 : .58);material.roughness=Math.max(material.roughness??.5,.64);}
+        material.side=THREE.DoubleSide;material.fog=true;material.needsUpdate=true;return material;});
+      o.material=Array.isArray(o.material)?mapped:mapped[0];o.castShadow=true;
+    });
+    return;
+  }
   const maps=stormlanceHideMaps();
   model.traverse(o=>{ if(!o.isMesh || !o.material) return;
     const previous=o.material;
@@ -1748,6 +1764,20 @@ function applyDragonMaterials(model, rig){
   });
 }
 function stormlanceSurfaceSnapshot(){
+  if(activeRig.materialProfile==='sablewing-authored-hide-v1'){
+    const out={profile:activeRig.surfaceProfile,meshes:0,surfaceMeshes:0,accessoryMeshes:0,
+      physicalMaterials:0,vertexColored:0,uvMeshes:0,textures:0,generatedTextureResolution:1024,
+      vertices:0,regions:{body:0,wing:0,tail:0,leg:0,head:0}};
+    const textureSet=new Set();
+    D.model?.traverse(o=>{if(!o.isMesh)return;out.meshes++;if(o.isSkinnedMesh)out.surfaceMeshes++;else out.accessoryMeshes++;
+      const position=o.geometry?.getAttribute('position');if(position)out.vertices+=position.count;
+      if(o.geometry?.getAttribute('uv'))out.uvMeshes++;
+      const materials=Array.isArray(o.material)?o.material:[o.material];for(const material of materials){
+        if(material?.isMeshPhysicalMaterial)out.physicalMaterials++;
+        for(const slot of ['map','normalMap','roughnessMap','metalnessMap','emissiveMap'])if(material?.[slot])textureSet.add(material[slot].uuid);
+      }});
+    out.textures=textureSet.size;return out;
+  }
   const out={profile:STORMLANCE_SURFACE,meshes:0,surfaceMeshes:0,accessoryMeshes:0,
     physicalMaterials:0,vertexColored:0,uvMeshes:0,textures:0,generatedTextureResolution:STORMLANCE_HIDE_MAPS?.resolution||0,
     vertices:0,regions:{body:0,wing:0,tail:0,leg:0,head:0}};
@@ -1762,7 +1792,7 @@ function stormlanceSurfaceSnapshot(){
   out.accessoryMeshes=out.meshes-out.surfaceMeshes;
   return out;
 }
-function attachDragonAccessories(model){
+function attachDragonAccessories(model,rig){
   D.eyeRigs=[];D.rider=null;D.riderHood=null;D.riderScarf=null;D.presentationReport=null;
   D.mixer=new THREE.AnimationMixer(model);
   D.headNode=model.getObjectByName('head')||model.getObjectByName('Head');
@@ -1776,7 +1806,12 @@ function attachDragonAccessories(model){
   const mlt=new THREE.PointLight(0x59f0d5,0,80,2); mouth.add(mlt);
   D.mouth=mouth; D.mouthLt=mlt;
   const chest=model.getObjectByName('chest')||model.getObjectByName('Body');
-  if(D.headNode){
+  if(rig.eyeProfile==='source-face-rig-v1'){
+    const sourceNode=name=>model.getObjectByName(name)||model.getObjectByName(name.replaceAll('.','_'))||model.getObjectByName(name.replaceAll('.',''));
+    for(const [side,eyeName,irisName] of [[-1,'sourceEye.L','sourceIris.L'],[1,'sourceEye.R','sourceIris.R']]){
+      const eye=sourceNode(eyeName),pupil=sourceNode(irisName);if(eye&&pupil)D.eyeRigs.push({eye,pupil,side,source:true});
+    }
+  } else if(D.headNode){
     const eyeGeo=new THREE.SphereGeometry(.023,22,14),pupilGeo=new THREE.SphereGeometry(.011,16,10);
     const eyeMat=new THREE.MeshPhysicalMaterial({color:0x17393b,emissive:0x0a2928,emissiveIntensity:.42,roughness:.22,clearcoat:.64});
     const pupilMat=new THREE.MeshStandardMaterial({color:0xb8fff0,emissive:0x39d8bd,emissiveIntensity:1.25,roughness:.24});
@@ -1825,10 +1860,14 @@ function attachDragonAccessories(model){
     for(const side of [-1,1]){const rein=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(side*.055,.055,-.074),new THREE.Vector3(side*.074,.030,-.180)]),reinMat);
       rein.name=`Stormwarden_Rein_${side<0?'L':'R'}`;rider.add(rein);}
-    rider.position.set(0,.675,-.03);model.add(rider);model.updateWorldMatrix(true,true);
+    if(rig.riderProfile==='scaled-chest-anchor-v1'){
+      model.updateWorldMatrix(true,true);const anchor=chest.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.35,0));
+      model.add(rider);rider.position.copy(model.worldToLocal(anchor));rider.scale.setScalar(12);
+    } else {rider.position.set(0,.675,-.03);model.add(rider);}
+    model.updateWorldMatrix(true,true);
     chest.updateWorldMatrix(true,false);chest.attach(rider);
     rider.userData.basePosition=rider.position.clone();D.rider=rider;D.riderHood=hood;D.riderScarf=scarf;
-    D.presentationReport={profile:'stormwarden-seated-flight-v1',faceProfile:'lightning-crown-orbital-v1',
+    D.presentationReport={profile:rig.riderProfile||'stormwarden-seated-flight-v1',faceProfile:rig.eyeProfile||'lightning-crown-orbital-v1',
       riderParts:rider.children.filter(o=>o.isMesh).length,saddleParts:5,reins:2,eyes:D.eyeRigs.length,
       pupils:D.eyeRigs.filter(e=>e.pupil).length,chestAnchored:rider.parent===chest,windReactive:true,gazeReactive:true};
   }
@@ -1862,7 +1901,7 @@ function onDragonLoaded(g, rig){
   const model=g.scene; D.model=model; model.scale.setScalar(rig.scale||9); model.rotation.y=Math.PI;
   applyDragonMaterials(model, rig);
   D.group.add(model);
-  attachDragonAccessories(model);
+  attachDragonAccessories(model,rig);
   setupDragonClips(g, rig);
   collectBones(model);
   ALIVE=1.0;
@@ -1879,12 +1918,11 @@ function renderRigPicker(){
   const host=$('rigPicker'); if(!host) return;
   const mount=$('flightMount'); if(mount) mount.textContent=(activeRig?.loreName||'Stormlance').toUpperCase();
   host.innerHTML='';
-  const rig=rigCatalog()[0]; if(!rig) return;
+  const rig=LOCAL_STORMLANCE_ENABLED?activeRig:rigCatalog()[0]; if(!rig) return;
   const card=document.createElement('div');
   card.className='rig on'; card.innerHTML=`<b>${rig.loreName}</b><i>${rig.epithet}</i>`;
   card.title=rig.note; host.appendChild(card);
 }
-activeRig=defaultRig();
 loadDragonRig(activeRig).catch(()=>{
   $('objText').textContent='DRAGON ASSET FAILED TO LOAD — refresh the local server and try again';
   $('wakehint').textContent='MODEL LOAD FAILED';
@@ -2006,7 +2044,8 @@ function applyAlive(dt){
   }
   if(D.eyeRigs?.length){
     const blink=Math.pow(Math.max(0,Math.sin(t*.73+1.25)),24),gaze=THREE.MathUtils.clamp(q.head.value*.08+q.slip.value*.018,-.016,.016);
-    for(const rig of D.eyeRigs){rig.eye.scale.y=.48*(1-blink*.82);rig.pupil.position.x=gaze*rig.side;rig.pupil.position.y=-q.pitch.value*.004;}
+    for(const rig of D.eyeRigs){if(rig.source){rig.eye.rotation.y=gaze*rig.side;rig.pupil.rotation.x=-q.pitch.value*.035;}
+      else {rig.eye.scale.y=.48*(1-blink*.82);rig.pupil.position.x=gaze*rig.side;rig.pupil.position.y=-q.pitch.value*.004;}}
   }
 }
 
@@ -3255,7 +3294,7 @@ function tick(dt){
     if(D.mixer){ D.mixer.update(dt); D.turn=0.28*Math.sin(S.t*0.4); applyAlive(dt); }  // idle tail sway
     if(D.model){
       const b=1+Math.sin(S.t*1.5)*0.011;                       // slow breath
-      D.model.scale.setScalar(9*b);
+      D.model.scale.setScalar((activeRig.scale||9)*b);
       D.model.rotation.x += (-0.12 - D.model.rotation.x)*fdamp(3,dt);
     }
     lobbyMarkers.syncAnchor(REST);
@@ -3790,7 +3829,7 @@ function reset(){
   S.finishing=false; S.finishToken++; GATE.open=0; S.impactCd=0; S.alertStage=0; S.keeperGateWarnAt=0; S.storyGateWarnAt=0;
   S.boost=0; S.accel=0; S.prevSpeed=30; S.boomed=false; S.charges=3; S.chargeT=-1; S.scatterCd=0; S.pulseCd=0; S.grace=3; S.launching=true;
   TOD.day=0.0; S.keepersWoke=false; ROG.amp=0; ROG.life=0; ROG.next=6; uRA.value=0;
-  if(D.model) D.model.scale.setScalar(9);
+  if(D.model) D.model.scale.setScalar(activeRig.scale||9);
   if(D.glide) D.glide.timeScale=1;
   for(const r of rings){ setStormVaneState(r,false); r.userData.pop=0; r.scale.setScalar(1); }
   for(const sl of searchlights){ sl.lit=0; sl.disabled=0; sl.destroyed=false; sl.fall=0;
@@ -4363,7 +4402,7 @@ window.SIM={
       patrolVisible:patrol.visible, markers:lobbyMarkers.snapshot(),
       defaultMode:lobby.snapshot().selection?.mode||null,
       primaryAction:document.querySelector('[data-lobby-launch]')?.textContent||'',
-      materialDirection:'stormlance-v2 split-crown wet-hide',
+      materialDirection:'sablewing-v1 matte-black weathered hide',
       palette:['basalt','weathered-bronze','cold-keeper-core','wind-shear-cyan']
     };
   },
@@ -4504,7 +4543,8 @@ window.SIM={
     const eyePoints=(D.eyeRigs||[]).map(e=>e.eye.getWorldPosition(new THREE.Vector3()));
     const pupilPoints=(D.eyeRigs||[]).map(e=>e.pupil.getWorldPosition(new THREE.Vector3()));
     const eyeCenter=eyePoints.length?eyePoints.reduce((sum,p)=>sum.add(p),new THREE.Vector3()).multiplyScalar(1/eyePoints.length):head;
-    const faceOut=eyePoints.length===pupilPoints.length&&eyePoints.length?pupilPoints.reduce((sum,p,i)=>sum.add(p.clone().sub(eyePoints[i])),new THREE.Vector3()).normalize():forward;
+    const faceOut=activeRig.eyeProfile==='source-face-rig-v1'?forward:
+      eyePoints.length===pupilPoints.length&&eyePoints.length?pupilPoints.reduce((sum,p,i)=>sum.add(p.clone().sub(eyePoints[i])),new THREE.Vector3()).normalize():forward;
     const riderWorld=D.rider?.getWorldPosition(new THREE.Vector3());
     if(pose.view==='face'&&eyeCenter){camera.position.copy(eyeCenter).addScaledVector(faceOut,5.6).addScaledVector(side,1.75).addScaledVector(up,.75);
       camera.fov=34;camera.updateProjectionMatrix();camera.lookAt(eyeCenter.clone().addScaledVector(up,-.10));}
@@ -4654,7 +4694,8 @@ window.SIM={
   structureSnapshot:()=>structure?.snapshot()??null,
   rig:()=>({id:activeRig?.id,loreName:activeRig?.loreName,
     geometryProfile:activeRig?.geometryProfile,flapProfile:activeRig?.flapProfile,
-    brakeProfile:activeRig?.brakeProfile,aliveProfile:activeRig?.aliveProfile,surfaceProfile:activeRig?.surfaceProfile}),
+    brakeProfile:activeRig?.brakeProfile,aliveProfile:activeRig?.aliveProfile,surfaceProfile:activeRig?.surfaceProfile,
+    licenseProfile:activeRig?.licenseProfile||'project-owned'}),
   rigMotion:()=>({profile:activeRig?.aliveProfile,clips:{
       flap:D.flap?.getClip().name||null,glide:D.glide?.getClip().name||null,brake:D.brake?.getClip().name||null},
     responseChannels:Object.keys(D.springs||{}),cruiseMode:'stable-glide',flapAuthority:'player-command',brakeMode:'held-authored-pose',

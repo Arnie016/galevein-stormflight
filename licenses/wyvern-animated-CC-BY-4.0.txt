@@ -1,0 +1,21 @@
+Sablewing creature asset attribution
+
+Original work: "Wyvern animated"
+Creator: Charlie catling
+Source: https://www.fab.com/listings/d1faa655-b744-40d1-af90-ff8748f4398d
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+License URL: https://creativecommons.org/licenses/by/4.0/
+
+Galevein: Stormflight changes:
+- reduced embedded textures to a web-sized 1024-pixel maximum;
+- exported WebP textures and Draco-compressed geometry;
+- shortened the snout, neck, and tail;
+- broadened the head and wing planform;
+- reduced the dorsal and long-horned silhouette;
+- changed the material response to matte blue-black hide;
+- renamed selected control bones and three browser-authoritative clips;
+- attached the original Galevein rider, wind-response, and gameplay systems.
+
+The resulting character and game identity are called Sablewing and Galevein:
+Stormflight. They are not presented as Night Fury or as an official character,
+asset, or product from DreamWorks Animation.

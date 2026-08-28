@@ -236,7 +236,7 @@ then creates `release/` from an explicit allowlist. It does not include
 
 ## Prototype boundary
 
-This is a free, non-commercial prototype under a working title. It uses an original locally generated Stormlance Galevein, procedural landmarks, synthesized project audio, a documented CC0 menu track, vendored Three.js, and an MIT-licensed Poseidon spectral-ocean adaptation. Stormlance retains its 25-bone rig, higher-density crescent membrane, broad torso and neck, split lightning crown, jaw keel, sensory barbs, and rider-seat clearance; r26 exports named Flap, Glide, and Brake clips, and r27 adds a generated UV hide surface without importing third-party creature textures. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), [OCEAN_PROVENANCE.md](OCEAN_PROVENANCE.md), and [RELEASE_READINESS.md](RELEASE_READINESS.md).
+This is a free, non-commercial prototype under a working title. It uses the original-IP Sablewing Galevein character, procedural landmarks, synthesized project audio, a documented CC0 menu track, vendored Three.js, and an MIT-licensed Poseidon spectral-ocean adaptation. Sablewing is a materially and geometrically modified CC BY 4.0 rig with 183 bones, eleven retained source clips, named Flap, Glide, and Brake actions, source facial controls, a chest-anchored rider, and layered wind response. It is not Night Fury or an official DreamWorks character or asset. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), [OCEAN_PROVENANCE.md](OCEAN_PROVENANCE.md), and [RELEASE_READINESS.md](RELEASE_READINESS.md).
 
 The r24 Story route adds one fixed Drowned Hearth decision at beacon seven.
 The prompt is triggered by authored world position and campaign progress, then

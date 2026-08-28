@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-28T17:27:14.568Z",
+  "generatedAt": "2026-08-28T18:43:18.413Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -9,9 +9,9 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "path": "assets/galevein_stormlance.glb",
-      "bytes": 183700,
-      "sha256": "2d4c61d7f92c4ccf778d3daa98869ea7ad42ad4bfbe835b5da0c2fe2ffc351ee"
+      "path": "assets/galevein_sablewing.glb",
+      "bytes": 4278588,
+      "sha256": "32bcf1ca5feb22537a94cb3bb4c548c215103e9498c5bc50c84e4c2e529576f0"
     },
     {
       "path": "audio/amb_sea.mp3",
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 289982,
-      "sha256": "c8a0e4cad972539d9d263efcf5deae26370d9e5ae458aa463e35062b48bcc791"
+      "bytes": 293497,
+      "sha256": "7f0816b9e3241d7687c846b22296a6681c573ff64caeb98daed4da5ca8874d3d"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -79,24 +79,29 @@
       "sha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc"
     },
     {
+      "path": "licenses/wyvern-animated-CC-BY-4.0.txt",
+      "bytes": 984,
+      "sha256": "f1e7f218d5aad2643b4c0e432cdfd74a83a1c8fc406d0037e8c3d5389f3ac9b0"
+    },
+    {
       "path": "OCEAN_PROVENANCE.md",
       "bytes": 2697,
       "sha256": "f88c6c4ff38c559c83edc4de3305318eb2b73306d267f74789b9c3ba5c57c7cd"
     },
     {
       "path": "README.md",
-      "bytes": 18088,
-      "sha256": "a164f40b29905d703b905c8a278081d8cdd316ed108bab33c6387574ee2ba377"
+      "bytes": 18072,
+      "sha256": "530254d5776400881cea280b7c2d23a3d011452fbf019b12df60603451d0196e"
     },
     {
       "path": "RELEASE_READINESS.md",
-      "bytes": 23266,
-      "sha256": "5ea662d72fc2cebacb397b1c43da3bf73ad88ea180e75142bd331e2ed94763bd"
+      "bytes": 24734,
+      "sha256": "5782a6f371f2f2e7383cc08d7886a30752d782479066e997f24569dba558240e"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
-      "bytes": 2697,
-      "sha256": "6e39aa18a3cd070ca04f6cb02b6e6cecb3578df2fd4ed213c4f18025d66a490d"
+      "bytes": 3075,
+      "sha256": "cb2c2d91728b20c432a878f14c22e3bf262ba03f18210572a9f280fa57eab60f"
     },
     {
       "path": "utils/BufferGeometryUtils.js",
@@ -240,8 +245,8 @@
     },
     {
       "path": "world-expansion/modules/dragonRigs.js",
-      "bytes": 1210,
-      "sha256": "748fce91c529ac16108de465d895c2bd9215838029c5f71149a2ca7a0ba50ee3"
+      "bytes": 1487,
+      "sha256": "a5e7bc5779dc922e8698a8a7ad9da423a387a0f1061b22977f1f2b74749f17af"
     },
     {
       "path": "world-expansion/modules/galeveinPoseidonSky.js",
