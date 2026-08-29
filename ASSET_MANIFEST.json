@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-29T09:03:24.021Z",
+  "generatedAt": "2026-08-29T15:50:14.975Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 305177,
-      "sha256": "1640f296c2c00ec0b1086284847cbea06ac4c3c9bbe74de33b68b3f11769d81f"
+      "bytes": 320751,
+      "sha256": "b04c3ffddf79c99c25a14395bea92e1e6d9d503ed10d083915c25452556805d5"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -215,8 +215,8 @@
     },
     {
       "path": "world-expansion/data/chapters.json",
-      "bytes": 7537,
-      "sha256": "7df8853e256ab355e933ee892e25c9fa6e19cf9b2aedf8ab1d4a6ff66669b0b7"
+      "bytes": 7594,
+      "sha256": "a0322b9fd56fd1bbf9c68d4a57f23a0f7d826937962d33b892f24a63b8595c8a"
     },
     {
       "path": "world-expansion/data/regions.json",
@@ -230,8 +230,8 @@
     },
     {
       "path": "world-expansion/modules/chapterDirector.js",
-      "bytes": 13377,
-      "sha256": "eca4f6f671d3c56c8e36d158067fe28dfffcf1d474b945f99eb92c8d0ffd5c37"
+      "bytes": 13374,
+      "sha256": "22a04117b9e65b267ff9f34c90b2ca61f1433b7ec22bde4d23609a54bf15b696"
     },
     {
       "path": "world-expansion/modules/cinematicDof.js",
@@ -240,8 +240,8 @@
     },
     {
       "path": "world-expansion/modules/crownfallRange.js",
-      "bytes": 23320,
-      "sha256": "c99decc6dc8a2d520e5c69b5cd990db850e7376c1a9271b129b30138cf97fcc8"
+      "bytes": 23331,
+      "sha256": "826102f1de0c5f3e3562461c0e123c9a624f17693856c05108c9a8092020d6c4"
     },
     {
       "path": "world-expansion/modules/dragonRigs.js",
@@ -265,13 +265,13 @@
     },
     {
       "path": "world-expansion/modules/horizonDirector.js",
-      "bytes": 18399,
-      "sha256": "f241c638a39937984986e7197a63f27ad64b2b734b9068e08602666599eb5f1f"
+      "bytes": 18410,
+      "sha256": "1c72867ab7ac38b1b9d16e3c87e09f94b719e7f0967bfd0b356edcbed6146ec8"
     },
     {
       "path": "world-expansion/modules/keeperHollowBiome.js",
-      "bytes": 32129,
-      "sha256": "0c4fa49d395b640cd86fbfbd4f5986ce8dcbaa1317e436fc5b47bfae88abbc5c"
+      "bytes": 32114,
+      "sha256": "3140af5736fed9800867c28a7a1f6bf1c814f6e1888310a8799ee6c17a0c7db6"
     },
     {
       "path": "world-expansion/modules/landmarkPath.js",

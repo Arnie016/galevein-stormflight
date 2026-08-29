@@ -188,7 +188,9 @@ function erodedCliffGeometry(radialSegments = 24, tiers = 18) {
 }
 
 function coniferGeometry(radialSegments = 7) {
-  const profile = [[0,.07],[.14,.08],[.17,.46],[.34,.12],[.31,.39],[.51,.09],[.47,.31],[.69,.06],[.64,.22],[.85,.03],[1,0]];
+  // Root flare extends below the sampled ledge so silhouettes read as planted,
+  // never as cone props hovering a few pixels above fractured rock.
+  const profile = [[-.08,.13],[0,.10],[.14,.08],[.17,.46],[.34,.12],[.31,.39],[.51,.09],[.47,.31],[.69,.06],[.64,.22],[.85,.03],[1,0]];
   const positions = [], indices = [];
   for (let ring = 0; ring < profile.length; ring += 1) {
     const [y, radius] = profile[ring];
@@ -328,14 +330,13 @@ export class KeeperHollowBiome {
       const mass = index % 11 === 0
         ? forestSeats[Math.floor(index / 11) % forestSeats.length]
         : forestShoulders[index % forestShoulders.length];
-      const ledgeBands = [.27, .43, .60, .72];
-      const v = ledgeBands[Math.floor(hash(index + 1100) * ledgeBands.length)] + (hash(index + 1200) - .5) * .07;
+      const v = .91 + hash(index + 1200) * .055;
       const angleCluster = Math.floor(hash(index + 1300) * 10) / 10 * TAU;
       const angle = angleCluster + (hash(index + 1400) - .5) * .30;
-      const radius = mass.radius * cliffRadius(v) * (.70 + hash(index + 1500) * .18);
+      const radius = mass.radius * (.045 + hash(index + 1500) * .115);
       const height = 5.5 + hash(index + 1700) * 9;
       this.position.set(mass.x + Math.cos(angle) * radius, -5 + (mass.top + 5) * v, mass.z + Math.sin(angle) * radius * .74);
-      this.quaternion.setFromEuler(new THREE.Euler(0, hash(index + 1900) * TAU, (hash(index + 2100) - .5) * .06));
+      this.quaternion.setFromEuler(new THREE.Euler(0, hash(index + 1900) * TAU, (hash(index + 2100) - .5) * .025));
       this.scale.set(height * (.72 + hash(index + 2300) * .18), height, height * (.72 + hash(index + 2500) * .18));
       this.matrix.compose(this.position, this.quaternion, this.scale); this.forest.setMatrixAt(index, this.matrix);
     }
@@ -371,20 +372,19 @@ export class KeeperHollowBiome {
     this.backdropForest.name = 'KeeperHollow_FogTreelineBands';
     this.backdropForest.frustumCulled = false;
     const forestPalette = [new THREE.Color(0x17372f), new THREE.Color(0x244039), new THREE.Color(0x344b49)];
-    const ledgeBands = [.38, .50, .61, .70];
     for (let index = 0; index < BACKDROP_FOREST_COUNT; index += 1) {
       const ridge = this.backdropLayout[index % this.backdropLayout.length];
-      const v = ledgeBands[Math.floor(hash(index + 6500) * ledgeBands.length)] + (hash(index + 6700) - .5) * .055;
+      const v = .91 + hash(index + 6700) * .052;
       const angleCluster = Math.floor(hash(index + 6900) * 12) / 12 * TAU;
       const angle = angleCluster + (hash(index + 7100) - .5) * .22;
-      const ledgeRadius = ridge.radius * cliffRadius(v) * (.72 + hash(index + 7300) * .17);
+      const ledgeRadius = ridge.radius * (.04 + hash(index + 7300) * .11);
       const height = 13 + ridge.layer * 3 + hash(index + 7500) * 11;
       this.position.set(
         ridge.x + Math.cos(angle) * ledgeRadius,
         -28 + (ridge.top + 28) * v,
         ridge.z + Math.sin(angle) * ledgeRadius * .72
       );
-      this.quaternion.setFromEuler(new THREE.Euler(0, hash(index + 7700) * TAU, (hash(index + 7900) - .5) * .045));
+      this.quaternion.setFromEuler(new THREE.Euler(0, hash(index + 7700) * TAU, (hash(index + 7900) - .5) * .018));
       this.scale.set(height * (.74 + hash(index + 8100) * .16), height, height * (.74 + hash(index + 8300) * .16));
       this.matrix.compose(this.position, this.quaternion, this.scale);
       this.backdropForest.setMatrixAt(index, this.matrix);
@@ -548,7 +548,8 @@ export class KeeperHollowBiome {
       valleyShoulders:MASSES.filter((mass) => mass.shoulder).length,
       shrineSupports:MASSES.filter((mass) => mass.shrine).length,
       forestInstances:this.forest.count, talusInstances:this.talus.count,
-      forestDistribution:'deterministic-ledge-clusters', fogBackdrop:'layered-exp2-geometry-v2',
+      forestDistribution:'deterministic-crown-groves-v2', forestGrounding:'root-embedded-fixed-world-v2',
+      treeRootEmbedRatio:.08, fogBackdrop:'layered-exp2-geometry-v2',
       wetAprons:this.wetAprons.count, surfCollars:this.surf.count,
       drawCalls:7, collisionProxies:MASSES.length,
       atmosphericDepthProfile:'keeper-hollow-ridge-bands-v1', backdropMountainLayers:3,

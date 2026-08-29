@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-story-r34">
+<meta name="galevein-build" content="stormflight-atmosphere-r36">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -80,7 +80,7 @@
   #abil .ab.rdy{ color:#cbd9f5; text-shadow:0 0 12px rgba(150,110,255,.55); }
   #abil .ab.rdy b{ color:#fff; background:rgba(140,100,240,.34); border-color:rgba(180,150,255,.65); }
   #abil .ab.hot{ color:#ffd08a; text-shadow:0 0 14px rgba(255,170,80,.7); }
-  #hudBR{ bottom:44px; right:14px; display:flex; gap:18px; padding:8px 16px; }
+  #hudBR{ bottom:44px; right:14px; display:flex; gap:18px; padding:8px 16px; transition:opacity .2s ease; }
   #hudBR .inst{ display:flex; flex-direction:column; align-items:center; line-height:1; }
   #hudBR .iv{ font-family:var(--display); font-size:26px; font-weight:700; color:#eaf1ff; }
   #hudBR .il{ font-size:9px; letter-spacing:2px; color:#7d8cad; margin-top:3px; }
@@ -107,11 +107,18 @@
   #objTag b{ color:var(--teal); }
   #chapterLabel{ display:block; font-family:var(--display); font-size:10px; letter-spacing:.22em;
     color:var(--purple); margin-bottom:4px; text-transform:uppercase; }
+  #objectiveProgress{ display:flex; align-items:center; justify-content:center; gap:9px; margin-top:7px; }
+  #objectiveCount{ color:#ffc27a; font:800 12px var(--display); letter-spacing:.08em; }
+  #objectiveMarks{ display:flex; align-items:center; gap:6px; }
+  .objective-mark{ position:relative; width:13px; height:13px; border:1px solid rgba(255,194,122,.34); border-radius:50%;
+    background:rgba(2,8,13,.22); box-shadow:inset 0 0 0 2px rgba(2,8,13,.18); transition:all .28s ease; }
+  .objective-mark.done{ border-color:#ffc27a; background:rgba(255,194,122,.16); box-shadow:0 0 10px rgba(255,194,122,.24); }
+  .objective-mark.done::after{ content:'✓'; position:absolute; inset:-4px -2px 0; color:#ffc27a; font:900 15px var(--body); }
   #missionBeat{ display:none; margin-top:5px; font-size:11px; letter-spacing:.8px; color:#ffbe6a;
     font-family:var(--mono); }
   #missionBeat.on{ display:block; }
-  #journeyRail{ position:absolute; top:83px; left:50%; transform:translateX(-50%); display:flex; align-items:center;
-    gap:5px; padding:5px 8px; border-radius:18px; background:rgba(5,10,18,.62); border:1px solid rgba(89,240,213,.16); }
+  #journeyRail{ position:static; display:flex; align-items:center; justify-content:center; width:max-content; margin:8px auto 0;
+    gap:5px; padding:4px 8px; border-radius:18px; background:rgba(5,10,18,.52); border:1px solid rgba(89,240,213,.16); }
   .journey-step{ display:block; width:24px; height:3px; border-radius:4px; background:rgba(207,224,245,.18); transition:all .25s; }
   .journey-step.done{ background:rgba(89,240,213,.7); }
   .journey-step.current{ width:42px; background:#ffc27a; box-shadow:0 0 10px rgba(255,194,122,.55); }
@@ -230,6 +237,55 @@
   .bk-skill .d{ font-size:13px; color:#6c5432; font-style:italic; }
   .bk-foot{ margin-top:14px; text-align:center; font-size:11.5px; font-style:italic; color:#6c5432;
     border-top:1px dotted rgba(90,60,25,.5); padding-top:9px; }
+
+  /* The field card is a saddle-mounted reference, not a pause menu. */
+  #book{ position:fixed; inset:auto 22px 58px auto; z-index:4; display:block; width:min(390px,calc(100vw - 34px));
+    background:none; opacity:0; pointer-events:none; perspective:900px;
+    transform:translate(34px,24px) rotate(3deg) rotateY(-7deg) scale(.94); transform-origin:100% 100%;
+    transition:opacity .24s ease,transform .34s cubic-bezier(.2,.9,.25,1); }
+  #book.on{ opacity:1; pointer-events:auto; transform:translate(0,0) rotate(2.2deg) rotateY(-5deg) scale(1); }
+  #bookInner,#book.on #bookInner{ width:auto; max-height:none; overflow:visible; padding:12px 14px 13px;
+    transform:none; border:1px solid rgba(57,36,15,.74); border-radius:7px;
+    clip-path:polygon(1% 3%,7% 1%,14% 2.2%,23% .7%,34% 2%,45% .5%,57% 1.8%,68% .6%,79% 2%,90% .7%,99% 2%,
+      98.7% 15%,100% 28%,98.8% 42%,99.7% 56%,98.6% 70%,99.4% 84%,98% 98%,87% 99.2%,75% 98.1%,
+      62% 99.4%,49% 98%,36% 99.3%,23% 98.1%,10% 99.2%,1% 97%,1.7% 82%,.5% 67%,1.5% 51%,.4% 35%,1.5% 19%);
+    background:
+      radial-gradient(circle at 14% 72%,rgba(78,45,15,.19),transparent 24%),
+      radial-gradient(circle at 84% 18%,rgba(82,46,14,.16),transparent 22%),
+      repeating-linear-gradient(94deg,rgba(108,73,32,.045) 0 2px,transparent 2px 5px),
+      linear-gradient(155deg,#d9c18f,#c6a66d 58%,#ab8956);
+    box-shadow:0 22px 54px rgba(0,0,0,.58),0 0 0 2px rgba(215,180,113,.12),inset 0 0 34px rgba(70,40,14,.3); }
+  #bookInner::before{ top:-2px; height:8px; border-radius:7px 7px 0 0; opacity:.72; }
+  #book .bk-head{ display:flex; align-items:center; justify-content:center; gap:9px; margin:2px 0 7px;
+    padding:0 0 7px; border-bottom:1px solid rgba(70,43,17,.52); }
+  #book .bk-rune{ font-size:12px; }
+  #book .bk-title{ font-size:15px; line-height:1; letter-spacing:.19em; }
+  #book .bk-sub{ display:none; }
+  .flight-gesture-grid{ display:grid; grid-template-columns:1fr 1fr; border:1px solid rgba(64,39,16,.5); }
+  .flight-gesture{ position:relative; min-height:104px; padding:5px 6px 7px; box-sizing:border-box; text-align:center;
+    border-right:1px solid rgba(64,39,16,.42); border-bottom:1px solid rgba(64,39,16,.42); overflow:hidden; }
+  .flight-gesture:nth-child(2n){ border-right:0; }
+  .flight-gesture:nth-last-child(-n+2){ border-bottom:0; }
+  .flight-gesture svg{ display:block; width:100%; height:66px; overflow:visible; }
+  .flight-gesture .dragon-line{ fill:none; stroke:#30200f; stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round; }
+  .flight-gesture .motion-line{ fill:none; stroke:#6e4620; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+  .flight-gesture .motion-fill{ fill:#6e4620; }
+  .flight-gesture strong{ display:block; color:#35220f; font:800 10px var(--display); letter-spacing:.12em; }
+  .flight-gesture kbd{ display:inline-block; min-width:16px; margin-top:3px; padding:1px 4px; color:#2d1c0b;
+    border:1px solid rgba(55,33,13,.72); border-radius:2px; background:rgba(245,224,180,.28); font:800 9px var(--mono); }
+  .gesture-mark{ position:absolute; right:6px; top:5px; width:12px; height:12px; border-radius:50%;
+    border:1px solid rgba(58,35,14,.34); color:transparent; font:900 10px/12px var(--body); transition:.2s ease; }
+  .flight-gesture.discovered{ background:rgba(245,224,180,.18); }
+  .flight-gesture.discovered .gesture-mark{ color:#3d6c59; border-color:#3d6c59; box-shadow:0 0 0 2px rgba(61,108,89,.08); }
+  #book .bk-foot{ display:flex; justify-content:space-between; gap:10px; margin-top:7px; padding-top:7px;
+    font:italic 10px var(--body); letter-spacing:.03em; }
+  #book .bk-foot b{ color:#3b2814; font:800 8px var(--mono); letter-spacing:.13em; }
+  #ctrlhint{ display:none; }
+  @media (max-width:720px){
+    #book{ right:10px; bottom:46px; width:min(350px,calc(100vw - 20px)); }
+    .flight-gesture{ min-height:91px; } .flight-gesture svg{ height:54px; }
+    #hudBR{ display:none; } #coachCue{ bottom:18px; }
+  }
   #chargeHud{ position:absolute; opacity:0; transition:opacity .12s; pointer-events:none; text-align:center;
     transform:translate(-50%,-50%); }
   #chargeHud.on{ opacity:1; }
@@ -557,7 +613,7 @@
     <div class="bar"><i id="hpFill"></i></div>
     <div class="row" style="margin-top:5px"><span class="k">DETECTION</span><span class="v" id="detPct">0%</span></div>
     <div class="bar"><i id="detFill"></i></div>
-    <div class="row" style="margin-top:6px"><span class="k">PLASMA <span class="pips" id="plasmaPips"><i></i><i></i><i></i></span></span><span class="v" id="plasmaV">3</span></div>
+    <div class="row" style="margin-top:6px"><span class="k">STORMFIRE <span class="pips" id="plasmaPips"><i></i><i></i><i></i></span></span><span class="v" id="plasmaV">3</span></div>
     <div class="bar"><i id="plasmaFill"></i></div>
   </div>
   <div class="panel" id="hudTR">
@@ -578,12 +634,16 @@
   <div class="panel" id="objTag">
     <div id="chapterLabel">Galevein · Stormflight</div>
     <span id="objText">reach the Tempest Gate — <b>12 beacons before nightfall</b></span>
+    <div id="objectiveProgress" aria-label="Objective progress"><b id="objectiveCount">0 / 3</b><span id="objectiveMarks">
+      <i class="objective-mark"></i><i class="objective-mark"></i><i class="objective-mark"></i>
+    </span></div>
     <div id="missionBeat"></div>
-    <span class="objmeta"><b id="beaconV">0/12</b> beacons · <b id="duskV">dusk</b><span id="distanceV"></span></span></div>
-  <div id="journeyRail" aria-label="Five-phase story journey">
-    <i class="journey-step current" data-journey-phase="1"></i><i class="journey-step" data-journey-phase="2"></i>
-    <i class="journey-step" data-journey-phase="3"></i><i class="journey-step" data-journey-phase="4"></i>
-    <i class="journey-step" data-journey-phase="5"></i><b id="journeyClock">10:00</b>
+    <span class="objmeta"><b id="beaconV">0/12</b> beacons · <b id="duskV">dusk</b><span id="distanceV"></span></span>
+    <div id="journeyRail" aria-label="Five-phase story journey">
+      <i class="journey-step current" data-journey-phase="1"></i><i class="journey-step" data-journey-phase="2"></i>
+      <i class="journey-step" data-journey-phase="3"></i><i class="journey-step" data-journey-phase="4"></i>
+      <i class="journey-step" data-journey-phase="5"></i><b id="journeyClock">10:00</b>
+    </div>
   </div>
   <div class="panel" id="abil">
     <span class="ab" id="abEcho"><b>C</b>ECHO</span>
@@ -598,7 +658,7 @@
   <div id="arrow"></div>
   <div id="popup"></div>
   <div id="storyline"></div>
-  <div id="coachCue" aria-live="polite">W/S sets pace · arrows steer · tap SPACE for lift</div>
+  <div id="coachCue" aria-live="polite">Three quiet rings are waking across the cove.</div>
   <section id="hearthChoice" aria-live="polite" aria-label="Drowned Hearth decision">
     <div class="hearth-kicker">DROWNED VILLAGE · SIGNAL INTERPRETATION</div>
     <div class="hearth-question" id="hearthQuestion">One hearth answers your echo. Survivor, or Keeper bait?</div>
@@ -620,21 +680,34 @@
       <div class="bk-head">
         <div class="bk-rune">◈</div>
         <div class="bk-title">RIDER FIELD CARD</div>
-        <div class="bk-sub">Rook's weatherproof saddle card · <b>TAB</b> to close</div>
       </div>
-      <div class="bk-card">
-        <div class="bk-name">SABLEWING</div>
-        <div class="bk-art">◢◈◣</div>
-        <div class="bk-stats">
-          <span>⚔ ATTACK<b id="stAtk">14</b></span><span>➤ SPEED<b id="stSpd">18</b></span>
-          <span>⛨ ARMOUR<b id="stArm">10</b></span><span>✸ FIREPOWER<b id="stFire">15</b></span>
+      <div class="flight-gesture-grid" aria-label="Six flight gestures">
+        <div class="flight-gesture" data-flight-gesture="accelerate"><i class="gesture-mark">✓</i>
+          <svg viewBox="0 0 140 66" aria-hidden="true"><path class="dragon-line" d="M15 42 Q35 29 58 34 Q78 37 96 30 Q108 27 119 31 M37 34 Q49 14 68 10 Q66 29 58 34 M55 36 Q69 52 89 55 Q82 41 73 36 M16 42 L9 48 M96 30 Q112 21 124 23"/><circle class="dragon-line" cx="33" cy="30" r="4"/><path class="motion-line" d="M87 16 H129 M121 10 L129 16 L121 22"/></svg>
+          <strong>ACCELERATE</strong><kbd>W</kbd>
         </div>
-        <div class="bk-note">“Do not command the wind. Give her a reason to trust it.”</div>
+        <div class="flight-gesture" data-flight-gesture="left"><i class="gesture-mark">✓</i>
+          <svg viewBox="0 0 140 66" aria-hidden="true"><path class="dragon-line" d="M69 47 Q58 36 59 22 Q66 15 72 22 Q77 36 69 47 M60 27 Q39 14 18 17 Q36 31 58 36 M74 27 Q101 16 123 23 Q101 34 76 37 M66 45 L56 58 M72 45 L80 58"/><circle class="dragon-line" cx="68" cy="17" r="4"/><path class="motion-line" d="M101 51 Q70 63 39 49 M45 44 L38 49 L44 56"/></svg>
+          <strong>LEAN LEFT</strong><kbd>A</kbd>
+        </div>
+        <div class="flight-gesture" data-flight-gesture="right"><i class="gesture-mark">✓</i>
+          <svg viewBox="0 0 140 66" aria-hidden="true"><path class="dragon-line" d="M71 47 Q82 36 81 22 Q74 15 68 22 Q63 36 71 47 M80 27 Q101 14 122 17 Q104 31 82 36 M66 27 Q39 16 17 23 Q39 34 64 37 M74 45 L84 58 M68 45 L60 58"/><circle class="dragon-line" cx="72" cy="17" r="4"/><path class="motion-line" d="M39 51 Q70 63 101 49 M95 44 L102 49 L96 56"/></svg>
+          <strong>LEAN RIGHT</strong><kbd>D</kbd>
+        </div>
+        <div class="flight-gesture" data-flight-gesture="climb"><i class="gesture-mark">✓</i>
+          <svg viewBox="0 0 140 66" aria-hidden="true"><g transform="rotate(-18 66 35)"><path class="dragon-line" d="M14 43 Q35 30 57 34 Q76 37 96 29 Q110 25 123 28 M38 34 Q49 13 67 9 Q66 27 58 34 M56 36 Q71 52 91 54 Q83 41 74 35 M18 42 L9 48"/><circle class="dragon-line" cx="34" cy="29" r="4"/></g><path class="motion-line" d="M104 46 Q117 34 124 16 M116 20 L124 15 L128 24"/></svg>
+          <strong>CLIMB</strong><kbd>↑</kbd>
+        </div>
+        <div class="flight-gesture" data-flight-gesture="dive"><i class="gesture-mark">✓</i>
+          <svg viewBox="0 0 140 66" aria-hidden="true"><g transform="rotate(18 66 35)"><path class="dragon-line" d="M14 32 Q35 22 57 27 Q76 31 96 23 Q110 20 123 23 M38 27 Q49 8 67 7 Q66 23 58 27 M56 29 Q71 45 91 48 Q83 35 74 29 M18 31 L9 37"/><circle class="dragon-line" cx="34" cy="22" r="4"/></g><path class="motion-line" d="M105 15 Q118 28 125 49 M117 45 L125 51 L129 42"/></svg>
+          <strong>DIVE</strong><kbd>↓</kbd>
+        </div>
+        <div class="flight-gesture" data-flight-gesture="downbeat"><i class="gesture-mark">✓</i>
+          <svg viewBox="0 0 140 66" aria-hidden="true"><path class="dragon-line" d="M68 43 Q57 36 58 25 Q65 18 72 25 Q80 36 68 43 M59 30 Q38 12 15 9 Q29 31 57 38 M74 30 Q99 12 124 10 Q108 31 77 38 M66 42 L56 55 M72 42 L82 55"/><circle class="dragon-line" cx="68" cy="20" r="4"/><path class="motion-line" d="M24 35 L24 55 M18 48 L24 55 L30 48 M115 35 L115 55 M109 48 L115 55 L121 48"/></svg>
+          <strong>DOWNBEAT</strong><kbd>SPACE</kbd>
+        </div>
       </div>
-      <div class="bk-now"><b id="bkPhase">PHASE I · FIRST BOND</b><span id="bkNow">Follow the three low rings and learn Sablewing's rhythm.</span></div>
-      <div class="bk-journey" id="bkJourney"><i class="current"></i><i></i><i></i><i></i><i></i></div>
-      <div class="bk-skills" id="bkSkills"></div>
-      <div class="bk-foot" id="bkFoot">skills reveal themselves as you earn them</div>
+      <div class="bk-foot" id="bkFoot"><span>Let her answer the wind.</span><b>TAB · TUCK CARD</b></div>
     </div>
   </div>
   <div id="ach"><div class="ach-in"><div class="ach-k">SKILL LEARNED</div>
@@ -710,7 +783,7 @@
         <span class="chip"><b>↑↓</b>climb · dive</span>
         <span class="chip"><b>A/D</b>bank & turn</span>
         <span class="chip"><b>SPACE</b>flap</span>
-        <span class="chip"><b>X</b>hold to charge plasma</span>
+        <span class="chip"><b>X</b>hold to breathe stormfire</span>
         <span class="chip"><b>Q/E</b>look around</span>
         <span class="chip"><b>V</b>ride first-person</span>
         <span class="chip"><b>M</b>mute</span>
@@ -1446,13 +1519,13 @@ const rp=new Float32Array(RAIN_N*6); rainGeo.setAttribute('position',new THREE.B
 scene.add(new THREE.LineSegments(rainGeo,new THREE.LineBasicMaterial({color:0x7488ad,transparent:true,opacity:.28})));
 const rainSeed=Array.from({length:RAIN_N},()=>[worldRandom(),worldRandom(),worldRandom()]);
 
-/* ---- WIND: long drifting streaks that show which way the gale is blowing ---- */
-const WIND_N=110, WIND_SEGMENTS=4, windBox=300;
+/* ---- WIND: sparse moisture traces, visible only when a gust earns them ---- */
+const WIND_N=36, WIND_SEGMENTS=4, windBox=300;
 const windGeo=new THREE.BufferGeometry();
 const wp=new Float32Array(WIND_N*WIND_SEGMENTS*6);
 windGeo.setAttribute('position',new THREE.BufferAttribute(wp,3));
-const windLines=new THREE.LineSegments(windGeo,new THREE.LineBasicMaterial({color:0xbcd0e8,
-  transparent:true, opacity:0.16, blending:THREE.AdditiveBlending, depthWrite:false, fog:false}));
+const windLines=new THREE.LineSegments(windGeo,new THREE.LineBasicMaterial({color:0x9fb3bd,
+  transparent:true, opacity:0.025, blending:THREE.NormalBlending, depthWrite:false, fog:true}));
 windLines.frustumCulled=false; scene.add(windLines);
 const windSeed=Array.from({length:WIND_N},()=>[worldRandom(),worldRandom(),worldRandom()]);
 const WINDV=new THREE.Vector3();
@@ -1460,7 +1533,7 @@ function updateWindLines(){
   // Four connected segments turn each line into a swaying streamline. The same
   // direction and gust scalar already moved the dragon and tilted the rain.
   WINDV.fromArray(CURRENT_WIND.direction).normalize();
-  const c=camera.position, len=18+S.boost*30+CURRENT_WIND.gust*24;
+  const c=camera.position, len=10+S.boost*14+CURRENT_WIND.gust*10;
   for(let i=0;i<WIND_N;i++){ const s=windSeed[i];
     const t=((s[0]-S.t*(0.11+CURRENT_WIND.speed*.008+S.boost*.18))%1+1)%1;
     const x=c.x+(t-.5)*windBox*WINDV.x+(s[1]-.5)*windBox*.8;
@@ -1468,15 +1541,18 @@ function updateWindLines(){
     const z=c.z+(t-.5)*windBox*WINDV.z+(s[2]-.5)*windBox*.8;
     for(let seg=0;seg<WIND_SEGMENTS;seg++){
       const a=seg/WIND_SEGMENTS,b=(seg+1)/WIND_SEGMENTS;
-      const swayA=Math.sin(S.t*(.8+CURRENT_WIND.gust*1.4)+i*2.17+a*4.2)*(1.2+CURRENT_WIND.gust*3.8);
-      const swayB=Math.sin(S.t*(.8+CURRENT_WIND.gust*1.4)+i*2.17+b*4.2)*(1.2+CURRENT_WIND.gust*3.8);
+      const swayA=Math.sin(S.t*(.55+CURRENT_WIND.gust*.6)+i*2.17+a*3.2)*(.18+CURRENT_WIND.gust*.58);
+      const swayB=Math.sin(S.t*(.55+CURRENT_WIND.gust*.6)+i*2.17+b*3.2)*(.18+CURRENT_WIND.gust*.58);
       const base=(i*WIND_SEGMENTS+seg)*6;
       wp[base]=x-WINDV.x*len*a+WINDV.z*swayA; wp[base+1]=y-WINDV.y*len*a+swayA*.18; wp[base+2]=z-WINDV.z*len*a-WINDV.x*swayA;
       wp[base+3]=x-WINDV.x*len*b+WINDV.z*swayB; wp[base+4]=y-WINDV.y*len*b+swayB*.18; wp[base+5]=z-WINDV.z*len*b-WINDV.x*swayB;
     }
   }
   windGeo.attributes.position.needsUpdate=true;
-  windLines.material.opacity=0.08+S.boost*0.16+CURRENT_WIND.gust*0.34;
+  const gustCue=THREE.MathUtils.smoothstep(CURRENT_WIND.gust,.48,.92);
+  windLines.material.opacity=.008+gustCue*.045+S.boost*.035;
+  windLines.visible=FX.gfx==='high'?(gustCue>.12||S.boost>.35)
+    :FX.gfx==='med'?(gustCue>.42||S.boost>.62):false;
 }
 
 /* ---- speed-lines (warp streaks) that whoosh past when accelerating ---- */
@@ -2141,6 +2217,7 @@ addEventListener('keydown',e=>{
   if(!e.repeat && e.code==='Digit2' && hearthDecision?.snapshot().status==='prompted'){
     hearthDecision.choose('silent',{time:S.t}); e.preventDefault(); return;
   }
+  if(!e.repeat && S.started && !S.done) discoverFlightGesture(e.code);
   if(e.code==='Space'){ if(S.started&&!S.done){ input.flap=true;
       if(!e.repeat){ S.lift=Math.min(20,(S.lift||0)+9+upLv('stirrup')*2.2); S.beatCd=0.30;   // every TAP lifts you
         S.shake=Math.max(S.shake,0.2); AU.play('flap',0.55);
@@ -2171,7 +2248,9 @@ const S={ t:0, flightT:0, started:false, done:false, detection:0, score:0, fpv:f
   nightfall:570, dayHold:30, grace:0, keepersWoke:false,
   hp:100, hpMax:100, hurt:0,                        // the dragon can be shot down
   echoCd:0, echoR:0, echoOn:false, lift:0, beatCd:0, poison:0, spiral:0,
-  bookOpen:false, bookLost:false, violence:0, violenceWarned:false, shopOpen:false, scales:0,
+  bookOpen:false, bookLost:false, fieldCardAuto:false, fieldCardUntil:0,
+  flightDiscoveries:{accelerate:false,left:false,right:false,climb:false,dive:false,downbeat:false},
+  violence:0, violenceWarned:false, shopOpen:false, scales:0,
   chapter:0, tutDone:false, spiralFired:false, spiralMax:false, tier:0,
   dive:0, stormbreakFired:false,                    // stormbreak dive -> sonic boom
   turn:0, pTurn:0, pPitch:0, muted:false, impactCd:0, alertStage:0,
@@ -2371,7 +2450,7 @@ function storyDragonSnapshot(){
     apex:{name:apex.name,loaded:apex.loaded,visible:apex.group.visible,hp:apex.hp,maxHp:apex.maxHp,defeated:apex.defeated,position:apex.group.position.toArray()}};
 }
 
-/* ---- plasma lightning (X): a jagged bolt from the mouth that shatters towers ---- */
+/* ---- stormfire breath (X): combustion plume; existing bolt remains collision authority ---- */
 const bolts=[], BOLT_SEG=16;
 /* Pooled FX — charge/shoot used to alloc BufferGeometry every tick and hitch hard. */
 const FX={
@@ -2382,6 +2461,7 @@ const FX={
   _dir:new THREE.Vector3(), _tmp:new THREE.Vector3(),
   chargeRing:null, chargeHum:null, humGain:null,
   sky:[], skyI:0, skyLt:null,
+  breath:[], breathI:0, breathGeo:null,
   ballGeo:null, haloGeo:null, ballMat:null, haloMat:null,
 };
 function initFxPools(){
@@ -2418,8 +2498,42 @@ function initFxPools(){
   FX.chargeRing.visible=false; scene.add(FX.chargeRing);
   FX.ballGeo=new THREE.SphereGeometry(1,10,10);
   FX.haloGeo=new THREE.SphereGeometry(2,10,10);
-  FX.ballMat=new THREE.MeshBasicMaterial({color:0xf0e6ff,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true});
-  FX.haloMat=new THREE.MeshBasicMaterial({color:0xb06bff,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.5});
+  FX.ballMat=new THREE.MeshBasicMaterial({color:0xfff0bd,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true});
+  FX.haloMat=new THREE.MeshBasicMaterial({color:0xff6a24,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.24});
+  FX.breathGeo=new THREE.IcosahedronGeometry(1,1);
+  for(let i=0;i<54;i++){
+    const kind=i%6===0?0:i%3===0?2:1;
+    const material=new THREE.MeshBasicMaterial({
+      color:kind===0?0xfff1b0:kind===1?0xff6a22:0x273238,
+      transparent:true,opacity:0,depthWrite:false,fog:true,
+      blending:kind===2?THREE.NormalBlending:THREE.AdditiveBlending
+    });
+    const mesh=new THREE.Mesh(FX.breathGeo,material);
+    mesh.visible=false;mesh.frustumCulled=false;scene.add(mesh);
+    FX.breath.push({mesh,kind,life:0,dur:0,base:1,spin:0,vel:new THREE.Vector3()});
+  }
+}
+function emitStormfire(origin,direction,power=1){
+  const count=FX.gfx==='low'?15:FX.gfx==='med'?30:42;
+  const right=FX._p1.crossVectors(direction,new THREE.Vector3(0,1,0)).normalize();
+  const up=FX._p2.crossVectors(right,direction).normalize();
+  for(let i=0;i<count;i++){
+    const entry=FX.breath[FX.breathI++%FX.breath.length], kind=entry.kind;
+    const along=3+(i/count)*(28+power*22), spread=(.65+i/count*4.6)*(kind===2?1.35:1);
+    const lateral=(Math.random()-.5)*spread, lift=(Math.random()-.42)*spread;
+    entry.mesh.position.copy(origin).addScaledVector(direction,along)
+      .addScaledVector(right,lateral).addScaledVector(up,lift);
+    entry.vel.copy(direction).multiplyScalar((kind===2?24:48)+power*(kind===2?16:32))
+      .addScaledVector(right,(Math.random()-.5)*6).addScaledVector(up,(Math.random()-.35)*5);
+    entry.dur=entry.life=kind===2?.72+Math.random()*.38:.30+Math.random()*.30;
+    entry.base=(kind===0?.75:kind===1?1.2:1.6)*(1+power*.72)*(0.72+Math.random()*.55);
+    entry.spin=(Math.random()-.5)*2.4;
+    entry.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),direction);
+    entry.mesh.rotateZ(Math.random()*Math.PI*2);
+    entry.mesh.scale.set(entry.base*(kind===2?.78:.42),entry.base*(kind===2?.62:.42),entry.base*(kind===2?.92:1.35));
+    entry.mesh.material.opacity=kind===0?.68:kind===1?.56:.16;
+    entry.mesh.visible=true;
+  }
 }
 function setLineSeg(entry, a, b, life, dur){
   const pos=entry.geo.attributes.position.array;
@@ -2443,6 +2557,19 @@ function updateFxPools(dt){
     if(e.life<=0){ e.line.visible=false; continue; }
     e.life-=dt; e.line.material.opacity=Math.max(0,e.life/e.dur);
     if(e.life<=0) e.line.visible=false;
+  }
+  for(const e of FX.breath){
+    if(e.life<=0){e.mesh.visible=false;continue;}
+    e.life-=dt;
+    const age=THREE.MathUtils.clamp(1-e.life/e.dur,0,1);
+    e.mesh.position.addScaledVector(e.vel,dt);
+    if(e.kind===2){e.vel.y+=dt*7;e.vel.multiplyScalar(Math.max(.86,1-dt*1.5));}
+    else e.vel.multiplyScalar(Math.max(.9,1-dt*.8));
+    e.mesh.rotateZ(e.spin*dt);
+    const grow=e.kind===2?.72+age*2.15:.62+Math.sin(age*Math.PI)*.78;
+    e.mesh.scale.set(e.base*grow*(e.kind===2?.82:.44),e.base*grow*(e.kind===2?.68:.44),e.base*grow*(e.kind===2?.96:1.42));
+    e.mesh.material.opacity=Math.max(0,(e.kind===0?.92:e.kind===1?.72:.20)*(1-age)*(e.kind===2?age*.9+.1:1));
+    if(e.life<=0)e.mesh.visible=false;
   }
   if(FX.skyLt.intensity>0){
     FX.skyLt.intensity=Math.max(0,FX.skyLt.intensity-dt*900);
@@ -2501,7 +2628,7 @@ function shoot(power=0.35,attackId='volt-lance',options={}){
   S.shootCd=options.cooldown??0.4; S.charges-=cost;
   power=Math.min(1.25,power+upLv('gland')*.07);
   S.tier = power>0.85 ? 2 : (power>0.45 ? 1 : 0);
-  if(S.tier===2&&attackId==='volt-lance'){ popup('VOLT LANCE · OVERCHARGED'); S.shootCd=0.65; }
+  if(S.tier===2&&attackId==='volt-lance'){ popup('STORMFIRE BREATH · OVERCHARGED'); S.shootCd=0.65; }
   if(S.superCharge){ power=1.25; S.superCharge=0; popup('STORMFIRE'); }
   updateChargeHum(0,false);
   const head=FX._mp; (D.mouth||D.headNode||D.group).getWorldPosition(head);
@@ -2511,19 +2638,21 @@ function shoot(power=0.35,attackId='volt-lance',options={}){
   const m=new THREE.Mesh(FX.ballGeo, FX.ballMat.clone());
   const scatter=attackId==='arc-scatter';
   if(scatter){ m.material.color.setHex(0x79ffe0); m.scale.set(R*1.55,R*.72,R*1.9); }
-  else m.scale.setScalar(R);
+  else {m.scale.set(R*.25,R*.25,R*.8);m.material.opacity=.72;}
   const halo=new THREE.Mesh(FX.haloGeo, FX.haloMat.clone());
   if(scatter){ halo.material.color.setHex(0x42e6be); halo.scale.set(R*1.35,R*.64,R*1.7); }
-  else halo.scale.setScalar(R);
+  else {halo.scale.set(.78,.78,.72);halo.material.opacity=.20;}
   m.add(halo); m.position.copy(head).addScaledVector(dir,3);
-  const lt=new THREE.PointLight(scatter?0x59f0d5:0xc07bff,300+power*760,160+power*180,2); m.add(lt);
+  if(!scatter)m.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),dir);
+  const lt=new THREE.PointLight(scatter?0x59f0d5:0xff7028,300+power*760,160+power*180,2); m.add(lt);
   const N=BOLT_SEG, lgeo=new THREE.BufferGeometry();
   lgeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N*3), 3));
-  const line=new THREE.Line(lgeo, new THREE.LineBasicMaterial({color:scatter?0x8dffe8:0xe0ccff, transparent:true,
-    opacity:0.95, blending:THREE.AdditiveBlending, depthWrite:false}));
+  const line=new THREE.Line(lgeo, new THREE.LineBasicMaterial({color:scatter?0x8dffe8:0xffce79, transparent:true,
+    opacity:scatter?.95:.58, blending:THREE.AdditiveBlending, depthWrite:false}));
   line.frustumCulled=false; scene.add(m); scene.add(line);
   bolts.push({ m, lt, line, lgeo, origin:head.clone(), vel:dir.clone().multiplyScalar(scatter?185:220+power*150),
-    life:scatter?.82:2.4, power, attackId, jag:scatter?14:6+power*10 });
+    life:scatter?.82:2.4, power, attackId, jag:scatter?14:1.2+power*1.4 });
+  if(!scatter)emitStormfire(head,dir,power);
   if(D.glow) D.glow.intensity=70+power*90;
   if(D.mouth){ D.mouth.scale.setScalar(0.001); D.mouthLt.intensity=0; }
   const mz=m.position;
@@ -2536,7 +2665,7 @@ function shoot(power=0.35,attackId='volt-lance',options={}){
     setLineSeg(e, FX._p1, FX._p2, 0.22, 0.22);
   }
   const arc=new THREE.Mesh(new THREE.TorusGeometry(1.6,0.22,6,20),
-    new THREE.MeshBasicMaterial({color:0xd8b8ff,transparent:true,opacity:0.95,blending:THREE.AdditiveBlending,depthWrite:false}));
+    new THREE.MeshBasicMaterial({color:scatter?0x8dffe8:0xffb14a,transparent:true,opacity:0.86,blending:THREE.AdditiveBlending,depthWrite:false}));
   arc.position.copy(mz); arc.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),dir); scene.add(arc);
   shocks.push({m:arc,life:0.28,dur:0.28,axis:true});
   const a=AU.el.zap; if(a){ a.playbackRate=1.45-power*0.5; } AU.play('zap',0.45+power*0.35);
@@ -2686,7 +2815,8 @@ function plasmaImpact(pos,power){
 function updateBolts(dt){
   for(let i=bolts.length-1;i>=0;i--){ const b=bolts[i];
     b.m.position.addScaledVector(b.vel,dt); b.life-=dt; b.lt.intensity*=0.95;
-    b.m.material.opacity=Math.min(1,b.life*2); b.line.material.opacity=0.5+0.5*Math.random();
+    b.m.material.opacity=b.attackId==='arc-scatter'?Math.min(1,b.life*2):Math.min(.72,b.life*1.4);
+    b.line.material.opacity=b.attackId==='arc-scatter'?.55+Math.random()*.35:.12+Math.random()*.08;
     fillBolt(b);
     let hit=false;
     const apex=STORY_DRAGONS.apex;
@@ -2854,24 +2984,40 @@ const SKILLS=[
   {k:'DOWN,UP', name:'Stormbreak Dive',d:'scream down, pull up: sonic boom',     unlockAt:3,have:()=>S.score>=3},
   {k:'F',       name:'Dragon Call',   d:'the wild flock hides you',              unlockAt:4,have:()=>S.score>=4},
 ];
+const FLIGHT_GESTURE_KEYS={KeyW:'accelerate',KeyA:'left',KeyD:'right',ArrowUp:'climb',ArrowDown:'dive',Space:'downbeat'};
+function resetFlightDiscoveries(){
+  for(const gesture of Object.values(FLIGHT_GESTURE_KEYS)) S.flightDiscoveries[gesture]=false;
+}
+function discoverFlightGesture(code){
+  const gesture=FLIGHT_GESTURE_KEYS[code];
+  if(!gesture||S.flightDiscoveries[gesture]) return false;
+  S.flightDiscoveries[gesture]=true;
+  renderBook();
+  return true;
+}
+function setBookOpen(open,{auto=false,duration=24}={}){
+  S.bookOpen=!!open; S.fieldCardAuto=!!open&&!!auto; S.fieldCardUntil=S.fieldCardAuto?S.t+duration:0;
+  $('book').classList.toggle('on',S.bookOpen);
+  if(S.bookOpen) renderBook();
+}
 function renderBook(){
-  const el=$('bkSkills'); if(!el) return;
-  el.innerHTML=SKILLS.map(sk=>{ const got=sk.have();
-    return '<div class="bk-skill'+(got?'':' locked')+'"><span class="k">'+(got?sk.k:'? ? ?')+'</span>'+
-      '<span><b>'+(got?sk.name:'not yet learned')+'</b><br><span class="d">'+
-      (got?sk.d:'fly further to earn it')+'</span></span></div>'; }).join('');
-  $('stAtk').textContent = 12+Math.min(6,searchlights.filter(t=>t.destroyed).length*2);
-  $('stSpd').textContent = Math.round(D.speed);
-  $('stArm').textContent = Math.max(1,Math.round(S.hp/10));
-  $('stFire').textContent = 12+Math.round(S.charges||0);
-  const journey=structure?.journey?.();const phase=journey?.phases?.[S.chapter];
-  if(phase){$('bkPhase').textContent=`PHASE ${S.chapter+1} · ${phase.title}`;$('bkNow').textContent=phase.humanCue;}
-  [...$('bkJourney').children].forEach((node,index)=>{node.className=index<S.chapter?'done':index===S.chapter?'current':'';});
-  $('bkFoot').textContent='weatherproof and riveted to the saddle · skills reveal themselves as you earn them';
+  document.querySelectorAll('[data-flight-gesture]').forEach(node=>{
+    node.classList.toggle('discovered',!!S.flightDiscoveries[node.dataset.flightGesture]);
+  });
+}
+function fieldCardSnapshot(){
+  const root=$('book'),rect=root.getBoundingClientRect(),style=getComputedStyle(root);
+  return {profile:'saddle-field-card-v1',visible:root.classList.contains('on'),title:root.querySelector('.bk-title')?.textContent||'',
+    itemCount:root.querySelectorAll('[data-flight-gesture]').length,
+    items:[...root.querySelectorAll('[data-flight-gesture]')].map(node=>({id:node.dataset.flightGesture,
+      label:node.querySelector('strong')?.textContent||'',key:node.querySelector('kbd')?.textContent||'',
+      discovered:node.classList.contains('discovered'),illustrated:!!node.querySelector('svg')})),
+    objective:objectiveProgressState(),nonModal:true,simulationPausedByCard:false,
+    rect:{left:+rect.left.toFixed(1),top:+rect.top.toFixed(1),right:+(innerWidth-rect.right).toFixed(1),bottom:+(innerHeight-rect.bottom).toFixed(1),
+      width:+rect.width.toFixed(1),height:+rect.height.toFixed(1)},pointerEvents:style.pointerEvents};
 }
 function toggleBook(){
-  S.bookOpen=!S.bookOpen; $('book').classList.toggle('on',S.bookOpen);
-  if(S.bookOpen) renderBook();
+  setBookOpen(!S.bookOpen,{auto:false});
   AU.play('flap',0.25);
 }
 function addViolence(v){
@@ -2906,6 +3052,7 @@ function driveTutorial(dt){
     } }
   if(tutRings.every(t=>t.userData.hit) && !S.tutDone){
     S.tutDone=true;
+    if(S.fieldCardAuto) S.fieldCardUntil=Math.min(S.fieldCardUntil||Infinity,S.t+2.5);
     structure?.director?.enterChapter(1);
     achievement('First Bond','Sablewing trusts the saddle — the lighthouse road waits','PHASE II');
     storyPop('She answers you now. Ahead, the drowned lighthouse road is dark.',6);
@@ -2933,6 +3080,28 @@ function driveMissionsFallback(){
   else if(S.score<8) $('objText').textContent=`The Lost Wing — answering echoes ${S.score}/8`;
   else if(S.score<11) $('objText').textContent=`Stormwake Pursuit — signals ${S.score}/11`;
   else $('objText').textContent=`Crown of the Gale — final signal ${S.score}/12`;
+}
+function objectiveProgressState(){
+  if(S.duelMode) return {hidden:true,current:0,total:0,label:'duel'};
+  if(S.chapter===0) return {hidden:false,current:tutRings.filter(r=>r.userData.hit).length,total:3,label:'bond rings'};
+  if(S.chapter===1) return {hidden:false,current:Math.max(0,Math.min(4,S.score)),total:4,label:'coastal signals'};
+  if(S.chapter===2) return {hidden:false,current:Math.max(0,Math.min(4,S.score-4)),total:4,label:'answering echoes'};
+  if(S.chapter===3) return {hidden:false,current:Math.max(0,Math.min(3,S.score-8)),total:3,label:'pursuit vanes'};
+  const apexDone=STORY_DRAGONS.apex.defeated?1:0;
+  const finalVane=S.score>=12?1:0;
+  return {hidden:false,current:apexDone+finalVane,total:2,label:'apex and final vane'};
+}
+function renderObjectiveProgress(){
+  const state=objectiveProgressState(),root=$('objectiveProgress'),marks=$('objectiveMarks');
+  root.hidden=state.hidden;
+  if(state.hidden) return state;
+  $('objectiveCount').textContent=`${state.current} / ${state.total}`;
+  if(marks.children.length!==state.total){
+    marks.replaceChildren(...Array.from({length:state.total},()=>{const node=document.createElement('i');node.className='objective-mark';return node;}));
+  }
+  [...marks.children].forEach((node,index)=>node.classList.toggle('done',index<state.current));
+  root.setAttribute('aria-label',`${state.label}: ${state.current} of ${state.total}`);
+  return state;
 }
 
 /* ---- explosion burst (expanding fireball + flash light) ---- */
@@ -3371,7 +3540,7 @@ function driveRogue(dt){
 }
 
 function tick(dt){
-  if((S.shopOpen||S.bookOpen)&&S.started&&!S.done) return;
+  if(S.shopOpen&&S.started&&!S.done) return;
   S.t+=dt; seaUniforms.uT.value=S.t; sky.material.uniforms.uT.value=S.t;
   CURRENT_WIND=windField.sample(S.t,D.group.position.toArray());
   CURRENT_WIND_FORCES=windField.flightForces(CURRENT_WIND,D.yaw,{grazing:!!S.grazing});
@@ -3797,6 +3966,12 @@ function hud(litNow){
   $('detPct').textContent = dp>=70?dp+'% SEEN' : dp>=35?dp+'% HUNTED' : dp+'%';
   $('detPct').style.color = dp>=70?'#ff5a7a' : dp>=35?'#ffbe6a' : '#dbe7fb';
   if(S.bookOpen && (S.bookT=(S.bookT||0)-1)<=0){ S.bookT=20; renderBook(); }
+  if(S.bookOpen&&S.fieldCardAuto&&S.t>=S.fieldCardUntil) setBookOpen(false);
+  renderObjectiveProgress();
+  const tutorialFocus=!S.duelMode&&S.chapter===0;
+  document.querySelector('#objTag .objmeta').style.display=tutorialFocus?'none':'block';
+  $('abil').style.display=(tutorialFocus||S.duelMode)?'none':'flex';
+  $('hudBR').style.opacity=S.bookOpen?'0':'1';
   $('duskV').textContent = TOD.day<0.35?'dusk' : TOD.day<0.7?'twilight' : TOD.day<0.99?'nightfall' : 'night';
   // next-beacon arrow projected to screen
   const nb=S.duelMode?DUEL_OBJECTIVE:(S.chapter===0?tutRings.find(r=>!r.userData.hit):rings.find(r=>!r.userData.hit));
@@ -3907,6 +4082,7 @@ function begin(opts={}){
     STORY_DRAGONS.companion.group.visible=false;STORY_DRAGONS.apex.group.visible=false;
     STORY_DRAGONS.apex.hp=STORY_DRAGONS.apex.maxHp;STORY_DRAGONS.apex.defeated=false;STORY_DRAGONS.apex.fireCd=2.4;S.apexGateWarnAt=0;
     S.chapter=0; S.tutDone=false; S.altitudePeak=0; S.altitudeCollected=false;
+    resetFlightDiscoveries();
     for(const r of tutRings){ r.userData.hit=false; r.material.opacity=.52; r.visible=true; }
     for(const r of rings) r.visible=false;
     if(S.duelMode){
@@ -3920,8 +4096,10 @@ function begin(opts={}){
       simJumpChapter(Number(opts.chapterIndex));
       storyPop('Chapter checkpoint loaded.',4);
     } else {
-      storyPop('Rook, breathe with Sablewing. Three rings — and press TAB whenever you need the rider field card.',7);
+      storyPop('Rook, breathe with Sablewing. Three quiet rings are waking across the cove.',7);
     }
+    const showFieldCard=!S.duelMode&&(S.chapter===0||S.practiceMode);
+    setBookOpen(showFieldCard,{auto:showFieldCard,duration:26});
     for(const sl of searchlights){ sl.hp=sl.maxHp; sl.hbT=0; sl.fireCd=2+Math.random(); if(S.practiceMode) sl.alerted=0; }
     D.group.position.set(REST.x, REST.y+6, REST.z);
     D.yaw=Math.PI; D.pitch=0.18; D.roll=0; D.speed=30; S.prevSpeed=30;
@@ -3961,7 +4139,7 @@ function reset(){
   structure?.reset();
   S.echoCd=0; S.echoR=0; S.echoOn=false; echoMesh.visible=false; S.dive=0; S.stormbreakFired=false;
   S.spiral=0; S.spiralFired=false; S.spiralMax=false; S.lift=0; S.beatCd=0; S.poison=0;
-  S.bookLost=false; S.violence=0; S.violenceWarned=false; S.bookOpen=false; $('book').classList.remove('on');
+  S.bookLost=false; S.violence=0; S.violenceWarned=false; resetFlightDiscoveries(); setBookOpen(!S.duelMode,{auto:!S.duelMode,duration:26});
   S.shopOpen=false; $('shop').classList.remove('on'); S.scales=0;
   S.chapter=0; S.tutDone=false; S.altitudePeak=0; S.altitudeCollected=false;
   for(const r of tutRings){ r.userData.hit=false; r.material.opacity=.52; r.visible=true; }
@@ -3974,7 +4152,7 @@ function reset(){
   $('over').classList.add('hide'); $('litglow').style.opacity=0; $('warn').style.opacity=0;
   AU.fadeTo('music',0.4,600); AU.fadeTo('amb',0.5,600);
   S.started=true;
-  storyPop('Back to the cove. Three bond rings first — TAB opens the rider field card.',5);
+  storyPop('Back to the cove. Three quiet rings wake ahead; let Sablewing answer your hands.',5);
   $('shutter').classList.add('closed');
   setTimeout(()=>{ $('shutter').classList.remove('closed'); input.flap=true; AU.play('flap',0.5);
     setTimeout(()=>{ input.flap=false; },700); },900);
@@ -4022,7 +4200,8 @@ function applyGfx(level){
   poseidonOcean.setQuality(level,dpr);
   rainGeo.setDrawRange(0,(hi?RAIN_N:med?900:450)*2);
   streaks.visible=hi||med;
-  windLines.visible=hi||med;
+  // Gust gating in updateWindLines owns visibility; presets only set its ceiling.
+  windLines.visible=false;
   renderer.shadowMap.enabled=hi;
   cinematicDof.enabled=hi&&!poseidonActive;
   cinematicDof.setSize(renderer.domElement.width,renderer.domElement.height);
@@ -4244,6 +4423,7 @@ function simJumpBeacon(n, opts={}){
 function simJumpChapter(n){
   const chapter=THREE.MathUtils.clamp(Math.floor(n),0,4);
   S.started=true; S.done=false; S.launching=false; S.grace=3;
+  setBookOpen(false); resetFlightDiscoveries();
   menuEl.classList.add('hide','live'); $('hud').classList.add('on'); $('over').classList.add('hide');
   structure?.reset();
   STORY_DRAGONS.companion.group.visible=false;STORY_DRAGONS.apex.group.visible=false;
@@ -4275,16 +4455,18 @@ function simStoryStage(kind='tutorial'){
   const phase={tutorial:0,lighthouse:1,companion:3,apex:4}[kind]??0;
   simJumpChapter(phase);S.launching=false;S.grace=999;S.flightT=[24,128,382,510][phase===0?0:phase===1?1:phase===3?2:3];
   if(kind==='tutorial'){
-    S.bookOpen=true;$('book').classList.add('on');renderBook();
-    D.group.position.set(675,50,350);D.yaw=2.75;
+    S.flightDiscoveries.accelerate=true;S.flightDiscoveries.left=true;S.flightDiscoveries.downbeat=true;
+    tutRings[0].userData.hit=true;tutRings[0].material.opacity=.18;
+    setBookOpen(true,{auto:false});
+    D.group.position.set(520,120,380);D.yaw=simHeadingTo(650,180,620);
   }else if(kind==='lighthouse'){
     S.score=2;for(let i=0;i<rings.length;i++)setStormVaneState(rings[i],i<2);
-    D.group.position.set(330,92,100);D.yaw=2.55;S.bookOpen=false;$('book').classList.remove('on');
+    D.group.position.set(330,92,100);D.yaw=2.55;setBookOpen(false);
   }else if(kind==='companion'){
-    D.group.position.set(-395,132,-310);D.yaw=-.85;S.bookOpen=false;$('book').classList.remove('on');
+    D.group.position.set(-395,132,-310);D.yaw=-.85;setBookOpen(false);
     STORY_DRAGONS.companion.group.position.set(-360,144,-286);
   }else{
-    D.group.position.set(-55,154,505);D.yaw=2.82;S.bookOpen=false;$('book').classList.remove('on');
+    D.group.position.set(-55,154,505);D.yaw=2.82;setBookOpen(false);
     STORY_DRAGONS.apex.hp=STORY_DRAGONS.apex.maxHp;STORY_DRAGONS.apex.defeated=false;
     STORY_DRAGONS.companion.group.position.set(-112,166,545);STORY_DRAGONS.apex.group.position.set(104,184,600);
   }
@@ -4298,6 +4480,22 @@ function simStoryStage(kind='tutorial'){
     apexHp:STORY_DRAGONS.apex.hp,apexMaxHp:STORY_DRAGONS.apex.maxHp,hearthDecision:hearthDecision.snapshot()});
   if(hud)structure.applyHud(hud);
   return {kind,journey:structure?.journey?.(),dragons:storyDragonSnapshot(),state:SIM.state(),hud};
+}
+function simStormfireStage(){
+  simStoryStage('apex');
+  S.done=false;S.charges=3;S.shootCd=0;S.boost=0;S.shake=0;
+  searchlights.forEach(shrine=>{shrine.cone.visible=false;shrine.ribbons.visible=false;});
+  const target=STORY_DRAGONS.apex.group.position.clone();
+  D.yaw=simHeadingTo(target.x,target.y,target.z);
+  const distance=Math.max(1,D.group.position.distanceTo(target));
+  D.pitch=Math.asin(THREE.MathUtils.clamp((target.y-D.group.position.y)/distance,-.6,.6));
+  D.group.rotation.set(0,D.yaw,0);D.group.rotateX(D.pitch*.75);
+  const back=new THREE.Vector3(Math.sin(D.yaw),0,Math.cos(D.yaw));
+  camera.position.copy(D.group.position).addScaledVector(back,42).add(new THREE.Vector3(0,14,0));
+  camera.lookAt(D.group.position.clone().lerp(target,.42));camera.updateMatrixWorld(true);
+  const fired=shoot(1.08,'volt-lance');
+  updateFxPools(.11);updateBolts(.035);S.done=true;render(1/60);
+  return {fired,stormfire:SIM.stormfire(),state:SIM.state(),target:target.toArray()};
 }
 function simDefeatStoryApex(){
   STORY_DRAGONS.apex.hp=0;STORY_DRAGONS.apex.defeated=true;STORY_DRAGONS.apex.group.visible=false;
@@ -4460,9 +4658,11 @@ window.SIM={
   runSteps:simRunSteps, runUntil:simRunUntil, snapshot:simSnapshot,
   storyObjective:serpentObjectiveSnapshot,
   storyJourney:()=>structure?.journey?.()??null,
+  fieldCard:fieldCardSnapshot,
   loadStoryDragons,
   storyDragons:storyDragonSnapshot,
   storyStage:simStoryStage,
+  stormfireStage:simStormfireStage,
   defeatStoryApex:simDefeatStoryApex,
   chooseHearth:choice=>hearthDecision.choose(choice,{time:S.t}),
   atmosphere:()=>({...ATMOSPHERE_STATE,phase:atmospherePhase(TOD.day),sceneFog:+scene.fog.density.toFixed(7),
@@ -4655,6 +4855,12 @@ window.SIM={
     keeperHollowBiome.setVisible(true);keeperHollowBiome.update(S.t,TOD.day,CURRENT_WIND.gust);
     return {view,position:spec.position,target:spec.target,keeper:SIM.keeperThreat(),hollow:SIM.keeperHollow(),state:SIM.state()};
   },
+  atmosphereStage:(kind='grounded')=>{
+    const stage=SIM.keeperStage(kind==='gust'?'storm':'shear');
+    CURRENT_WIND.gust=kind==='gust'?.88:.28;S.boost=0;
+    updateWindLines();render(1/60);
+    return {kind,stage,wind:SIM.wind(),linesVisible:windLines.visible,lineOpacity:+windLines.material.opacity.toFixed(4)};
+  },
   warp:(dt,steps=60)=>{ for(let i=0;i<steps;i++) tick(dt); render(); },
   capturePose:name=>{ const poses={
       glide:{action:'glide',phase:.08,pitch:-.08,speed:38,view:'rear',crosswind:0,gust:.18},
@@ -4829,11 +5035,16 @@ window.SIM={
     direction:CURRENT_WIND.direction.map(v=>+v.toFixed(4)),
     forces:{driftPerSecond:CURRENT_WIND_FORCES.driftPerSecond.map(v=>+v.toFixed(3)),
       rollPerSecond:+CURRENT_WIND_FORCES.rollPerSecond.toFixed(3),crosswind:+CURRENT_WIND_FORCES.crosswind.toFixed(3)},
-    visual:{streamlines:WIND_N,segmentsPerLine:WIND_SEGMENTS,rainCoupled:true,wingFlexCoupled:!!D.springs?.wind},
+    visual:{streamlines:WIND_N,segmentsPerLine:WIND_SEGMENTS,rainCoupled:true,wingFlexCoupled:!!D.springs?.wind,
+      visibilityPolicy:'gust-gated-moisture-traces-v2',maxOpacity:.088,blending:'normal'},
     physicsCoupled:true,audioCoupled:true,
     webgpu:poseidonOcean.snapshot().wind,
     proof:windField.proof()
   }),
+  stormfire:()=>({profile:'pooled-stormfire-breath-v1',pool:FX.breath.length,
+    active:FX.breath.filter(entry=>entry.mesh.visible).length,
+    stages:['white-hot-core','orange-combustion','buoyant-smoke'],
+    gameplayAuthority:'existing-bolt-collision-v1',allocationsPerFrame:0,externalAssets:0}),
   worldMap:()=>crownfallRange.getSnapshot(),
   keeperHollow:()=>keeperHollowBiome.getSnapshot(),
   cliffReady:()=>fabCliffReady,

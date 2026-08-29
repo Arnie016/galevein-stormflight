@@ -267,7 +267,7 @@ function forestSamples(limit = 150) {
 }
 
 function layeredConiferGeometry(radialSegments = 7) {
-  const profile = [[0,.07],[.17,.08],[.19,.44],[.36,.13],[.34,.38],[.53,.10],[.50,.31],[.70,.07],[.67,.23],[.86,.035],[1,0]];
+  const profile = [[-.08,.13],[0,.10],[.17,.08],[.19,.44],[.36,.13],[.34,.38],[.53,.10],[.50,.31],[.70,.07],[.67,.23],[.86,.035],[1,0]];
   const positions = [], indices = [];
   for (let ring = 0; ring < profile.length; ring += 1) {
     const [y, radius] = profile[ring];

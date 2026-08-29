@@ -222,7 +222,7 @@ export class ChapterDirector {
       const td = vars.towersDestroyed ?? 0;
       const need = Math.min(3, state.towerTarget ?? 3);
       if (td >= need) return `✓ ${need} towers shattered — the wastes open ahead`;
-      return `⚔ Silence wind shrines — ${td}/${need} broken · hold X to charge plasma`;
+      return `⚔ Silence wind shrines — ${td}/${need} broken · hold X for stormfire`;
     }
     if (beat === 'nightfall_escape') {
       if (state.apexDefeated) return '✓ Crowned Maw driven off — cross the final storm vane';

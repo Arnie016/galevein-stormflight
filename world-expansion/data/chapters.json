@@ -12,7 +12,7 @@
       "roman": "I",
       "title": "FIRST BOND",
       "timeWindowSeconds": [0, 90],
-      "humanCue": "W/S sets pace · arrows steer · tap SPACE when Sablewing needs lift",
+      "humanCue": "Feel Sablewing's wingbeat; let the three low rings teach the cove's rhythm.",
       "phasePromise": "Learn her weight, not a list of buttons.",
       "reward": "Sablewing trusts the saddle.",
       "regionId": "wake_cove",
@@ -35,7 +35,7 @@
         "goalText": "Follow three low wind rings and learn her rhythm",
         "distanceLabel": "Next ring",
         "showHeightAboveWater": false,
-        "subHints": ["Feel beat and brake before open water"]
+        "subHints": ["Three low rings wake in sequence"]
       },
       "storyLine": "Rook, breathe with her. Three rings, then the open water.",
       "popupOnEnter": "PHASE I · FIRST BOND"
@@ -46,7 +46,7 @@
       "roman": "II",
       "title": "THREE LIGHTS",
       "timeWindowSeconds": [90, 210],
-      "humanCue": "Press C to read the fog · fly through all four lighthouse vanes",
+      "humanCue": "The fog brightens wherever the old lighthouse vanes remember the wind.",
       "phasePromise": "Relight a safe road for the fishing coast.",
       "reward": "The drowned coast answers your echo.",
       "regionId": "keeper_shallows",
@@ -69,7 +69,7 @@
         "goalText": "Echo through the fog and wake the four coastal lights",
         "distanceLabel": "Next beacon",
         "showHeightAboveWater": true,
-        "subHints": ["Press C to echo — lights reveal the road"]
+        "subHints": ["Echo-sense reveals what the fog hides"]
       },
       "storyLine": "Three lighthouses are dark. Give the coast its horizon back.",
       "popupOnEnter": "PHASE II · THREE LIGHTS"
@@ -80,7 +80,7 @@
       "roman": "III",
       "title": "THE LOST WING",
       "timeWindowSeconds": [210, 330],
-      "humanCue": "Climb to 120m · find the answering hearth · choose 1 or 2",
+      "humanCue": "Take the high air, listen for the lone hearth, then decide whether to answer.",
       "phasePromise": "Follow a strange echo to a dragon left behind.",
       "reward": "Neris, a young Tidevein, joins your flight.",
       "regionId": "serpent_reach",
@@ -114,7 +114,7 @@
       "roman": "IV",
       "title": "STORMWAKE PURSUIT",
       "timeWindowSeconds": [330, 465],
-      "humanCue": "Hold X for a charged lance · break all three wind shrines",
+      "humanCue": "The three wind shrines are feeding the pursuit; break their hold on the valley.",
       "phasePromise": "Protect Neris while the Keeper net closes.",
       "reward": "The Tempest Gate road opens.",
       "regionId": "rib_wastes",
@@ -137,7 +137,7 @@
         "goalText": "Shield Neris and silence the three Keeper wind shrines",
         "distanceLabel": "Next beacon",
         "showHeightAboveWater": false,
-        "subHints": ["Hold X to charge plasma — break Keeper wind shrines", "Press F to hide in the flock"]
+        "subHints": ["Charged lightning breaks the wind shrines", "The wild flock can hide your wake"]
       },
       "storyLine": "Neris is with you. Now the whole storm turns to follow.",
       "popupOnEnter": "PHASE IV · STORMWAKE PURSUIT"
@@ -148,7 +148,7 @@
       "roman": "V",
       "title": "CROWN OF THE GALE",
       "timeWindowSeconds": [465, 600],
-      "humanCue": "Charge X into the Crowned Maw · pass the final vane when it falls",
+      "humanCue": "The Crowned Maw guards the final vane; wait for its breath, then answer with lightning.",
       "phasePromise": "Face the apex dragon guarding the way home.",
       "reward": "The pair become a flight, not fugitives.",
       "regionId": "aurora_gate",
@@ -182,6 +182,6 @@
     "rebuild": "Cross home waters without losing the Codex to reckless violence.",
     "rescue": "Find the spared torch in the drowned village — someone still tends a hearth.",
     "collect_at_altitude": "Climb above harbor masts and cinder stacks to read the coast.",
-    "destroy_tower": "Charge plasma (X) and break the Keeper wind shrines reading your wake."
+    "destroy_tower": "Break the Keeper wind shrines reading your wake with charged lightning."
   }
 }
