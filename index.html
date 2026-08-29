@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-meadow-rest-r38">
+<meta name="galevein-build" content="stormflight-grounded-forest-r39">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -1110,7 +1110,10 @@ const poseidonOcean=createPoseidonOceanLayer({
   }
 });
 poseidonOcean.start(localStorage.getItem('galevein_gfx')||'med');
-const horizonDirector = new HorizonDirector(scene, camera);
+const LOCAL_FOREST_PARAMS=new URLSearchParams(location.search);
+const LOCAL_FOREST_INCUMBENT=['127.0.0.1','localhost','[::1]'].includes(location.hostname)
+  && LOCAL_FOREST_PARAMS.get('forest')==='incumbent';
+const horizonDirector = new HorizonDirector(scene, camera,{forestMode:LOCAL_FOREST_INCUMBENT?'incumbent':'ridge-anchored'});
 const refreshSeaFog=()=>{
   sea.material.uniforms.fogColor.value.copy(scene.fog.color);
   sea.material.uniforms.fogDensity.value=scene.fog.density;

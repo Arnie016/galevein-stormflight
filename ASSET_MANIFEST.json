@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-29T16:16:53.307Z",
+  "generatedAt": "2026-08-29T17:09:19.118Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 333488,
-      "sha256": "ae1a53418e636c490998bb671c22a27cc85e57692c5efdaf7defdf0cc345de17"
+      "bytes": 333766,
+      "sha256": "d3131dc0b8ea12a0db29d8e2b5dccde4e3fd9e3b4deb4e7d12f7e856d9e7388e"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -265,8 +265,8 @@
     },
     {
       "path": "world-expansion/modules/horizonDirector.js",
-      "bytes": 18410,
-      "sha256": "1c72867ab7ac38b1b9d16e3c87e09f94b719e7f0967bfd0b356edcbed6146ec8"
+      "bytes": 23182,
+      "sha256": "bbbb97adf30821fdcf1922393a68918106e49d2d6957445c990d9e91386aaea2"
     },
     {
       "path": "world-expansion/modules/keeperHollowBiome.js",

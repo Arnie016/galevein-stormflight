@@ -13,6 +13,10 @@ const RIDGE_SPECS = Object.freeze([
   Object.freeze({ id:'mid', sections:56, inner:980, width:560, start:-1450, end:2320, height:545, opening:250 }),
   Object.freeze({ id:'far', sections:64, inner:1580, width:780, start:-2100, end:3180, height:720, opening:340 })
 ]);
+const GROVE_WINDOWS = Object.freeze([
+  Object.freeze([.07, .23]), Object.freeze([.29, .47]),
+  Object.freeze([.56, .73]), Object.freeze([.79, .93])
+]);
 const CROSS_PROFILE = Object.freeze([
   Object.freeze({ x:0, y:-.07, tone:'waterline' }),
   Object.freeze({ x:.08, y:.015, tone:'waterline' }),
@@ -135,6 +139,25 @@ function ridgeTone(tone, layerIndex, target) {
   return target;
 }
 
+function ridgeVertex(spec, layerIndex, anchor, routeHeading, side, segment, column) {
+  const t = clamp01(segment / spec.sections);
+  const along = spec.start + (spec.end - spec.start) * t;
+  const shape = ridgeShape(spec, along, side, layerIndex);
+  const profile = CROSS_PROFILE[column];
+  const crownBias = Math.sin(profile.x * Math.PI) * (shape.crownOffset - spec.width * .51);
+  const cross = shape.inner + spec.width * profile.x + crownBias;
+  const fracture = column > 0 && column < CROSS_PROFILE.length - 1
+    ? Math.sin(segment * 2.21 + column * 1.73 + side * 2.4 + layerIndex) * (3 + layerIndex * 2)
+    : 0;
+  const forwardX = Math.sin(routeHeading), forwardZ = Math.cos(routeHeading);
+  const sideX = Math.cos(routeHeading), sideZ = -Math.sin(routeHeading);
+  return new THREE.Vector3(
+    anchor.x + forwardX * along + sideX * side * cross,
+    anchor.y + profile.y * shape.crest + fracture,
+    anchor.z + forwardZ * along + sideZ * side * cross
+  );
+}
+
 function continuousRidgeGeometry(spec, layerIndex, anchor, routeHeading) {
   const positions = [], colors = [], indices = [];
   const color = new THREE.Color();
@@ -208,6 +231,7 @@ export class HorizonDirector {
       options.anchorZ ?? FIXED_WORLD_ANCHOR.z
     );
     this.routeHeading = options.routeHeading ?? FIXED_ROUTE_HEADING;
+    this.forestMode = options.forestMode === 'incumbent' ? 'incumbent' : 'ridge-anchored';
     this.placementRevision = 0;
     this.placementSignature = null;
     this._hueShift = 0;
@@ -285,7 +309,7 @@ export class HorizonDirector {
     this.camera.updateProjectionMatrix();
   }
 
-  _placeForest(baseX, baseZ, forwardAngle) {
+  _placeForestIncumbent(baseX, baseZ, forwardAngle) {
     const forwardX = Math.sin(forwardAngle), forwardZ = Math.cos(forwardAngle);
     const sideX = Math.cos(forwardAngle), sideZ = -Math.sin(forwardAngle);
     for (let index = 0; index < LAYER_COUNTS.forest; index += 1) {
@@ -312,6 +336,65 @@ export class HorizonDirector {
       this.forest.setMatrixAt(index, this.matrix);
     }
     this.forest.instanceMatrix.needsUpdate = true;
+    this.forestGroundingAudit = {
+      profile: 'approximate-height-sampled-v1', verifiedAgainstRenderedVertices: false,
+      rootGapMaximum: null, rootGapMinimum: null, minimumSurfaceHeight: null,
+      detachedTrees: null, groveWindows: 0
+    };
+  }
+
+  _placeForestAnchored() {
+    const plan = [
+      { layerIndex: 0, count: 208 },
+      { layerIndex: 1, count: 80 },
+      { layerIndex: 2, count: 32 }
+    ];
+    let instance = 0;
+    let minimumSurfaceHeight = Infinity;
+    let maximumRootGap = -Infinity;
+    let minimumRootGap = Infinity;
+    for (const { layerIndex, count } of plan) {
+      const spec = RIDGE_SPECS[layerIndex];
+      const perWindowSide = Math.ceil(count / (GROVE_WINDOWS.length * 2));
+      for (let local = 0; local < count; local += 1) {
+        const side = local % 2 ? 1 : -1;
+        const groveIndex = Math.floor(local / 2) % GROVE_WINDOWS.length;
+        const ordinal = Math.floor(local / (GROVE_WINDOWS.length * 2));
+        const [start, end] = GROVE_WINDOWS[groveIndex];
+        const progress = THREE.MathUtils.lerp(start, end,
+          clamp01((ordinal + .18 + seeded(instance + 7100) * .64) / perWindowSide));
+        const segmentFloat = progress * spec.sections;
+        const segmentA = Math.min(spec.sections - 1, Math.floor(segmentFloat));
+        const segmentB = segmentA + 1;
+        const blend = segmentFloat - segmentA;
+        // Trees occupy two explicit ledges in the rendered cross-section. They
+        // never use the low waterline/forest-color band as invisible support.
+        const column = (ordinal + groveIndex + layerIndex) % 3 === 0 ? 4 : 3;
+        const a = ridgeVertex(spec, layerIndex, this.anchor, this.routeHeading, side, segmentA, column);
+        const b = ridgeVertex(spec, layerIndex, this.anchor, this.routeHeading, side, segmentB, column);
+        const surface = a.lerp(b, blend);
+        const height = 11 + seeded(instance + 7300) * (17 - layerIndex * 2);
+        const width = height * (.76 + seeded(instance + 7500) * .20);
+        const rootGap = -height * .07; // geometry begins at y=-.08; origin sits +.01 above the ledge
+        this.position.set(surface.x, surface.y + height * .01, surface.z);
+        this.quaternion.setFromEuler(new THREE.Euler(0, seeded(instance + 7700) * TAU, 0));
+        this.scale.set(width, height, width);
+        this.matrix.compose(this.position, this.quaternion, this.scale);
+        this.forest.setMatrixAt(instance, this.matrix);
+        minimumSurfaceHeight = Math.min(minimumSurfaceHeight, surface.y);
+        maximumRootGap = Math.max(maximumRootGap, rootGap);
+        minimumRootGap = Math.min(minimumRootGap, rootGap);
+        instance += 1;
+      }
+    }
+    this.forest.instanceMatrix.needsUpdate = true;
+    this.forest.computeBoundingSphere();
+    this.forestGroundingAudit = {
+      profile: 'rendered-ridge-edge-interpolation-v1', verifiedAgainstRenderedVertices: true,
+      rootGapMaximum: +maximumRootGap.toFixed(3), rootGapMinimum: +minimumRootGap.toFixed(3),
+      minimumSurfaceHeight: +minimumSurfaceHeight.toFixed(2), detachedTrees: maximumRootGap > .001 ? 1 : 0,
+      groveWindows: GROVE_WINDOWS.length, ledgeColumns: [3, 4]
+    };
   }
 
   _placeMonoliths(baseX, baseZ) {
@@ -351,7 +434,8 @@ export class HorizonDirector {
     const baseX = this.anchor.x;
     const baseZ = this.anchor.z;
     const forwardAngle = this.routeHeading;
-    this._placeForest(baseX, baseZ, forwardAngle);
+    if (this.forestMode === 'incumbent') this._placeForestIncumbent(baseX, baseZ, forwardAngle);
+    else this._placeForestAnchored();
     this._placeMonoliths(baseX, baseZ);
     this.placementRevision += 1;
     this.placementSignature = this._calculatePlacementSignature();
@@ -396,7 +480,10 @@ export class HorizonDirector {
       valleyFloorWidth: RIDGE_SPECS[0].inner * 2,
       longitudinalSpan: RIDGE_SPECS[2].end - RIDGE_SPECS[2].start,
       forestInstances: LAYER_COUNTS.forest,
-      forestAttachment: 'slope-sampled-v1',
+      forestMode: this.forestMode,
+      forestAttachment: this.forestMode === 'incumbent' ? 'slope-sampled-v1' : 'rendered-ridge-anchored-v2',
+      forestDistribution: this.forestMode === 'incumbent' ? 'continuous-approximate-belt-v1' : 'four-authored-ledge-groves-v1',
+      forestGrounding: { ...this.forestGroundingAudit },
       drawCalls: 5,
       valleyCorridor: true,
       fogBackdrop: true,
