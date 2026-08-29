@@ -1,7 +1,7 @@
 /**
  * Chapter state machine for Galevein: Stormflight.
  * Owns region gates, objective strings, and win/loss evaluation.
- * Does not touch the DOM — returns HUD payloads for the playability layer.
+ * Does not touch the DOM. returns HUD payloads for the playability layer.
  */
 
 const DEFAULT_TOTAL_BEACONS = 12;
@@ -202,31 +202,31 @@ export class ChapterDirector {
     if (beat === 'thread_canyon') {
       const hearth = state.hearthDecision;
       if (hearth?.status === 'prompted') {
-        return '◈ Last Hearth — [1] answer the signal · [2] pass in shadow';
+        return '◈ The Last Hearth is calling. [1] Answer it. [2] Slip past.';
       }
       const target = 120;
       const peak = state.altitudePeak ?? 0;
-      if (!state.altitudeCollected) return `▲ Map the harbor — climb ${target}m AGL · peak ${Math.max(0, Math.round(peak))}m`;
+      if (!state.altitudeCollected) return `▲ Rise above the harbor. ${Math.max(0, Math.round(peak))}/${target}m`;
       if (hearth?.status === 'resolved' && hearth.choice === 'answer') {
-        return '✓ Harbor mapped · Hearth answered · beacon eight is open';
+        return '✓ The harbor is mapped. The hearth answers. Beacon eight wakes.';
       }
       if (hearth?.status === 'resolved' && hearth.choice === 'silent') {
-        return '✓ Harbor mapped · passed in shadow · beacon eight is open';
+        return '✓ The harbor is mapped. The hearth fades behind you. Beacon eight wakes.';
       }
       if ((state.score ?? 0) >= 6) {
-        return '◇ Altitude mapped · resolve the Last Hearth beneath beacon seven';
+        return '◇ The coast is clear below. Find the Last Hearth beneath beacon seven.';
       }
-      return '✓ Altitude mapped · follow the storm vanes to the Last Hearth';
+      return '✓ You can read the coast now. Follow the vanes to the Last Hearth.';
     }
     if (beat === 'destroy_tower') {
       const td = vars.towersDestroyed ?? 0;
       const need = Math.min(3, state.towerTarget ?? 3);
-      if (td >= need) return `✓ ${need} towers shattered — the wastes open ahead`;
-      return `⚔ Silence wind shrines — ${td}/${need} broken · hold X for stormfire`;
+      if (td >= need) return `✓ The last shrine falls quiet. The wastes lie open.`;
+      return `⚔ Silence the wind shrines. ${td}/${need} broken. Hold X for stormfire.`;
     }
     if (beat === 'nightfall_escape') {
-      if (state.apexDefeated) return '✓ Crowned Maw driven off — cross the final storm vane';
-      return `⚔ Crowned Maw — ${Math.max(0, state.apexHp ?? 10)}/${state.apexMaxHp ?? 10} resolve · hold X to charge`;
+      if (state.apexDefeated) return '✓ The Crowned Maw breaks away. Cross the final vane.';
+      return `⚔ Crowned Maw. ${Math.max(0, state.apexHp ?? 10)}/${state.apexMaxHp ?? 10} resolve. Hold X to charge.`;
     }
     const meta = this.metaObjectives[beat];
     if (meta && chapter.index > 0 && chapter.index < 4) return meta;
@@ -264,7 +264,7 @@ export class ChapterDirector {
       goalText: hud.goalText ?? '',
       distanceM: distance,
       distanceLabel: hud.distanceLabel ?? 'Next objective',
-      distanceText: distance != null ? `${Math.round(distance)} m` : '—',
+      distanceText: distance != null ? `${Math.round(distance)} m` : '',
       heightAboveWater: hud.showHeightAboveWater ? (state.heightAboveWater ?? null) : null,
       heightText: hud.showHeightAboveWater && state.heightAboveWater != null
         ? `${Math.max(0, Math.round(state.heightAboveWater))} m AGL`
@@ -298,7 +298,7 @@ export class ChapterDirector {
 
   /**
    * Apply sky preset fields onto a HorizonDirector instance.
-   * Cheap extension — does not allocate per frame.
+   * Cheap extension. does not allocate per frame.
    * @param {import('./horizonDirector.js').HorizonDirector} horizonDirector
    * @param {string} [regionId]
    */

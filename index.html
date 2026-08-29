@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-atmosphere-r36">
+<meta name="galevein-build" content="stormflight-combustion-r37">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -603,7 +603,7 @@
   <div class="sh top"></div><div class="sh bot"></div>
   <div id="loadline">
     <div class="t1">TAKE FLIGHT</div>
-    <div class="t2">dive into shadow · break the lock · twelve beacons unseen</div>
+    <div class="t2">read the storm · break the lock · bring Sablewing home</div>
   </div>
 </div>
 
@@ -633,7 +633,7 @@
   </div>
   <div class="panel" id="objTag">
     <div id="chapterLabel">Galevein · Stormflight</div>
-    <span id="objText">reach the Tempest Gate — <b>12 beacons before nightfall</b></span>
+    <span id="objText">Reach the Tempest Gate. <b>Twelve beacons before nightfall.</b></span>
     <div id="objectiveProgress" aria-label="Objective progress"><b id="objectiveCount">0 / 3</b><span id="objectiveMarks">
       <i class="objective-mark"></i><i class="objective-mark"></i><i class="objective-mark"></i>
     </span></div>
@@ -654,7 +654,7 @@
     <div class="inst"><span class="iv" id="spdV">0</span><span class="il">SPEED</span></div>
     <div class="inst"><span class="iv" id="altV">0</span><span class="il">ALT m</span></div>
   </div>
-  <div id="warn">IN THE LIGHT — DIVE!</div>
+  <div id="warn">THEY SEE YOU. DIVE!</div>
   <div id="arrow"></div>
   <div id="popup"></div>
   <div id="storyline"></div>
@@ -664,9 +664,9 @@
     <div class="hearth-question" id="hearthQuestion">One hearth answers your echo. Survivor, or Keeper bait?</div>
     <div id="hearthOptions">
       <button type="button" data-hearth-choice="answer"><b>1</b>ANSWER THE HEARTH<i>Reveal your line · gain a guide</i></button>
-      <button type="button" data-hearth-choice="silent"><b>2</b>PASS IN SHADOW<i>Preserve stealth · leave the signal</i></button>
+      <button type="button" data-hearth-choice="silent"><b>2</b>PASS IN SHADOW<i>Stay hidden. Leave the signal behind.</i></button>
     </div>
-    <div id="hearthResult">—</div>
+    <div id="hearthResult"></div>
   </section>
   <div id="shop"><div id="shopInner">
     <div class="bk-head"><div class="bk-rune">⚒</div>
@@ -711,8 +711,8 @@
     </div>
   </div>
   <div id="ach"><div class="ach-in"><div class="ach-k">SKILL LEARNED</div>
-    <div class="ach-n" id="achName">—</div><div class="ach-d" id="achDesc">—</div>
-    <div class="ach-key" id="achKey">—</div></div></div>
+    <div class="ach-n" id="achName">. </div><div class="ach-d" id="achDesc">. </div>
+    <div class="ach-key" id="achKey">. </div></div></div>
   <div id="chargeHud"><div id="chargeRing"><i></i></div><div id="chargeTxt">SPIT</div></div>
   <div id="ctrlhint"><b>W/S</b> speed · <b>↑↓</b> climb/dive · <b>A/D</b> turn · <b>SPACE</b> flap · <b>X</b> volt lance · <b>Z</b> arc scatter · <b>R</b> wingbreak · <b>C</b> echo · <b>F</b> flock · <b>V</b> view · <b>M</b> mute</div>
 </div>
@@ -729,7 +729,7 @@
       <h1>GALE<span class="galevein">VEIN: STORMFLIGHT</span></h1>
       <div class="ornament" style="justify-content:center">◈</div>
       <div class="sub">Keeper wind shrines read every wake across the black water.<br>
-        Guide Rook through the storm-lashed reach to the Tempest Gate — <b>never be seen.</b></div>
+        Guide Rook and Sablewing through the storm-lashed reach. <b>Bring them home unseen.</b></div>
     </div>
     <div class="playwrap">
       <button class="play" id="startBtn" aria-label="Take flight"><span class="tri"></span></button>
@@ -738,7 +738,7 @@
     <div id="lobbyHub" class="hide">
       <div class="preflight-console">
         <div class="lobby-hub-kicker">Wake Perch · flight operations</div>
-        <div class="lobby-promise"><b>Choose one journey.</b>A ten-minute story of trust, rescue, and an apex showdown — or a focused Stormscar 1v1 duel.</div>
+        <div class="lobby-promise"><b>Choose one journey.</b>Fly a ten-minute tale of trust and rescue, or meet a rival over Stormscar Shelf.</div>
         <div class="preflight-label">Primary routes</div>
         <div class="lobby-nodes" aria-label="Flight route">
           <button class="lobby-node" type="button" data-lobby-kind="primary" data-lobby-mode="story" aria-pressed="false"><span class="lobby-mode-kicker">CAMPAIGN · SOLO</span><b>THE TEN-MINUTE FLIGHT</b><i>Bond, relight the coast, rescue Neris, and face the Crowned Maw.</i><span class="lobby-mode-meta">5 PHASES · 10 MIN MAX · 1 COMPLETE ARC</span></button>
@@ -787,7 +787,7 @@
         <span class="chip"><b>Q/E</b>look around</span>
         <span class="chip"><b>V</b>ride first-person</span>
         <span class="chip"><b>M</b>mute</span>
-        <span class="chip"><b>GOAL</b>follow 12 beacons — never be seen</span>
+        <span class="chip"><b>GOAL</b>follow twelve beacons. Stay unseen.</span>
       </div>
       <div class="gfxrow">GRAPHICS <b data-g="low">LOW</b><b data-g="med" class="on">MED</b><b data-g="high">HIGH</b>
         <label class="shakerow">SHAKE <input id="shakeSlider" type="range" min="0" max="100" value="35"><span class="shakelbl" id="shakeLbl">35%</span></label></div>
@@ -965,7 +965,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.35;
 renderer.domElement.addEventListener('webglcontextlost', e => {
   e.preventDefault();
-  surfaceBootError('webgl context lost', 'WebGL context lost — reload the page');
+  surfaceBootError('webgl context lost', 'WebGL context lost. reload the page');
 });
 renderer.domElement.addEventListener('webglcontextrestored', () => location.reload());
 
@@ -1255,13 +1255,13 @@ const crownfallRange=new CrownfallRange(scene);
 for(const proxy of crownfallRange.getCollisionProxies()) colliders.push({
   x:proxy.x,z:proxy.z,r:proxy.radius,top:proxy.top,landmark:proxy.id
 });
-// connective archipelago — stepping stones so the regions read as one sea, not islands of content
+// connective archipelago. stepping stones so the regions read as one sea, not islands of content
 for(const [ix,iz,ir,ih] of [[240,-180,9,14],[330,-300,11,17],[60,-300,8,12],[-180,-260,10,15],
   [-300,-140,9,13],[-420,60,11,16],[-460,340,10,15],[-320,470,9,13],[-140,640,11,17],[120,660,9,14],
   [260,300,10,15],[380,140,8,12],[-60,420,9,13],[180,-480,10,16],[520,-180,9,14]]) rock(ix,iz,ir,ih);
 
 /* ================= FAR REGIONS: the world beyond the lighthouse ================= */
-// THE DROWNED VILLAGE — four hearths share one crescent shoal; only one still burns.
+// THE DROWNED VILLAGE. four hearths share one crescent shoal; only one still burns.
 // Repeated parts are instanced so the place reads as one authored settlement without
 // turning a small story landmark into a pile of draw calls.
 const DROWNED_VILLAGE_HOUSES=Object.freeze([
@@ -1368,7 +1368,7 @@ function drownedVillageSnapshot(){
     verticalClearance:+(beacon.y-maxTop).toFixed(1),decisionAnchor:lastHearth.position.toArray(),
     returnSignalRings:hearthSignalRings.length,positions:DROWNED_VILLAGE_HOUSES.map(h=>[h.id,h.x,h.z,h.yaw,h.state])};
 }
-// THE BONE ARCHES — the ribs of something vast, bleached over the sea
+// THE BONE ARCHES. the ribs of something vast, bleached over the sea
 const boneMat=new THREE.MeshStandardMaterial({color:0xcfc8ba,roughness:.85,flatShading:true});
 for(let i=0;i<5;i++){
   const arch=new THREE.Mesh(new THREE.TorusGeometry(46-i*3,3.4-i*0.3,8,22,Math.PI), boneMat);
@@ -1376,7 +1376,7 @@ for(let i=0;i<5;i++){
   colliders.push({x:-330-i*46+44,z:-410+i*10,r:6,top:50}); colliders.push({x:-330-i*46-44,z:-410+i*10,r:6,top:50});
 }
 const skullRock=rock(-560,-380,30,26);                          // where the head came to rest
-// THE TEMPEST GATE — sea-stack ring, the aurora pours into it like a curtain
+// THE TEMPEST GATE. sea-stack ring, the aurora pours into it like a curtain
 const tempestGateScenery=[];
 function trackTempestBuild(build){
   const start=scene.children.length; build();
@@ -1777,7 +1777,7 @@ landmarkReady.then(async ()=>{
   });
 }).catch(err=>{
   surfaceBootError('landmark build failed', err?.message||err);
-  $('objText').textContent='LANDMARK GEOMETRY FAILED TO BUILD — '+(err&&err.message||err);
+  $('objText').textContent='LANDMARK GEOMETRY FAILED TO BUILD. '+(err&&err.message||err);
   $('wakehint').textContent='LANDMARK BUILD FAILED';
   $('startBtn').disabled=true;
 });
@@ -2066,7 +2066,7 @@ function renderRigPicker(){
   card.title=rig.note; host.appendChild(card);
 }
 loadDragonRig(activeRig).catch(()=>{
-  $('objText').textContent='DRAGON ASSET FAILED TO LOAD — refresh the local server and try again';
+  $('objText').textContent='DRAGON ASSET FAILED TO LOAD. refresh the local server and try again';
   $('wakehint').textContent='MODEL LOAD FAILED';
   $('startBtn').disabled=true;
 });
@@ -2201,7 +2201,7 @@ function springAxis(axis,target,dt,frequency,damping=1){
   axis.velocity+=((target-axis.value)*omega*omega-2*damping*omega*axis.velocity)*dt;
   axis.value+=axis.velocity*dt;
 }
-// mouse only drives the landing-page parallax now — flight is pure keyboard (no cursor drift)
+// mouse only drives the landing-page parallax now. flight is pure keyboard (no cursor drift)
 addEventListener('mousemove',e=>{
   const nx=(e.clientX/innerWidth)*2-1, ny=(e.clientY/innerHeight)*2-1;
   document.documentElement.style.setProperty('--px',(nx*-9).toFixed(1)+'px');
@@ -2261,8 +2261,8 @@ const routeDifficulty=()=>THREE.MathUtils.clamp((S.score-1)/(rings.length-2),0,1
 const chargeSeconds=()=>Math.max(.54,.9-upLv('gland')*.12);
 
 const HEARTH_OUTCOMES=Object.freeze({
-  answer:{title:'THE HEARTH ANSWERS BACK',detail:'Trust +1 · plasma restored · two beacons guided · +18% detection · night advances'},
-  silent:{title:'THE SIGNAL FALLS BEHIND',detail:'Detection −18% · six seconds of grace · no guide · trust unchanged'}
+  answer:{title:'THE HEARTH ANSWERS BACK',detail:'Trust grows. Stormfire returns. Two lights guide you, but every keeper turns your way.'},
+  silent:{title:'THE SIGNAL FALLS BEHIND',detail:'The keepers lose your wake. You gain six quiet seconds, but no light waits ahead.'}
 });
 function hearthUiSnapshot(){
   const root=$('hearthChoice'),rect=root?.getBoundingClientRect(),style=root?getComputedStyle(root):null;
@@ -2452,7 +2452,7 @@ function storyDragonSnapshot(){
 
 /* ---- stormfire breath (X): combustion plume; existing bolt remains collision authority ---- */
 const bolts=[], BOLT_SEG=16;
-/* Pooled FX — charge/shoot used to alloc BufferGeometry every tick and hitch hard. */
+/* Pooled FX. charge/shoot used to alloc BufferGeometry every tick and hitch hard. */
 const FX={
   gfx:'med',
   crack:[], crackI:0,
@@ -2462,6 +2462,7 @@ const FX={
   chargeRing:null, chargeHum:null, humGain:null,
   sky:[], skyI:0, skyLt:null,
   breath:[], breathI:0, breathGeo:null,
+  tongues:[], tongueGeo:null,
   ballGeo:null, haloGeo:null, ballMat:null, haloMat:null,
 };
 function initFxPools(){
@@ -2512,14 +2513,68 @@ function initFxPools(){
     mesh.visible=false;mesh.frustumCulled=false;scene.add(mesh);
     FX.breath.push({mesh,kind,life:0,dur:0,base:1,spin:0,vel:new THREE.Vector3()});
   }
+  FX.tongueGeo=new THREE.ConeGeometry(1,1,14,9,true);
+  const tongueVertex=`
+    uniform float uTime; uniform float uHeat; varying vec2 vUv;
+    void main(){
+      vUv=uv; vec3 p=position;
+      float ripple=sin(p.y*19.0+uTime*15.0)+sin(p.y*31.0-uTime*11.0+p.x*7.0);
+      p.xz*=1.0+ripple*(0.025+uHeat*0.055);
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);
+    }`;
+  const tongueFragment=`
+    uniform float uTime; uniform float uOpacity; uniform float uHeat;
+    uniform vec3 uColorA; uniform vec3 uColorB; varying vec2 vUv;
+    float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+    void main(){
+      float bands=sin(vUv.y*37.0-uTime*18.0+hash(floor(vUv*18.0))*2.2);
+      float body=smoothstep(.02,.13,vUv.y)*(1.0-smoothstep(.76,1.0,vUv.y));
+      float edge=.58+.42*(1.0-smoothstep(.20,.50,abs(vUv.x-.5)));
+      float alpha=uOpacity*body*edge*(.78+bands*.16);
+      vec3 color=mix(uColorA,uColorB,clamp(vUv.y+bands*.06,0.0,1.0));
+      if(uHeat>.5){color=vec3(.72,.78,.82);alpha*=.24;}
+      if(alpha<.012)discard; gl_FragColor=vec4(color,alpha);
+    }`;
+  for(const spec of [
+    {kind:'combustion',a:0xff7a24,b:0xffc15a,blend:THREE.AdditiveBlending},
+    {kind:'core',a:0xfff4c2,b:0xff9c32,blend:THREE.AdditiveBlending},
+    {kind:'heat',a:0xb8c8d2,b:0x8398a3,blend:THREE.NormalBlending}
+  ]){
+    const material=new THREE.ShaderMaterial({
+      uniforms:{uTime:{value:0},uOpacity:{value:0},uHeat:{value:spec.kind==='heat'?1:0},
+        uColorA:{value:new THREE.Color(spec.a)},uColorB:{value:new THREE.Color(spec.b)}},
+      vertexShader:tongueVertex,fragmentShader:tongueFragment,transparent:true,depthWrite:false,
+      blending:spec.blend,side:THREE.DoubleSide
+    });
+    const mesh=new THREE.Mesh(FX.tongueGeo,material);mesh.visible=false;mesh.frustumCulled=false;scene.add(mesh);
+    FX.tongues.push({mesh,kind:spec.kind,life:0,dur:0,opacity:0});
+  }
+}
+function emitStormfireTongue(origin,direction,power=1){
+  const specs=[
+    {radius:2.5+power*.9,length:20+power*8,dur:.34,opacity:.72},
+    {radius:1.05+power*.35,length:13+power*5,dur:.25,opacity:.86},
+    {radius:3.2+power*1.1,length:23+power*9,dur:.43,opacity:.16}
+  ];
+  for(let i=0;i<FX.tongues.length;i++){
+    const entry=FX.tongues[i],spec=specs[i];
+    entry.life=entry.dur=spec.dur;entry.opacity=spec.opacity;
+    entry.mesh.visible=true;entry.mesh.position.copy(origin).addScaledVector(direction,spec.length*.5+1.5);
+    entry.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction);
+    entry.mesh.scale.set(spec.radius,spec.length,spec.radius);
+    entry.mesh.material.uniforms.uOpacity.value=spec.opacity;
+    entry.mesh.material.uniforms.uTime.value=S.t;
+  }
 }
 function emitStormfire(origin,direction,power=1){
-  const count=FX.gfx==='low'?15:FX.gfx==='med'?30:42;
+  emitStormfireTongue(origin,direction,power);
+  const smokePool=FX.breath.filter(entry=>entry.kind===2);
+  const count=FX.gfx==='low'?3:FX.gfx==='med'?5:7;
   const right=FX._p1.crossVectors(direction,new THREE.Vector3(0,1,0)).normalize();
   const up=FX._p2.crossVectors(right,direction).normalize();
   for(let i=0;i<count;i++){
-    const entry=FX.breath[FX.breathI++%FX.breath.length], kind=entry.kind;
-    const along=3+(i/count)*(28+power*22), spread=(.65+i/count*4.6)*(kind===2?1.35:1);
+    const entry=smokePool[FX.breathI++%smokePool.length], kind=2;
+    const along=18+(i/count)*(12+power*10), spread=1.8+i/count*4.2;
     const lateral=(Math.random()-.5)*spread, lift=(Math.random()-.42)*spread;
     entry.mesh.position.copy(origin).addScaledVector(direction,along)
       .addScaledVector(right,lateral).addScaledVector(up,lift);
@@ -2531,7 +2586,7 @@ function emitStormfire(origin,direction,power=1){
     entry.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),direction);
     entry.mesh.rotateZ(Math.random()*Math.PI*2);
     entry.mesh.scale.set(entry.base*(kind===2?.78:.42),entry.base*(kind===2?.62:.42),entry.base*(kind===2?.92:1.35));
-    entry.mesh.material.opacity=kind===0?.68:kind===1?.56:.16;
+    entry.mesh.material.opacity=.13;
     entry.mesh.visible=true;
   }
 }
@@ -2569,6 +2624,15 @@ function updateFxPools(dt){
     const grow=e.kind===2?.72+age*2.15:.62+Math.sin(age*Math.PI)*.78;
     e.mesh.scale.set(e.base*grow*(e.kind===2?.82:.44),e.base*grow*(e.kind===2?.68:.44),e.base*grow*(e.kind===2?.96:1.42));
     e.mesh.material.opacity=Math.max(0,(e.kind===0?.92:e.kind===1?.72:.20)*(1-age)*(e.kind===2?age*.9+.1:1));
+    if(e.life<=0)e.mesh.visible=false;
+  }
+  for(const e of FX.tongues){
+    if(e.life<=0){e.mesh.visible=false;continue;}
+    e.life-=dt;
+    const remaining=THREE.MathUtils.clamp(e.life/e.dur,0,1);
+    e.mesh.material.uniforms.uTime.value=S.t+(1-remaining)*.45;
+    e.mesh.material.uniforms.uOpacity.value=e.opacity*Math.pow(remaining,.58);
+    if(e.kind==='heat')e.mesh.scale.x=e.mesh.scale.z*=1+dt*.7;
     if(e.life<=0)e.mesh.visible=false;
   }
   if(FX.skyLt.intensity>0){
@@ -2664,8 +2728,8 @@ function shoot(power=0.35,attackId='volt-lance',options={}){
     const e=FX.sparks[FX.sparkI++%FX.sparks.length];
     setLineSeg(e, FX._p1, FX._p2, 0.22, 0.22);
   }
-  const arc=new THREE.Mesh(new THREE.TorusGeometry(1.6,0.22,6,20),
-    new THREE.MeshBasicMaterial({color:scatter?0x8dffe8:0xffb14a,transparent:true,opacity:0.86,blending:THREE.AdditiveBlending,depthWrite:false}));
+  const arc=new THREE.Mesh(new THREE.TorusGeometry(scatter?1.6:.82,scatter?.22:.07,6,20),
+    new THREE.MeshBasicMaterial({color:scatter?0x8dffe8:0xffb14a,transparent:true,opacity:scatter?.86:.18,blending:THREE.AdditiveBlending,depthWrite:false}));
   arc.position.copy(mz); arc.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),dir); scene.add(arc);
   shocks.push({m:arc,life:0.28,dur:0.28,axis:true});
   const a=AU.el.zap; if(a){ a.playbackRate=1.45-power*0.5; } AU.play('zap',0.45+power*0.35);
@@ -2826,7 +2890,7 @@ function updateBolts(dt){
       plasmaImpact(b.m.position,b.power||.35);popup(`CROWNED MAW · ${apex.hp}/${apex.maxHp}`);hit=true;
       if(apex.hp<=0){apex.defeated=true;apex.group.visible=false;S.scales+=10;
         achievement('SKY SHARED','the Crowned Maw yields the Tempest Gate','FINAL VANE','STORY TURN');
-        storyPop('The great shadow breaks away. Neris holds the line beside you — the final vane is open.',6);}
+        storyPop('The great shadow breaks away. Neris holds the line beside you. the final vane is open.',6);}
     }
     if(S.duelMode&&localDuel.snapshot().matched&&RIVAL.group.visible&&
       b.m.position.distanceTo(RIVAL.group.position)<(b.attackId==='arc-scatter'?30:12+(b.power||.35)*8)){
@@ -2977,7 +3041,7 @@ const SKILLS=[
   {k:'W / S',   name:'Beat & Brake',  d:'drive the wings, spill the air',        have:()=>true},
   {k:'SPACE',   name:'Downbeat',      d:'each stroke lifts you against gravity', have:()=>true},
   {k:'UP / DOWN',name:'Climb & Dive', d:'read the wind with your body',          have:()=>true},
-  {k:'X',       name:'Plasma Breath', d:'hold to charge: spit, bolt, arc burst', have:()=>true},
+  {k:'X',       name:'Stormfire',     d:'hold your breath, then loose the flame', have:()=>true},
   {k:'V',       name:"Rider's Eye",   d:'ride first-person',                     have:()=>true},
   {k:'C',       name:'Echolocation',  d:'see the world by sound',                unlockAt:1,have:()=>S.score>=1},
   {k:'HOLD A/D',name:'Spiral to Ultra',d:'wind the corkscrew, then release',     unlockAt:2,have:()=>S.score>=2},
@@ -3025,7 +3089,7 @@ function addViolence(v){
 }
 
 /* ---- the flight is choreographed: three sworn tasks, told as story beats ---- */
-/* ---- CHAPTER I: the tutorial cove — three low practice rings between the home cliffs ---- */
+/* ---- CHAPTER I: the tutorial cove. three low practice rings between the home cliffs ---- */
 const tutRings=[];
 const tutMat=new THREE.MeshBasicMaterial({
   color:0x78c9b5, transparent:true, opacity:.52, depthWrite:false,
@@ -3054,7 +3118,7 @@ function driveTutorial(dt){
     S.tutDone=true;
     if(S.fieldCardAuto) S.fieldCardUntil=Math.min(S.fieldCardUntil||Infinity,S.t+2.5);
     structure?.director?.enterChapter(1);
-    achievement('First Bond','Sablewing trusts the saddle — the lighthouse road waits','PHASE II');
+    achievement('First Bond','Sablewing trusts the saddle. the lighthouse road waits','PHASE II');
     storyPop('She answers you now. Ahead, the drowned lighthouse road is dark.',6);
     for(const r of rings) r.visible=true;
   }
@@ -3075,11 +3139,11 @@ function serpentObjectiveSnapshot(){
     missing,sealed:S.chapter===2&&S.score===7&&missing.length>0};
 }
 function driveMissionsFallback(){
-  if(S.chapter===0){ $('objText').textContent=`First Bond — rings ${tutRings.filter(r=>r.userData.hit).length}/3`; return; }
-  if(S.score<4) $('objText').textContent=`Three Lights — coastal signals ${S.score}/4`;
-  else if(S.score<8) $('objText').textContent=`The Lost Wing — answering echoes ${S.score}/8`;
-  else if(S.score<11) $('objText').textContent=`Stormwake Pursuit — signals ${S.score}/11`;
-  else $('objText').textContent=`Crown of the Gale — final signal ${S.score}/12`;
+  if(S.chapter===0){ $('objText').textContent=`First Bond. rings ${tutRings.filter(r=>r.userData.hit).length}/3`; return; }
+  if(S.score<4) $('objText').textContent=`Three Lights. coastal signals ${S.score}/4`;
+  else if(S.score<8) $('objText').textContent=`The Lost Wing. answering echoes ${S.score}/8`;
+  else if(S.score<11) $('objText').textContent=`Stormwake Pursuit. signals ${S.score}/11`;
+  else $('objText').textContent=`Crown of the Gale. final signal ${S.score}/12`;
 }
 function objectiveProgressState(){
   if(S.duelMode) return {hidden:true,current:0,total:0,label:'duel'};
@@ -3169,7 +3233,7 @@ function updateTowerCombat(dt){
   }
   updateFoeBolts(dt);
 }
-/* ================= UNIQUE 1: ECHOLOCATION — a Galevein reads the storm by sound =================
+/* ================= UNIQUE 1: ECHOLOCATION. a Galevein reads the storm by sound =================
    A sonar wave rips outward and pings every beacon / gate / tower it touches, so you can
    read the map through rain, fog and full dark. */
 const echoMesh=new THREE.Mesh(new THREE.SphereGeometry(1,26,18),
@@ -3265,13 +3329,12 @@ function driveStormbreakDive(dt){
 }
 
 /* ================= UNIQUE 3: STORM LIGHTNING HARVEST =================
-   The storm throws real bolts at the sea. A column telegraphs where it will land —
-   fly INTO it and you drink the strike: full plasma + a supercharged blast, but it
+   The storm throws real bolts at the sea. A column telegraphs where it will land.    fly INTO it and you drink the strike: full plasma + a supercharged blast, but it
    lights you up like a flare for every keeper watching.
    Bolt path: default `phys` = coarse potential-biased discharge (EXP-LIGHTNING-PHYS-01);
    `?lightning=jag` restores the old random polyline. Demo metrics from social posts are not requirements. */
 const lightningMode=(new URLSearchParams(location.search).get('lightning')||'phys').toLowerCase();
-/* Fat telegraph so the strike is findable against rain/spotlights — not a hairline. */
+/* Fat telegraph so the strike is findable against rain/spotlights. not a hairline. */
 const teleMark=new THREE.Mesh(new THREE.CylinderGeometry(18,22,380,16,1,true),
   new THREE.MeshBasicMaterial({color:0xb8f0ff,transparent:true,opacity:0,side:THREE.DoubleSide,
     blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
@@ -3320,7 +3383,7 @@ function buildPhysStrikePoints(x,z,topY,wh){
   }
   return { main:pts, fork:null };
 }
-/* Ambient sky lightning — pooled polylines (no TubeGeometry alloc hitch). */
+/* Ambient sky lightning. pooled polylines (no TubeGeometry alloc hitch). */
 function fireSkyBolt(){
   const anchor=S.started&&D.group ? D.group.position : REST;
   const yaw=S.started ? D.yaw : Math.atan2(camera.position.x-anchor.x, camera.position.z-anchor.z);
@@ -3394,7 +3457,7 @@ function fireStrike(){
     S.charges=3; S.superCharge=1; S.detection=Math.min(1,S.detection+0.22);
     S.shake=Math.max(S.shake,0.9); S.flash=Math.max(S.flash,1);
     if(D.glow) D.glow.intensity=200;
-    popup('LIGHTNING HARVESTED'); storyPop('The storm gives up its fire — and every eye turns to you.',3.5);
+    popup('LIGHTNING HARVESTED'); storyPop('The storm gives up its fire. and every eye turns to you.',3.5);
   }
 }
 function updateStorm(dt){
@@ -3404,7 +3467,7 @@ function updateStorm(dt){
     S.strikeNext=7+Math.random()*6;     // then every ~7–13s
     const p=D.group.position, a=Math.random()*6.283, r=35+Math.random()*70; // closer = on camera
     S.strikeX=p.x+Math.cos(a)*r; S.strikeZ=p.z+Math.sin(a)*r; S.strikeT=2.0;
-    popup('STRIKE INCOMING — fly the cyan column');
+    popup('STRIKE INCOMING. fly the cyan column');
   }
   if(S.strikeT>0){
     S.strikeT-=dt;
@@ -3418,9 +3481,9 @@ function updateStorm(dt){
   }
 }
 
-/* ================= UNIQUE 4: DRAGON CALL — the wild flock answers (F) =================
+/* ================= UNIQUE 4: DRAGON CALL. the wild flock answers (F) =================
    Shapes rise out of the dark and wheel around you. While they fly with you the
-   keepers can't pick you out of the swarm — detection barely builds. */
+   keepers can't pick you out of the swarm. detection barely builds. */
 const flock=[];
 function makeFlockDragon(){
   const g=new THREE.Group();
@@ -3644,7 +3707,7 @@ function tick(dt){
       D.mouth.material.opacity=0.4+0.35*cp; D.mouthLt.intensity=14+cp*70; D.mouthLt.distance=24+cp*26;
       D.mouth.material.color.setHSL(0.75-cp*0.08, 1, 0.6+cp*0.3); }
     updateChargeHum(cp, true);
-    // pooled crackle — no new BufferGeometry while holding X
+    // pooled crackle. no new BufferGeometry while holding X
     S.crackT=(S.crackT||0)-dt;
     const crackEvery = FX.gfx==='low' ? 0.14 : (FX.gfx==='med' ? 0.09 : 0.07);
     if(D.headNode && S.crackT<=0){ S.crackT=crackEvery-cp*0.03;
@@ -3706,7 +3769,7 @@ function tick(dt){
       }
     }
     S.grazing=grazing;
-    // the dragon reads the rock and eases you off it — you keep control, it just helps
+    // the dragon reads the rock and eases you off it. you keep control, it just helps
     let av=null, avd=1e9;
     for(const c of colliders){ if(!colliderActive(c)) continue; const dx=p.x-c.x, dz=p.z-c.z, h=Math.hypot(dx,dz);
       if(p.y<c.top+6 && h<c.r+30 && h<avd){ avd=h; av={dx,dz,h,c}; } }
@@ -3813,7 +3876,7 @@ function tick(dt){
     S.altitudePeak=Math.max(S.altitudePeak||0,haw);
     if(haw>=SERPENT_ALTITUDE_TARGET && !S.altitudeCollected){
       S.altitudeCollected=true; AU.play('ring',0.55); popup('ALTITUDE COLLECTED');
-      storyPop('Harbor stacks mapped from above — the serpent run reads clear.',4.5);
+      storyPop('Harbor stacks mapped from above. the serpent run reads clear.',4.5);
     }
   }
   const hearth=updateHearthDecision(dt);
@@ -3890,7 +3953,7 @@ function tick(dt){
     }
   }
 
-  /* ---- lightning + thunder (sky bolts — the weather you expect to see) ---- */
+  /* ---- lightning + thunder (sky bolts. the weather you expect to see) ---- */
   if(S.t>S.nextThunder){
     S.nextThunder=S.t+4+Math.random()*7;
     fireSkyBolt();
@@ -4091,7 +4154,7 @@ function begin(opts={}){
       localDuel.join(); DUEL_OBJECTIVE.visible=true; DUEL_ARENA.visible=true; $('duelHud').classList.add('on');
       storyPop(DUEL_SERVER_URL?'Stormscar server queue. Match authority is outside this browser.':'Stormscar local 1v1. Open this exact URL in a second tab.',7);
     } else if(S.practiceMode){
-      storyPop('Practice flight — three rings in the cove. No keeper hunt.',6);
+      storyPop('Practice flight. three rings in the cove. No keeper hunt.',6);
     } else if(S.lobbyMode==='chapter' && opts.chapterIndex!=null){
       simJumpChapter(Number(opts.chapterIndex));
       storyPop('Chapter checkpoint loaded.',4);
@@ -5043,7 +5106,9 @@ window.SIM={
   }),
   stormfire:()=>({profile:'pooled-stormfire-breath-v1',pool:FX.breath.length,
     active:FX.breath.filter(entry=>entry.mesh.visible).length,
+    tongueActive:FX.tongues.filter(entry=>entry.mesh.visible).length,
     stages:['white-hot-core','orange-combustion','buoyant-smoke'],
+    heatDistortion:'procedural-vertex-shimmer-shell-v1',visiblePrimitive:'tapered-shader-tongue-v1',
     gameplayAuthority:'existing-bolt-collision-v1',allocationsPerFrame:0,externalAssets:0}),
   worldMap:()=>crownfallRange.getSnapshot(),
   keeperHollow:()=>keeperHollowBiome.getSnapshot(),

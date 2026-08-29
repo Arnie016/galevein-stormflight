@@ -30,15 +30,15 @@
         "narrative": "The stacks reclaim another attempt."
       },
       "hud": {
-        "chapterLabel": "Phase I · First Bond",
-        "objectiveTemplate": "Stay with Sablewing — bond rings {tutorialDone}/3",
+        "chapterLabel": "First Bond",
+        "objectiveTemplate": "Stay with Sablewing. Rings {tutorialDone}/3",
         "goalText": "Follow three low wind rings and learn her rhythm",
         "distanceLabel": "Next ring",
         "showHeightAboveWater": false,
         "subHints": ["Three low rings wake in sequence"]
       },
       "storyLine": "Rook, breathe with her. Three rings, then the open water.",
-      "popupOnEnter": "PHASE I · FIRST BOND"
+      "popupOnEnter": "FIRST BOND"
     },
     {
       "id": "home_waters",
@@ -64,15 +64,15 @@
         "narrative": "The keepers hold the shallows."
       },
       "hud": {
-        "chapterLabel": "Phase II · Three Lights",
-        "objectiveTemplate": "Relight the lighthouse road — signals {score}/4",
+        "chapterLabel": "Three Lights",
+        "objectiveTemplate": "Wake the lighthouse road. Signals {score}/4",
         "goalText": "Echo through the fog and wake the four coastal lights",
         "distanceLabel": "Next beacon",
         "showHeightAboveWater": true,
         "subHints": ["Echo-sense reveals what the fog hides"]
       },
       "storyLine": "Three lighthouses are dark. Give the coast its horizon back.",
-      "popupOnEnter": "PHASE II · THREE LIGHTS"
+      "popupOnEnter": "THREE LIGHTS"
     },
     {
       "id": "serpent_run",
@@ -98,15 +98,15 @@
         "narrative": "The serpent closes its jaws."
       },
       "hud": {
-        "chapterLabel": "Phase III · The Lost Wing",
-        "objectiveTemplate": "Trace the answering echo — signals {score}/8",
+        "chapterLabel": "The Lost Wing",
+        "objectiveTemplate": "Follow the answering echo. Signals {score}/8",
         "goalText": "Map the harbor from 120m and answer the Last Hearth",
         "distanceLabel": "Next beacon",
         "showHeightAboveWater": true,
         "subHints": ["Canyon gates are optional cover rewards", "Beacon eight opens after 120m AGL and a Last Hearth choice"]
       },
       "storyLine": "That echo is not a lighthouse. Something alive is calling back.",
-      "popupOnEnter": "PHASE III · THE LOST WING"
+      "popupOnEnter": "THE LOST WING"
     },
     {
       "id": "long_night",
@@ -132,15 +132,15 @@
         "narrative": "Night takes the wastes before the gate."
       },
       "hud": {
-        "chapterLabel": "Phase IV · Stormwake Pursuit",
-        "objectiveTemplate": "Break the pursuit net — signals {score}/11",
+        "chapterLabel": "Stormwake Pursuit",
+        "objectiveTemplate": "Break the pursuit net. Signals {score}/11",
         "goalText": "Shield Neris and silence the three Keeper wind shrines",
         "distanceLabel": "Next beacon",
         "showHeightAboveWater": false,
         "subHints": ["Charged lightning breaks the wind shrines", "The wild flock can hide your wake"]
       },
       "storyLine": "Neris is with you. Now the whole storm turns to follow.",
-      "popupOnEnter": "PHASE IV · STORMWAKE PURSUIT"
+      "popupOnEnter": "STORMWAKE PURSUIT"
     },
     {
       "id": "tempest_gate",
@@ -166,21 +166,21 @@
         "narrative": "The gate is lost to nightfall."
       },
       "hud": {
-        "chapterLabel": "Phase V · Crown of the Gale",
-        "objectiveTemplate": "Face the Crowned Maw — final signal {score}/12",
+        "chapterLabel": "Crown of the Gale",
+        "objectiveTemplate": "Face the Crowned Maw. Final signal {score}/12",
         "goalText": "Bring down the apex dragon and cross the Tempest Gate",
         "distanceLabel": "Tempest Gate",
         "showHeightAboveWater": true,
         "subHints": ["Nightfall accelerates after beacon eleven", "The aurora marks home"]
       },
       "storyLine": "The Crowned Maw owns this sky. Tonight, it learns to share it.",
-      "popupOnEnter": "PHASE V · CROWN OF THE GALE"
+      "popupOnEnter": "CROWN OF THE GALE"
     }
   ],
   "metaObjectives": {
     "save_dragon": "Wake Galevein in the cove and earn her trust through the first rings.",
     "rebuild": "Cross home waters without losing the Codex to reckless violence.",
-    "rescue": "Find the spared torch in the drowned village — someone still tends a hearth.",
+    "rescue": "Find the spared torch in the drowned village. Someone still tends a hearth.",
     "collect_at_altitude": "Climb above harbor masts and cinder stacks to read the coast.",
     "destroy_tower": "Break the Keeper wind shrines reading your wake with charged lightning."
   }
