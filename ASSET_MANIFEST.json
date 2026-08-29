@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-29T15:58:42.791Z",
+  "generatedAt": "2026-08-29T16:16:53.307Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 324040,
-      "sha256": "e485b7b3f03af08cec699e6d718a4c41663dde10680d2862c3da9bedeb4e9142"
+      "bytes": 333488,
+      "sha256": "ae1a53418e636c490998bb671c22a27cc85e57692c5efdaf7defdf0cc345de17"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -287,6 +287,11 @@
       "path": "world-expansion/modules/localDuel.js",
       "bytes": 16123,
       "sha256": "7c9fd068970298f6f15c980d96b04dfe0ea2fa130a6646416d38e7e103b973d1"
+    },
+    {
+      "path": "world-expansion/modules/meadowPerch.js",
+      "bytes": 7504,
+      "sha256": "01540bdbd588a9e34551d51624f1147e97792bbf955eff8a4d4e1f81f9e88fe1"
     },
     {
       "path": "world-expansion/modules/poseidonOceanLayer.js",

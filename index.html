@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-combustion-r37">
+<meta name="galevein-build" content="stormflight-meadow-rest-r38">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -64,6 +64,7 @@
   #wetlens{ position:fixed; inset:0; pointer-events:none; opacity:0; transition:opacity .5s;
     background:radial-gradient(ellipse at 50% 42%, transparent 46%, rgba(120,150,190,.20) 100%); }
   #plasmaFill{ background:linear-gradient(90deg,#5a2ea6,#a463ff 70%,#e0c6ff); }
+  #energyFill{ background:linear-gradient(90deg,#ae6f3b,#ffc27a 48%,#8ce1b4); width:100%; }
   #duskFill{ background:linear-gradient(90deg,#ff9a3c,#b96cff 60%,#2a2f66); }
   #hudTL .title{ font-family:var(--display); font-size:12px; letter-spacing:3px; color:var(--purple); margin:4px 0 7px; font-weight:700; }
   .pips{ display:inline-flex; gap:4px; margin-left:8px; vertical-align:1px; }
@@ -127,6 +128,12 @@
     padding:8px 13px; border-radius:8px; border:1px solid rgba(255,194,122,.34); border-left:3px solid #ffc27a;
     background:linear-gradient(90deg,rgba(7,14,22,.86),rgba(8,18,23,.72)); color:#e8f3f0; font:700 10px var(--mono);
     letter-spacing:.06em; text-align:center; text-shadow:0 1px 10px #000; }
+  #restCue{ position:absolute; left:50%; bottom:111px; transform:translate(-50%,8px); opacity:0;
+    padding:7px 13px; border-radius:18px; border:1px solid rgba(255,194,122,.38);
+    background:rgba(7,15,18,.78); color:#f4e7cc; font:700 10px var(--mono); letter-spacing:.12em;
+    text-shadow:0 1px 8px #000; transition:opacity .2s,transform .2s; }
+  #restCue.on{ opacity:1; transform:translate(-50%,0); }
+  #restCue b{ color:#ffc27a; }
   #warn{ position:absolute; top:46%; left:50%; transform:translate(-50%,-50%); text-align:center;
     font-size:26px; font-weight:800; letter-spacing:3px; color:var(--warn); opacity:0;
     text-shadow:0 0 22px rgba(255,90,122,.8); }
@@ -615,6 +622,8 @@
     <div class="bar"><i id="detFill"></i></div>
     <div class="row" style="margin-top:6px"><span class="k">STORMFIRE <span class="pips" id="plasmaPips"><i></i><i></i><i></i></span></span><span class="v" id="plasmaV">3</span></div>
     <div class="bar"><i id="plasmaFill"></i></div>
+    <div class="row" style="margin-top:6px"><span class="k">DRAGON ENERGY</span><span class="v" id="energyV">100</span></div>
+    <div class="bar"><i id="energyFill"></i></div>
   </div>
   <div class="panel" id="hudTR">
     <div class="mini">VIEW<b id="viewTag">CHASE</b></div>
@@ -659,6 +668,7 @@
   <div id="popup"></div>
   <div id="storyline"></div>
   <div id="coachCue" aria-live="polite">Three quiet rings are waking across the cove.</div>
+  <div id="restCue" aria-live="polite"></div>
   <section id="hearthChoice" aria-live="polite" aria-label="Drowned Hearth decision">
     <div class="hearth-kicker">DROWNED VILLAGE · SIGNAL INTERPRETATION</div>
     <div class="hearth-question" id="hearthQuestion">One hearth answers your echo. Survivor, or Keeper bait?</div>
@@ -840,6 +850,7 @@ import { CrownfallRange } from './world-expansion/modules/crownfallRange.js';
 import { DrownedHearthDecision } from './world-expansion/modules/hearthDecision.js';
 import { SerpentCoast } from './world-expansion/modules/serpentCoast.js';
 import { ATMOSPHERE_PROFILE, ATMOSPHERE_STOPS, atmospherePhase, sampleAtmosphere } from './world-expansion/modules/atmosphereProfile.js';
+import { MeadowPerch } from './world-expansion/modules/meadowPerch.js';
 
 const $ = id => document.getElementById(id);
 // Structural world variation is reproducible. Runtime VFX can still vary, but terrain,
@@ -1503,6 +1514,11 @@ for(const site of KEEPER_SHRINE_SITES) beacon(site.x,site.z,site.baseH,site.yaw0
 /* ---- menu patrol skiff: keeper sight on the water finds the resting dragon ---- */
 // Wake Perch sits inside the declared cove and faces the three-ring launch corridor.
 const REST=new THREE.Vector3(700,28,250);
+const meadowPerch=new MeadowPerch(scene);
+const MEADOW_LANDING=meadowPerch.landingPoint.clone();
+const meadowCollision=meadowPerch.getCollisionProxy();
+colliders.push({x:meadowCollision.x,z:meadowCollision.z,r:meadowCollision.radius,top:meadowCollision.top,
+  meadow:true,landmark:'wake-meadow-perch'});
 const lobbyMarkers=new LobbyMarkers(scene, REST);
 const patrol=new THREE.Group(); patrol.position.set(150,7,95); patrol.visible=false; scene.add(patrol);
 const pSpot=new THREE.SpotLight(0xffe3b0,2600,420,0.13,0.5,1.1);
@@ -2211,6 +2227,7 @@ addEventListener('mousedown',()=>{ if(S.started&&!S.done) input.flap=true; });
 addEventListener('mouseup',()=>{ input.flap=false; });
 addEventListener('keydown',e=>{
   key[e.code]=true;
+  if(!e.repeat&&S.resting&&(e.code==='Space'||e.code==='KeyW')) leaveMeadowRest(e.code==='Space'?'downbeat':'run');
   if(!e.repeat && e.code==='Digit1' && hearthDecision?.snapshot().status==='prompted'){
     hearthDecision.choose('answer',{time:S.t}); e.preventDefault(); return;
   }
@@ -2249,6 +2266,7 @@ const S={ t:0, flightT:0, started:false, done:false, detection:0, score:0, fpv:f
   hp:100, hpMax:100, hurt:0,                        // the dragon can be shot down
   echoCd:0, echoR:0, echoOn:false, lift:0, beatCd:0, poison:0, spiral:0,
   bookOpen:false, bookLost:false, fieldCardAuto:false, fieldCardUntil:0,
+  energy:100, energyMax:100, resting:false, restHold:0, restEligible:false, restVisits:0, restDiscovered:false,
   flightDiscoveries:{accelerate:false,left:false,right:false,climb:false,dive:false,downbeat:false},
   violence:0, violenceWarned:false, shopOpen:false, scales:0,
   chapter:0, tutDone:false, spiralFired:false, spiralMax:false, tier:0,
@@ -3111,6 +3129,7 @@ function driveTutorial(dt){
     r.material.opacity=.48+Math.sin(S.t*2.2+r.position.z*.02)*.08;
     if(p.distanceTo(r.position)<BEACON_STYLE.tutorialHitRadius){ r.userData.hit=true; r.material.opacity=.18;
       AU.play('ring',0.6); shockwave(r.position,0x7fe6c6); S.scales=(S.scales||0)+1;
+      S.energy=Math.min(S.energyMax,S.energy+6);
       const left=tutRings.filter(t=>!t.userData.hit).length;
       popup(left? 'GOOD · '+left+' MORE' : 'YOU CAN FLY');
     } }
@@ -3602,6 +3621,62 @@ function driveRogue(dt){
   } else { ROG.amp=0; uRA.value=0; }
 }
 
+/* ---- Wake Meadow: a fixed place to land, breathe, recover, and lift again ---- */
+function setRestCue(message=''){
+  const cue=$('restCue');
+  cue.innerHTML=message; cue.classList.toggle('on',!!message);
+}
+function meadowRange(){
+  const p=D.group.position;
+  return {horizontal:Math.hypot(p.x-MEADOW_LANDING.x,p.z-MEADOW_LANDING.z),vertical:p.y-MEADOW_LANDING.y};
+}
+function enterMeadowRest({quiet=false}={}){
+  if(S.duelMode||S.resting||!S.started||S.done) return false;
+  S.resting=true; S.restHold=0; S.restEligible=false; S.restVisits++;
+  input.flap=false; key.KeyS=false; D.speed=0; D.pitch=0; D.roll=0; D.turn=0;
+  D.group.position.copy(MEADOW_LANDING); D.group.rotation.set(0,D.yaw,0);
+  S.detection=Math.max(0,S.detection-.18); S.shake=0; S.boost=0; S.accel=0; S.prevSpeed=0;
+  if(!quiet){
+    AU.play('flap',.22);
+    storyPop('Sablewing folds into the meadow. The storm keeps moving around her.',4.2);
+    if(!S.restDiscovered){ S.restDiscovered=true;
+      achievement('A QUIET LEDGE','land, listen, and let Sablewing recover','HOLD S','FIELDCRAFT'); }
+  }
+  return true;
+}
+function leaveMeadowRest(kind='run'){
+  if(!S.resting) return false;
+  S.resting=false; S.restHold=0; S.restEligible=false; D.speed=kind==='downbeat'?24:20;
+  D.pitch=.22; D.roll=0; S.prevSpeed=D.speed; S.lift=Math.max(S.lift||0,kind==='downbeat'?14:8);
+  D.group.position.y=MEADOW_LANDING.y+2.5; S.grace=Math.max(S.grace,2.2); setRestCue('');
+  if(kind==='downbeat'){ AU.play('flap',.52); storyPop('One downbeat. The meadow falls away.',2.6); }
+  return true;
+}
+function updateMeadowRest(dt){
+  const breathe=Math.sin(S.t*1.35)*.07;
+  D.group.position.x+=(MEADOW_LANDING.x-D.group.position.x)*fdamp(8,dt);
+  D.group.position.z+=(MEADOW_LANDING.z-D.group.position.z)*fdamp(8,dt);
+  D.group.position.y=MEADOW_LANDING.y+breathe;
+  D.group.rotation.set(0,D.yaw,0); D.turn=.045*Math.sin(S.t*.55); D.pitch=0; D.roll=0; D.speed=0;
+  S.energy=Math.min(S.energyMax,S.energy+dt*18); S.hp=Math.min(S.hpMax,S.hp+dt*3.5);
+  S.detection=Math.max(0,S.detection-dt*.42); S.hurt=Math.max(0,S.hurt-dt*2);
+  if(D.mixer){
+    D.flap?.setEffectiveWeight(0); D.glide?.setEffectiveWeight(.18); D.brake?.setEffectiveWeight(D.brake?.getClip()? .82:0);
+    if(D.glide)D.glide.timeScale=.12;
+    if(D.brake){D.brake.timeScale=0;D.brake.time=D.brake.getClip().duration*.62;}
+    D.mixer.update(dt); applyAlive(dt);
+  }
+  if(D.model){
+    D.model.rotation.x+=(-.12-D.model.rotation.x)*fdamp(5,dt); D.model.rotation.z=0;
+    D.model.scale.setScalar((activeRig.scale||9)*(1+Math.sin(S.t*1.35)*.003));
+  }
+  meadowPerch.update(S.t,TOD.day,true);
+  setRestCue(`<b>RESTING</b> · ENERGY ${Math.round(S.energy)} · SPACE TO LIFT`);
+  updateFxPools(dt); updateShocks(dt); updateStorm(dt); updateFlock(dt);
+  updateRain(); updateWindLines(); updateShores();
+  hud(0);
+}
+
 function tick(dt){
   if(S.shopOpen&&S.started&&!S.done) return;
   S.t+=dt; seaUniforms.uT.value=S.t; sky.material.uniforms.uT.value=S.t;
@@ -3618,6 +3693,7 @@ function tick(dt){
   keeperHollowBiome.setVisible(!!S.started&&S.chapter===3);
   gateGroup.visible=!!S.started;
   for(const object of tempestGateScenery) object.visible=!!S.started;
+  meadowPerch.update(S.t,TOD.day,!!S.resting);
   landmarkPath.update(D.group.position);
   // escalation: more keepers wake as night falls (extend beam reach + speed)
   for(let i=0;i<searchlights.length;i++){ const sl=searchlights[i], d=routeDifficulty();
@@ -3642,6 +3718,7 @@ function tick(dt){
     return;
   }
   if(S.done){ if(D.mixer) D.mixer.update(dt); return; }
+  if(S.resting){ updateMeadowRest(dt); return; }
 
   /* ---- flight input: pure keyboard, no cursor drift ---- */
   const pitchCmd=THREE.MathUtils.clamp((key['ArrowUp']?1:0)-(key['ArrowDown']?1:0), -1,1);
@@ -3657,9 +3734,14 @@ function tick(dt){
   /* ---- energy + LIFT ---- */
   D.flapping=input.flap && S.flapCd<=0;
   const CRUISE=26, GRAV=13;
-  const thrust=(input.flap?26:0) + throttle*20;             // W drives forward, flap bursts
+  const energyAuthority=.55+.45*THREE.MathUtils.clamp(S.energy/24,0,1);
+  const throttleThrust=throttle>0?throttle*20*(.65+.35*energyAuthority):throttle*20;
+  const thrust=(input.flap?26*energyAuthority:0) + throttleThrust; // exhaustion softens power without stealing control
   D.speed += (thrust - Math.sin(D.pitch)*GRAV*1.15 - (D.speed-CRUISE)*0.42)*dt;
   D.speed = THREE.MathUtils.clamp(D.speed, 13, 62 + (S.dive||0)*20 + (S.spiral||0)*34);   // stormbreak dive breaks the ceiling
+  const effortDrain=(input.flap?5.2:0)+(throttle>0&&D.speed>34?1.7:0)+(S.spiral>0.2?2.4:0);
+  const glideRecovery=(!input.flap&&throttle<=0)?.72:.08;
+  S.energy=THREE.MathUtils.clamp(S.energy-effortDrain*dt+glideRecovery*dt,0,S.energyMax);
 
   /* ---- acceleration factor drives all the speed FX ---- */
   const inst=(D.speed-S.prevSpeed)/Math.max(dt,1e-3); S.prevSpeed=D.speed;
@@ -3746,6 +3828,18 @@ function tick(dt){
   D.roll+=CURRENT_WIND_FORCES.rollPerSecond*dt;
   S.shake=Math.max(S.shake,CURRENT_WIND.gust*.24);
 
+  // The meadow is physical and fixed. Braking low over its grass for a short,
+  // observable hold transitions the same flight state into a safe perch.
+  if(!S.duelMode){
+    const range=meadowRange();
+    S.restEligible=range.horizontal<44&&range.vertical>-5&&range.vertical<28&&D.speed<=24;
+    if(S.restEligible&&key['KeyS']) S.restHold+=dt; else S.restHold=Math.max(0,S.restHold-dt*2.5);
+    if(S.restEligible&&!key['KeyS']) setRestCue('<b>MEADOW BELOW</b> · HOLD S TO PERCH');
+    else if(S.restEligible) setRestCue(`<b>FOLDING WINGS</b> · ${Math.round(Math.min(1,S.restHold/.42)*100)}%`);
+    else setRestCue('');
+    if(S.restHold>=.42){ enterMeadowRest(); updateMeadowRest(0); return; }
+  }
+
   /* ---- collisions ---- */
   const wh=waveH(p.x,p.z,S.t);
   if(p.y<wh+3.0){ // sea strike
@@ -3757,6 +3851,7 @@ function tick(dt){
   if(!S.launching){ let grazing=false;
     for(const c of colliders){
       if(!colliderActive(c)) continue;
+      if(c.meadow&&(S.resting||(S.restEligible&&key['KeyS']))) continue;
       const dx=p.x-c.x, dz=p.z-c.z, horiz=Math.hypot(dx,dz);
       if(p.y < c.top+2){
         if(horiz < c.r+1.2 && S.impactCd<=0){
@@ -3946,7 +4041,7 @@ function tick(dt){
       const earned=rewards[S.score-1]+(clean?1:0);
       AU.play('ring',0.75); shockwave(r.position,0xffc27a);
       popup((clean?'CLEAN ':'')+'BEACON '+S.score+' / '+rings.length+' · +'+earned+' SCALES');
-      S.scales=(S.scales||0)+earned; S.detection=Math.max(0,S.detection-.12);
+      S.scales=(S.scales||0)+earned; S.energy=Math.min(S.energyMax,S.energy+8); S.detection=Math.max(0,S.detection-.12);
       S.flash=Math.max(S.flash,0.2);
       structure?.director?.syncChapterFromProgress(S.score,S.tutDone);
       if(S.score===rings.length) escaped();
@@ -4002,6 +4097,8 @@ function hud(litNow){
   const whole=Math.floor(S.charges), frac=S.charges-whole;
   $('plasmaV').textContent=whole;
   $('plasmaFill').style.width=((whole>=3?1:frac)*100)+'%';
+  $('energyV').textContent=Math.round(S.energy);
+  $('energyFill').style.width=(S.energy/S.energyMax*100).toFixed(1)+'%';
   const pp=$('plasmaPips').children;
   for(let i=0;i<3;i++) pp[i].className=i<whole?'on':'';
   $('viewTag').textContent=S.fpv?'RIDE':'CHASE';
@@ -4076,7 +4173,7 @@ function returnToHub(reason=''){
   $('over').classList.add('hide'); $('hud').classList.remove('on');
   menuEl.classList.remove('hide'); menuEl.classList.add('live','hub-open');
   $('lobbyHub').classList.add('on'); $('lobbyHub').classList.remove('hide');
-  S.started=false; S.done=false; S.launching=false; input.flap=false;
+  S.started=false; S.done=false; S.launching=false; S.resting=false; S.restHold=0; S.restEligible=false; input.flap=false; setRestCue('');
   S.alertStage=0; S.detection=0; TONE.mode='hub'; TONE.threat=0; TONE.snap=0.4;
   AU.fadeTo('music',0,500); AU.fadeTo('menu',0.36,700); AU.fadeTo('amb',0.28,600);
   lobby.returnToHub(reason); stageRest();
@@ -4142,6 +4239,7 @@ function begin(opts={}){
   $('shutter').classList.add('closed');
   setTimeout(()=>{
     S.started=true; S.flightT=0; S.grace=3; TOD.day=0.0; S.keepersWoke=false; S.hp=S.hpMax; S.hurt=0;
+    S.energy=S.energyMax; S.resting=false; S.restHold=0; S.restEligible=false; setRestCue('');
     STORY_DRAGONS.companion.group.visible=false;STORY_DRAGONS.apex.group.visible=false;
     STORY_DRAGONS.apex.hp=STORY_DRAGONS.apex.maxHp;STORY_DRAGONS.apex.defeated=false;STORY_DRAGONS.apex.fireCd=2.4;S.apexGateWarnAt=0;
     S.chapter=0; S.tutDone=false; S.altitudePeak=0; S.altitudeCollected=false;
@@ -4185,6 +4283,7 @@ function reset(){
   STORY_DRAGONS.companion.group.visible=false;STORY_DRAGONS.apex.group.visible=false;
   STORY_DRAGONS.apex.hp=STORY_DRAGONS.apex.maxHp;STORY_DRAGONS.apex.defeated=false;STORY_DRAGONS.apex.fireCd=2.4;S.apexGateWarnAt=0;
   S.boost=0; S.accel=0; S.prevSpeed=30; S.boomed=false; S.charges=3; S.chargeT=-1; S.scatterCd=0; S.pulseCd=0; S.grace=3; S.launching=true;
+  S.energy=S.energyMax; S.resting=false; S.restHold=0; S.restEligible=false; setRestCue('');
   TOD.day=0.0; S.keepersWoke=false; ROG.amp=0; ROG.life=0; ROG.next=6; uRA.value=0;
   if(D.model) D.model.scale.setScalar(activeRig.scale||9);
   if(D.glide) D.glide.timeScale=1;
@@ -4560,6 +4659,51 @@ function simStormfireStage(){
   updateFxPools(.11);updateBolts(.035);S.done=true;render(1/60);
   return {fired,stormfire:SIM.stormfire(),state:SIM.state(),target:target.toArray()};
 }
+function simMeadowStage(kind='approach'){
+  const day={approach:.10,resting:.48,takeoff:.78}[kind]??.10;
+  S.started=true;S.done=false;S.finishing=false;S.captureKind=null;S.fpv=false;S.shake=0;S.boost=0;S.accel=0;
+  S.lobbyMode='story';S.practiceMode=false;S.duelMode=false;S.chapter=0;S.tutDone=false;S.grace=999;
+  S.resting=false;S.restHold=0;S.restEligible=false;S.energy=kind==='resting'?46:82;
+  TOD.day=day;uDay.value=day;driveTimeOfDay(0);menuEl.classList.add('hide','live');$('hud').classList.add('on');
+  $('over').classList.add('hide');$('shutter').classList.remove('closed');setBookOpen(false);setRestCue('');
+  $('storyline').textContent='';$('storyline').style.animation='none';$('popup').textContent='';$('popup').style.animation='none';
+  clearAchievementUi(true);
+  for(const ring of rings)ring.visible=false;for(const ring of tutRings)ring.visible=false;
+  if(kind==='approach'){
+    D.group.position.set(MEADOW_LANDING.x,61,MEADOW_LANDING.z+92);
+    D.yaw=simHeadingTo(MEADOW_LANDING.x,MEADOW_LANDING.y,MEADOW_LANDING.z);D.pitch=-.08;D.roll=0;D.speed=20;
+  }else if(kind==='resting'){
+    D.group.position.copy(MEADOW_LANDING);D.yaw=Math.PI;D.pitch=0;D.roll=0;D.speed=0;
+    enterMeadowRest({quiet:true});updateMeadowRest(1/60);
+  }else{
+    D.group.position.copy(MEADOW_LANDING);D.yaw=0;D.pitch=0;D.roll=0;D.speed=0;
+    enterMeadowRest({quiet:true});leaveMeadowRest('downbeat');
+    D.group.position.add(new THREE.Vector3(0,12,-24));D.pitch=.30;D.speed=28;input.flap=true;
+    D.flap?.setEffectiveWeight(1);D.glide?.setEffectiveWeight(0);D.brake?.setEffectiveWeight(0);
+  }
+  D.group.rotation.set(0,D.yaw,0);D.group.rotateX(D.pitch*.75);D.prevYaw=D.yaw;D.prevPitch=D.pitch;S.prevSpeed=D.speed;
+  const back=new THREE.Vector3(Math.sin(D.yaw),0,Math.cos(D.yaw));
+  camera.position.copy(D.group.position).addScaledVector(back,kind==='resting'?32:38).add(new THREE.Vector3(0,kind==='resting'?13:16,0));
+  camera.lookAt(kind==='resting'?MEADOW_LANDING.clone().add(new THREE.Vector3(0,3,0)):D.group.position.clone().lerp(MEADOW_LANDING,.5));
+  camera.updateMatrixWorld(true);hud(0);render(1/60);
+  if(kind!=='resting')S.done=true;
+  return {kind,meadow:meadowPerch.getSnapshot(),state:SIM.state(),cue:$('restCue').textContent||''};
+}
+function simMeadowRestProof(){
+  simMeadowStage('approach');S.done=false;S.energy=35;S.resting=false;S.restHold=0;
+  D.group.position.copy(MEADOW_LANDING).add(new THREE.Vector3(0,8,8));D.yaw=simHeadingTo(...MEADOW_LANDING.toArray());
+  D.pitch=-.08;D.roll=0;D.speed=18;S.prevSpeed=18;key.KeyS=true;
+  for(let step=0;step<12&&!S.resting;step++)tick(.05);
+  key.KeyS=false;
+  const landed={resting:S.resting,energy:+S.energy.toFixed(1),position:D.group.position.toArray().map(v=>+v.toFixed(1))};
+  const energyBefore=S.energy;
+  for(let step=0;step<40;step++)tick(.05);
+  const recovered={resting:S.resting,energy:+S.energy.toFixed(1),gain:+(S.energy-energyBefore).toFixed(1)};
+  const lifted=leaveMeadowRest('downbeat');
+  const takeoff={lifted,resting:S.resting,speed:+D.speed.toFixed(1),grace:+S.grace.toFixed(1),height:+D.group.position.y.toFixed(1)};
+  S.done=true;input.flap=false;
+  return {profile:'wake-meadow-rest-proof-v1',meadow:meadowPerch.getSnapshot(),landed,recovered,takeoff,state:SIM.state()};
+}
 function simDefeatStoryApex(){
   STORY_DRAGONS.apex.hp=0;STORY_DRAGONS.apex.defeated=true;STORY_DRAGONS.apex.group.visible=false;
   const hud=structure?.tick({tutorialDone:3,apexDefeated:true,apexHp:0,apexMaxHp:STORY_DRAGONS.apex.maxHp});if(hud)structure.applyHud(hud);
@@ -4707,6 +4851,7 @@ window.SIM={
     mode:S.lobbyMode||'hub',practice:!!S.practiceMode,chapter:S.chapter,tutorial:tutRings.filter(r=>r.userData.hit).length,
     routeVisible:rings.filter(r=>r.visible).length,cause:S.cause||'',
     scales:Math.floor(S.scales||0),hp:+S.hp.toFixed(1),hpMax:S.hpMax,day:+TOD.day.toFixed(3),finishing:S.finishing,
+    energy:+S.energy.toFixed(1),energyMax:S.energyMax,resting:!!S.resting,restEligible:!!S.restEligible,restVisits:S.restVisits,
     charges:+S.charges.toFixed(2), chargeT:+(S.chargeT||0).toFixed(2),
     attackCooldowns:{scatter:+S.scatterCd.toFixed(2),pulse:+S.pulseCd.toFixed(2)},
     bolts:bolts.length, disabled:searchlights.filter(s=>s.disabled>0).length,
@@ -4726,6 +4871,9 @@ window.SIM={
   storyDragons:storyDragonSnapshot,
   storyStage:simStoryStage,
   stormfireStage:simStormfireStage,
+  meadow:()=>meadowPerch.getSnapshot(),
+  meadowStage:simMeadowStage,
+  meadowRestProof:simMeadowRestProof,
   defeatStoryApex:simDefeatStoryApex,
   chooseHearth:choice=>hearthDecision.choose(choice,{time:S.t}),
   atmosphere:()=>({...ATMOSPHERE_STATE,phase:atmospherePhase(TOD.day),sceneFog:+scene.fog.density.toFixed(7),
