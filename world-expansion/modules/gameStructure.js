@@ -106,6 +106,7 @@ function createRuntime(S, D, landmarkPath, options) {
       done: !!S.done,
       cause: S.cause ?? '',
       hp: S.hp ?? 100,
+      flightT: S.flightT ?? 0,
       position: D?.group?.position ?? null,
       target: getTarget(),
       heightAboveWater: getHaw(D?.group?.position),
@@ -134,6 +135,9 @@ function createRuntime(S, D, landmarkPath, options) {
       const distEl = dom.distanceV ?? (typeof document !== 'undefined' ? document.getElementById('distanceV') : null);
       const heightEl = dom.heightV ?? (typeof document !== 'undefined' ? document.getElementById('heightV') : null);
       const beatEl = dom.missionBeat ?? (typeof document !== 'undefined' ? document.getElementById('missionBeat') : null);
+      const cueEl = dom.coachCue ?? (typeof document !== 'undefined' ? document.getElementById('coachCue') : null);
+      const clockEl = dom.journeyClock ?? (typeof document !== 'undefined' ? document.getElementById('journeyClock') : null);
+      const railEl = dom.journeyRail ?? (typeof document !== 'undefined' ? document.getElementById('journeyRail') : null);
 
       if (objText) objText.textContent = hud.objectiveText;
       if (beaconV) beaconV.textContent = `${S.score ?? 0}/${totalBeacons}`;
@@ -146,6 +150,18 @@ function createRuntime(S, D, landmarkPath, options) {
       if (beatEl) {
         beatEl.textContent = hud.missionBeatText ?? '';
         beatEl.classList.toggle('on', !!hud.missionBeatText);
+      }
+      if (cueEl) cueEl.textContent = hud.humanCue ?? '';
+      if (clockEl) {
+        const remaining = Math.max(0, Math.ceil(hud.journeyRemainingSeconds ?? 0));
+        clockEl.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
+      }
+      if (railEl) {
+        railEl.querySelectorAll('[data-journey-phase]').forEach((node, index) => {
+          node.classList.toggle('done', index < hud.chapterIndex);
+          node.classList.toggle('current', index === hud.chapterIndex);
+          node.setAttribute('aria-current', index === hud.chapterIndex ? 'step' : 'false');
+        });
       }
     },
 
@@ -179,6 +195,10 @@ function createRuntime(S, D, landmarkPath, options) {
     dragonWingspanUnits: _regions?.dragonWingspanUnits ?? 8,
 
     snapshot() {
+      return _director?.snapshot() ?? null;
+    },
+
+    journey() {
       return _director?.snapshot() ?? null;
     }
   };

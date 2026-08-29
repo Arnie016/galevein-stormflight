@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-sablewing-r33">
+<meta name="galevein-build" content="stormflight-story-r34">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -110,6 +110,16 @@
   #missionBeat{ display:none; margin-top:5px; font-size:11px; letter-spacing:.8px; color:#ffbe6a;
     font-family:var(--mono); }
   #missionBeat.on{ display:block; }
+  #journeyRail{ position:absolute; top:83px; left:50%; transform:translateX(-50%); display:flex; align-items:center;
+    gap:5px; padding:5px 8px; border-radius:18px; background:rgba(5,10,18,.62); border:1px solid rgba(89,240,213,.16); }
+  .journey-step{ display:block; width:24px; height:3px; border-radius:4px; background:rgba(207,224,245,.18); transition:all .25s; }
+  .journey-step.done{ background:rgba(89,240,213,.7); }
+  .journey-step.current{ width:42px; background:#ffc27a; box-shadow:0 0 10px rgba(255,194,122,.55); }
+  #journeyClock{ margin-left:5px; min-width:42px; color:#dbe7fb; font:700 9px var(--mono); letter-spacing:.08em; }
+  #coachCue{ position:absolute; left:50%; bottom:70px; transform:translateX(-50%); max-width:min(680px,calc(100vw - 36px));
+    padding:8px 13px; border-radius:8px; border:1px solid rgba(255,194,122,.34); border-left:3px solid #ffc27a;
+    background:linear-gradient(90deg,rgba(7,14,22,.86),rgba(8,18,23,.72)); color:#e8f3f0; font:700 10px var(--mono);
+    letter-spacing:.06em; text-align:center; text-shadow:0 1px 10px #000; }
   #warn{ position:absolute; top:46%; left:50%; transform:translate(-50%,-50%); text-align:center;
     font-size:26px; font-weight:800; letter-spacing:3px; color:var(--warn); opacity:0;
     text-shadow:0 0 22px rgba(255,90,122,.8); }
@@ -205,6 +215,12 @@
   .bk-stats span{ display:flex; justify-content:space-between; border-bottom:1px dotted rgba(90,60,25,.4); }
   .bk-stats b{ font-weight:700; }
   .bk-note{ font-size:14px; font-style:italic; color:#6c5432; margin-top:9px; }
+  .bk-now{ margin:12px auto 4px; max-width:650px; padding:10px 12px; border:1px solid rgba(90,60,25,.42);
+    background:rgba(255,245,220,.3); text-align:left; font:14px var(--mono); }
+  .bk-now b{ display:block; margin-bottom:4px; font:800 11px var(--display); letter-spacing:.18em; color:#3d2a12; }
+  .bk-journey{ display:flex; gap:5px; margin:9px auto 0; max-width:650px; }
+  .bk-journey i{ flex:1; height:4px; border-radius:5px; background:rgba(60,42,23,.16); }
+  .bk-journey i.done{ background:#557b67; } .bk-journey i.current{ background:#a55f2f; }
   .bk-skills{ display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:8px 18px; margin-top:14px; }
   .bk-skill{ display:flex; gap:10px; align-items:baseline; font-size:16px; }
   .bk-skill .k{ font-family:var(--mono); font-size:13px; font-weight:700; padding:3px 9px; border-radius:3px;
@@ -564,6 +580,11 @@
     <span id="objText">reach the Tempest Gate — <b>12 beacons before nightfall</b></span>
     <div id="missionBeat"></div>
     <span class="objmeta"><b id="beaconV">0/12</b> beacons · <b id="duskV">dusk</b><span id="distanceV"></span></span></div>
+  <div id="journeyRail" aria-label="Five-phase story journey">
+    <i class="journey-step current" data-journey-phase="1"></i><i class="journey-step" data-journey-phase="2"></i>
+    <i class="journey-step" data-journey-phase="3"></i><i class="journey-step" data-journey-phase="4"></i>
+    <i class="journey-step" data-journey-phase="5"></i><b id="journeyClock">10:00</b>
+  </div>
   <div class="panel" id="abil">
     <span class="ab" id="abEcho"><b>C</b>ECHO</span>
     <span class="ab" id="abFlock"><b>F</b>FLOCK</span>
@@ -577,6 +598,7 @@
   <div id="arrow"></div>
   <div id="popup"></div>
   <div id="storyline"></div>
+  <div id="coachCue" aria-live="polite">W/S sets pace · arrows steer · tap SPACE for lift</div>
   <section id="hearthChoice" aria-live="polite" aria-label="Drowned Hearth decision">
     <div class="hearth-kicker">DROWNED VILLAGE · SIGNAL INTERPRETATION</div>
     <div class="hearth-question" id="hearthQuestion">One hearth answers your echo. Survivor, or Keeper bait?</div>
@@ -597,18 +619,20 @@
     <div id="bookInner">
       <div class="bk-head">
         <div class="bk-rune">◈</div>
-        <div class="bk-title">FLIGHT CODEX</div>
-        <div class="bk-sub">strapped to the saddle · <b>TAB</b> to close</div>
+        <div class="bk-title">RIDER FIELD CARD</div>
+        <div class="bk-sub">Rook's weatherproof saddle card · <b>TAB</b> to close</div>
       </div>
       <div class="bk-card">
-        <div class="bk-name">GALEVEIN</div>
-        <div class="bk-art">🐉</div>
+        <div class="bk-name">SABLEWING</div>
+        <div class="bk-art">◢◈◣</div>
         <div class="bk-stats">
           <span>⚔ ATTACK<b id="stAtk">14</b></span><span>➤ SPEED<b id="stSpd">18</b></span>
           <span>⛨ ARMOUR<b id="stArm">10</b></span><span>✸ FIREPOWER<b id="stFire">15</b></span>
         </div>
-        <div class="bk-note">"where thunder learns to wear a wing"</div>
+        <div class="bk-note">“Do not command the wind. Give her a reason to trust it.”</div>
       </div>
+      <div class="bk-now"><b id="bkPhase">PHASE I · FIRST BOND</b><span id="bkNow">Follow the three low rings and learn Sablewing's rhythm.</span></div>
+      <div class="bk-journey" id="bkJourney"><i class="current"></i><i></i><i></i><i></i><i></i></div>
       <div class="bk-skills" id="bkSkills"></div>
       <div class="bk-foot" id="bkFoot">skills reveal themselves as you earn them</div>
     </div>
@@ -641,17 +665,17 @@
     <div id="lobbyHub" class="hide">
       <div class="preflight-console">
         <div class="lobby-hub-kicker">Wake Perch · flight operations</div>
-        <div class="lobby-promise"><b>Choose your promise.</b>Continue Rook's flight through the Sable Reach, or enter Stormscar for a focused 1v1 duel.</div>
+        <div class="lobby-promise"><b>Choose one journey.</b>A ten-minute story of trust, rescue, and an apex showdown — or a focused Stormscar 1v1 duel.</div>
         <div class="preflight-label">Primary routes</div>
         <div class="lobby-nodes" aria-label="Flight route">
-          <button class="lobby-node" type="button" data-lobby-kind="primary" data-lobby-mode="story" aria-pressed="false"><span class="lobby-mode-kicker">CAMPAIGN · SOLO</span><b>STORY FLIGHT</b><i>From Wake Perch through keeper territory to the Tempest Gate.</i><span class="lobby-mode-meta">5 CHAPTERS · 12 BEACONS · 1 ESCAPE</span></button>
+          <button class="lobby-node" type="button" data-lobby-kind="primary" data-lobby-mode="story" aria-pressed="false"><span class="lobby-mode-kicker">CAMPAIGN · SOLO</span><b>THE TEN-MINUTE FLIGHT</b><i>Bond, relight the coast, rescue Neris, and face the Crowned Maw.</i><span class="lobby-mode-meta">5 PHASES · 10 MIN MAX · 1 COMPLETE ARC</span></button>
           <button class="lobby-node" type="button" data-lobby-kind="primary" data-lobby-mode="duel" aria-pressed="false"><span class="lobby-mode-kicker">VERSUS · 1V1</span><b>STORMSCAR DUEL</b><i>Three distinct attacks, a contested Stormheart, death and respawn.</i><span class="lobby-mode-meta">FIRST TO 3 · SERVER-READY COMBAT</span></button>
         </div>
         <div class="lobby-utilities" aria-label="Flight utilities">
           <button class="lobby-node" type="button" data-lobby-kind="utility" data-lobby-mode="practice" aria-pressed="false"><b>PRACTICE COVE</b><i>Three rings · no keeper pursuit</i></button>
           <button class="lobby-node" type="button" data-lobby-kind="utility" data-lobby-mode="chapter" aria-pressed="false"><b>CHECKPOINTS</b><i>Resume a reached chapter</i></button>
         </div>
-        <div id="lobbyTransport" aria-live="polite"><span data-lobby-status-label>SOLO CAMPAIGN</span><b data-lobby-status-value>FIVE CHAPTERS · 12 BEACONS</b><i data-lobby-status-note>One authored route from Wake Perch to the Tempest Gate.</i></div>
+        <div id="lobbyTransport" aria-live="polite"><span data-lobby-status-label>SOLO CAMPAIGN</span><b data-lobby-status-value>FIVE PHASES · TEN MINUTES MAX</b><i data-lobby-status-note>One authored journey from first bond to apex showdown.</i></div>
         <div id="flightLoadout">
           <div class="preflight-label">Player / mount</div>
           <div id="rigPicker" aria-label="Dragon mount"></div>
@@ -660,7 +684,7 @@
           <div class="review-grid">
             <div class="review-cell"><span>ROUTE</span><b data-lobby-world>STORY</b></div>
             <div class="review-cell"><span>MOUNT</span><b id="flightMount">STORMLANCE</b></div>
-            <div class="review-contract"><span>NEXT OBJECTIVE · </span><b data-lobby-contract>Fly the beacon road · 12 beacons before nightfall</b></div>
+            <div class="review-contract"><span>STORY PROMISE · </span><b data-lobby-contract>Bond · relight · rescue · pursue · face the apex</b></div>
           </div>
           <button class="lobby-launch" type="button" data-lobby-launch>LAUNCH FROM WAKE PERCH</button>
         </div>
@@ -668,11 +692,11 @@
       <div id="lobbyChapterPanel" data-lobby-chapter-panel>
         <b style="font-family:var(--display);letter-spacing:.2em;color:var(--purple)">CHAPTER SELECT</b>
         <select data-lobby-chapter-pick>
-          <option value="0">0 · First Flight</option>
-          <option value="1">I · Home Waters</option>
-          <option value="2">II · Serpent Run</option>
-          <option value="3">III · The Long Night</option>
-          <option value="4">IV · Tempest Gate</option>
+          <option value="0">I · First Bond</option>
+          <option value="1">II · Three Lights</option>
+          <option value="2">III · The Lost Wing</option>
+          <option value="3">IV · Stormwake Pursuit</option>
+          <option value="4">V · Crown of the Gale</option>
         </select>
         <div class="lobby-actions">
           <button type="button" data-lobby-chapter-back>Back</button>
@@ -1482,6 +1506,9 @@ const route=[[520,58,340],[400,68,180],[260,68,20],[-60,72,-150],            // 
   [140,60,-260],[420,70,-380],[520,64,-470],                                  // out to the Drowned Village
   [180,80,-560],[-320,90,-420],[-560,96,240],                                 // under the Bone Arches
   [-260,110,560],[0,120,780]];                                                // north to the Tempest Gate
+const LOCAL_ENV_PARAMS=new URLSearchParams(location.search);
+const LOCAL_FAB_CLIFF_CANDIDATE=['127.0.0.1','localhost','[::1]'].includes(location.hostname)
+  && LOCAL_ENV_PARAMS.get('cliffs')==='fab';
 serpentCoast=new SerpentCoast(scene,{flightRoute:route});
 for(const proxy of serpentCoast.getCollisionProxies()) colliders.push({
   x:proxy.x,z:proxy.z,r:proxy.radius,top:proxy.top,serpentCoast:true,id:proxy.id
@@ -1542,6 +1569,15 @@ const D={ group:new THREE.Group(), model:null, mixer:null, flap:null, glide:null
 D.group.position.copy(START); scene.add(D.group);
 const draco=new DRACOLoader().setDecoderPath('./vendor/draco/');
 const loader=new GLTFLoader(); loader.setDRACOLoader(draco);
+let fabCliffReady=Promise.resolve(keeperHollowBiome.getSnapshot());
+if(LOCAL_FAB_CLIFF_CANDIDATE){
+  fabCliffReady=new Promise(resolve=>loader.load('assets/galevein_coastal_cliffs_candidate.glb',g=>{
+    try{resolve(keeperHollowBiome.applyFabCliffKit(g.scene,{assetBytes:227768}));}
+    catch(error){bootErrors.push(`Fab cliff candidate: ${error.message}`);resolve(keeperHollowBiome.setFabFailure(error));}
+  },undefined,error=>{
+    bootErrors.push(`Fab cliff candidate: ${error.message}`);resolve(keeperHollowBiome.setFabFailure(error));
+  }));
+}
 const DUEL_SPAWNS={ host:new THREE.Vector3(-500,190,-250), challenger:new THREE.Vector3(-360,190,-250) };
 const DUEL_CAPTURE_RADIUS=34;
 const DUEL_ARENA=new THREE.Group(); DUEL_ARENA.name='StormscarShelfArena';
@@ -1609,6 +1645,34 @@ function loadRivalDragon(){
   },undefined,reject));
   return RIVAL.loading;
 }
+const STORY_DRAGONS={
+  companion:{id:'neris',name:'Neris',group:new THREE.Group(),model:null,mixer:null,flap:null,glide:null,loaded:false,target:new THREE.Vector3()},
+  apex:{id:'crowned-maw',name:'Crowned Maw',group:new THREE.Group(),model:null,mixer:null,flap:null,glide:null,loaded:false,
+    target:new THREE.Vector3(),hp:10,maxHp:10,defeated:false,fireCd:2.4}
+};
+STORY_DRAGONS.companion.group.name='StoryCompanion_Neris';
+STORY_DRAGONS.apex.group.name='StoryApex_CrownedMaw';
+STORY_DRAGONS.companion.group.visible=false; STORY_DRAGONS.apex.group.visible=false;
+scene.add(STORY_DRAGONS.companion.group,STORY_DRAGONS.apex.group);
+function loadStoryDragon(actor,variant,scaleMultiplier){
+  if(actor.loaded||actor.loading)return actor.loading;
+  actor.loading=new Promise((resolve,reject)=>loader.load(activeRig.asset,g=>{
+    const model=g.scene; model.scale.setScalar((activeRig.scale||9)*scaleMultiplier); model.rotation.y=Math.PI;
+    applyDragonMaterials(model,activeRig,{variant}); actor.model=model; actor.group.add(model);
+    actor.mixer=new THREE.AnimationMixer(model);
+    const flap=findClip(g.animations,activeRig.flapClip),glide=findClip(g.animations,activeRig.glideClip);
+    actor.flap=flap?actor.mixer.clipAction(flap):null; actor.glide=glide?actor.mixer.clipAction(glide):null;
+    actor.flap?.play();actor.glide?.play();actor.flap?.setEffectiveWeight(.35);actor.glide?.setEffectiveWeight(.65);
+    actor.loaded=true;resolve(actor);
+  },undefined,reject));
+  return actor.loading;
+}
+function loadStoryDragons(){
+  return Promise.all([
+    loadStoryDragon(STORY_DRAGONS.companion,'companion',.66),
+    loadStoryDragon(STORY_DRAGONS.apex,'apex',1.62)
+  ]);
+}
 // Landmarks are generated in code (see proceduralLandmarks.js). Palettes are baked into
 // vertex colours, so the whole feature runs on two materials and nightfall is two
 // uniform writes per frame instead of a loop over sixteen cloned materials.
@@ -1630,7 +1694,9 @@ landmarkReady.then(async ()=>{
     getHeightAboveWater:(pos)=>pos.y-waveH(pos.x,pos.z,S.t),
     getObjectiveTarget:nextObjectiveTarget,
     getTowersDestroyed:()=>searchlights.filter(s=>s.disabled>0).length,
-    onChapterStory:(chapter)=>{ if(chapter.popupOnEnter) popup(chapter.popupOnEnter); if(chapter.storyLine) storyPop(chapter.storyLine,5.5); },
+    onChapterStory:(chapter)=>{ if(chapter.popupOnEnter) popup(chapter.popupOnEnter); if(chapter.storyLine) storyPop(chapter.storyLine,5.5);
+      if(chapter.id==='long_night')achievement('NERIS JOINS THE FLIGHT','the young Tidevein chooses your wing','COMPANION','DRAGON BONDED');
+      if(chapter.id==='tempest_gate')achievement('THE CROWNED MAW','an apex dragon bars the final vane','CHARGE X','FINAL PHASE'); },
     onRegionStory:(region)=>{ if(region.ambientLine){ storyPop(region.ambientLine,6); AU.play('ring',0.35); } },
   });
 }).catch(err=>{
@@ -1736,10 +1802,10 @@ function applyDragonMaterials(model, rig, options={}){
     model.traverse(o=>{ if(!o.isMesh||!o.material)return;
       const materials=Array.isArray(o.material)?o.material:[o.material];
       const mapped=materials.map(source=>{const material=source.clone();
-        if(material.name.includes('Sable_Hide')){material.color.set(options.rival?0x4b3034:0x101f24);
+        if(material.name.includes('Sable_Hide')){material.color.set(options.variant==='companion'?0x214e54:options.variant==='apex'?0x5a2026:options.rival?0x4b3034:0x101f24);
           material.map=null;material.emissiveMap=null;material.roughnessMap=null;material.roughness=.82;material.metalness=0;
-          material.emissive?.set(0x000000);material.emissiveIntensity=0;material.envMapIntensity=.32;}
-        else if(material.name.includes('Iris_Glow')){material.color.set(options.rival?0xff8b71:0x5de7d3);material.emissive?.set(options.rival?0x6d180f:0x0d776b);material.emissiveIntensity=1.35;}
+          material.emissive?.set(options.variant==='apex'?0x180304:0x000000);material.emissiveIntensity=options.variant==='apex'?0.18:0;material.envMapIntensity=options.variant==='apex'?0.7:0.32;}
+        else if(material.name.includes('Iris_Glow')){const hot=options.rival||options.variant==='apex';material.color.set(options.variant==='companion'?0xffd68a:hot?0xff6f52:0x5de7d3);material.emissive?.set(options.variant==='companion'?0x7c5014:hot?0x77130b:0x0d776b);material.emissiveIntensity=hot?2.1:1.35;}
         else if(material.name.includes('Eye_Glass')){material.color.set(options.rival?0x241211:0x091b1d);material.roughness=.2;}
         else {material.color.multiplyScalar(options.rival ? .72 : .58);material.roughness=Math.max(material.roughness??.5,.64);}
         material.side=THREE.DoubleSide;material.fog=true;material.needsUpdate=true;return material;});
@@ -2102,7 +2168,7 @@ const S={ t:0, flightT:0, started:false, done:false, detection:0, score:0, fpv:f
   camYaw:0, camPitch:0, nextThunder:5, cause:'', shootCd:0, flash:0,
   boost:0, accel:0, prevSpeed:26, boomed:false,
   charges:3, chargeT:-1, scatterCd:0, pulseCd:0, // three-attack duel deck
-  nightfall:210, dayHold:30, grace:0, keepersWoke:false,
+  nightfall:570, dayHold:30, grace:0, keepersWoke:false,
   hp:100, hpMax:100, hurt:0,                        // the dragon can be shot down
   echoCd:0, echoR:0, echoOn:false, lift:0, beatCd:0, poison:0, spiral:0,
   bookOpen:false, bookLost:false, violence:0, violenceWarned:false, shopOpen:false, scales:0,
@@ -2264,6 +2330,45 @@ function updateLocalDuel(dt){
   $('chapterLabel').textContent=`STORMSCAR SHELF · ${snap.serverAuthoritative?'SERVER':'LOCAL'} 1V1`;
   $('objText').textContent=snap.status==='matched'?'Claim the Stormheart · three attacks · first to 3':'Waiting for a rival in another tab';
   return snap;
+}
+function storyApexFire(){
+  const apex=STORY_DRAGONS.apex;
+  if(!apex.group.visible||S.done)return;
+  const origin=apex.group.position.clone().add(new THREE.Vector3(0,4,0));
+  const direction=D.group.position.clone().sub(origin).normalize();
+  const m=new THREE.Mesh(new THREE.SphereGeometry(2.8,12,10),new THREE.MeshBasicMaterial({
+    color:0xff744f,transparent:true,opacity:.92,blending:THREE.AdditiveBlending,depthWrite:false}));
+  m.position.copy(origin);m.add(new THREE.PointLight(0xff5f3a,360,150,2));scene.add(m);
+  foeBolts.push({m,vel:direction.multiplyScalar(92),life:5});
+  smallBurst(origin.x,origin.y,origin.z,0xff744f);AU.play('zap',.28);
+}
+function updateStoryDragons(dt){
+  const companion=STORY_DRAGONS.companion,apex=STORY_DRAGONS.apex;
+  const story=S.started&&!S.done&&!S.duelMode&&!S.practiceMode;
+  companion.group.visible=!!(story&&companion.loaded&&S.chapter>=3);
+  apex.group.visible=!!(story&&apex.loaded&&S.chapter===4&&!apex.defeated);
+  if(companion.group.visible){
+    const side=new THREE.Vector3(Math.cos(D.yaw),.18,Math.sin(D.yaw)).multiplyScalar(30);
+    companion.target.copy(D.group.position).add(side).add(new THREE.Vector3(0,10,18));
+    companion.group.position.lerp(companion.target,fdamp(2.2,dt));
+    companion.group.rotation.set(0,D.yaw+.06,0);companion.group.rotateX(D.pitch*.52);companion.group.rotateZ(-D.roll*.5);
+    if(companion.model)companion.model.rotation.x=-.82;companion.mixer?.update(dt);
+  }
+  if(apex.group.visible){
+    const angle=S.t*.13;
+    apex.target.set(Math.sin(angle)*72,178+Math.sin(S.t*.38)*13,700+Math.cos(angle)*55);
+    apex.group.position.lerp(apex.target,fdamp(.72,dt));
+    apex.group.lookAt(D.group.position);apex.group.rotateY(Math.PI);
+    if(apex.model)apex.model.rotation.x=-.72;apex.mixer?.update(dt);
+    apex.fireCd-=dt;
+    if(apex.fireCd<=0&&apex.group.position.distanceTo(D.group.position)<440){apex.fireCd=2.2+Math.random()*1.4;storyApexFire();}
+  }
+}
+function storyDragonSnapshot(){
+  const companion=STORY_DRAGONS.companion,apex=STORY_DRAGONS.apex;
+  return {profile:'original-ip-story-dragons-v1',sharedClearedRig:true,
+    companion:{name:companion.name,loaded:companion.loaded,visible:companion.group.visible,position:companion.group.position.toArray()},
+    apex:{name:apex.name,loaded:apex.loaded,visible:apex.group.visible,hp:apex.hp,maxHp:apex.maxHp,defeated:apex.defeated,position:apex.group.position.toArray()}};
 }
 
 /* ---- plasma lightning (X): a jagged bolt from the mouth that shatters towers ---- */
@@ -2584,6 +2689,15 @@ function updateBolts(dt){
     b.m.material.opacity=Math.min(1,b.life*2); b.line.material.opacity=0.5+0.5*Math.random();
     fillBolt(b);
     let hit=false;
+    const apex=STORY_DRAGONS.apex;
+    if(!S.duelMode&&apex.group.visible&&!apex.defeated&&
+      b.m.position.distanceTo(apex.group.position)<(24+(b.power||.35)*28)){
+      const damage=(b.power||0)>.55?2:1;apex.hp=Math.max(0,apex.hp-damage);
+      plasmaImpact(b.m.position,b.power||.35);popup(`CROWNED MAW · ${apex.hp}/${apex.maxHp}`);hit=true;
+      if(apex.hp<=0){apex.defeated=true;apex.group.visible=false;S.scales+=10;
+        achievement('SKY SHARED','the Crowned Maw yields the Tempest Gate','FINAL VANE','STORY TURN');
+        storyPop('The great shadow breaks away. Neris holds the line beside you — the final vane is open.',6);}
+    }
     if(S.duelMode&&localDuel.snapshot().matched&&RIVAL.group.visible&&
       b.m.position.distanceTo(RIVAL.group.position)<(b.attackId==='arc-scatter'?30:12+(b.power||.35)*8)){
       const damage=b.attackId==='arc-scatter'?22:Math.round(18+(b.power||.35)*34);
@@ -2750,29 +2864,18 @@ function renderBook(){
   $('stSpd').textContent = Math.round(D.speed);
   $('stArm').textContent = Math.max(1,Math.round(S.hp/10));
   $('stFire').textContent = 12+Math.round(S.charges||0);
-  $('bkFoot').textContent = S.bookLost
-    ? 'the pages are gone, torn away over the water. fly from memory.'
-    : 'skills reveal themselves as you earn them';
+  const journey=structure?.journey?.();const phase=journey?.phases?.[S.chapter];
+  if(phase){$('bkPhase').textContent=`PHASE ${S.chapter+1} · ${phase.title}`;$('bkNow').textContent=phase.humanCue;}
+  [...$('bkJourney').children].forEach((node,index)=>{node.className=index<S.chapter?'done':index===S.chapter?'current':'';});
+  $('bkFoot').textContent='weatherproof and riveted to the saddle · skills reveal themselves as you earn them';
 }
 function toggleBook(){
-  if(S.bookLost){ popup('THE BOOK IS GONE'); return; }
   S.bookOpen=!S.bookOpen; $('book').classList.toggle('on',S.bookOpen);
   if(S.bookOpen) renderBook();
   AU.play('flap',0.25);
 }
 function addViolence(v){
-  if(S.bookLost) return;
   S.violence=(S.violence||0)+v;
-  if(S.violence>=7+upLv('strap')*3){
-    S.bookLost=true; S.bookOpen=false; $('book').classList.remove('on');
-    popup('THE BOOK IS TORN AWAY');
-    storyPop('The strap gives. Pages scatter over the black water, every one of them gone. You fly from memory now.',6.5);
-    S.flash=Math.max(S.flash,0.5); S.shake=Math.max(S.shake,0.8); AU.play('crash',0.5);
-    const p=D.group.position;
-    for(let i=0;i<16;i++) smallBurst(p.x+(Math.random()-.5)*30,p.y+(Math.random()-.5)*20,p.z+(Math.random()-.5)*30,0xe8d9b4);
-  } else if(S.violence>=4 && !S.violenceWarned){
-    S.violenceWarned=true; storyPop('The saddle strap is fraying. Every reckless blast loosens it further.',5);
-  }
 }
 
 /* ---- the flight is choreographed: three sworn tasks, told as story beats ---- */
@@ -2804,8 +2907,8 @@ function driveTutorial(dt){
   if(tutRings.every(t=>t.userData.hit) && !S.tutDone){
     S.tutDone=true;
     structure?.director?.enterChapter(1);
-    achievement('First Flight','the cove is behind you — the beacon road waits','CHAPTER II');
-    storyPop('She answers you now. Out past the stacks, the Keeper wind shrines begin to sing.',6);
+    achievement('First Bond','Sablewing trusts the saddle — the lighthouse road waits','PHASE II');
+    storyPop('She answers you now. Ahead, the drowned lighthouse road is dark.',6);
     for(const r of rings) r.visible=true;
   }
 }
@@ -2825,11 +2928,11 @@ function serpentObjectiveSnapshot(){
     missing,sealed:S.chapter===2&&S.score===7&&missing.length>0};
 }
 function driveMissionsFallback(){
-  if(S.chapter===0){ $('objText').textContent=`I · learn to fly — rings ${tutRings.filter(r=>r.userData.hit).length}/3`; return; }
-  if(S.score<4) $('objText').textContent=`II · home waters — beacons ${S.score}/4 · echo at 1`;
-  else if(S.score<8) $('objText').textContent=`III · Serpent Run — beacons ${S.score}/8 · dive and flock`;
-  else if(S.score<11) $('objText').textContent=`IV · the long night — beacons ${S.score}/11`;
-  else $('objText').textContent=`V · reach the Tempest Gate — ${S.score}/12`;
+  if(S.chapter===0){ $('objText').textContent=`First Bond — rings ${tutRings.filter(r=>r.userData.hit).length}/3`; return; }
+  if(S.score<4) $('objText').textContent=`Three Lights — coastal signals ${S.score}/4`;
+  else if(S.score<8) $('objText').textContent=`The Lost Wing — answering echoes ${S.score}/8`;
+  else if(S.score<11) $('objText').textContent=`Stormwake Pursuit — signals ${S.score}/11`;
+  else $('objText').textContent=`Crown of the Gale — final signal ${S.score}/12`;
 }
 
 /* ---- explosion burst (expanding fireball + flash light) ---- */
@@ -3397,6 +3500,7 @@ function tick(dt){
   }
   updateFxPools(dt);
   updateLocalDuel(dt);
+  updateStoryDragons(dt);
   updateBolts(dt); updateShocks(dt); updateDebris(dt); updateBursts(dt); updateTowers(dt); updateTowerCombat(dt);
   updateEcho(dt); driveStormbreakDive(dt); driveSpiral(dt); updateStorm(dt); updateFlock(dt);
   S.hurt=Math.max(0,S.hurt-dt*2);
@@ -3550,6 +3654,9 @@ function tick(dt){
       altitudePeak:S.altitudePeak||0,
       altitudeCollected:!!S.altitudeCollected,
       towerTarget:3,
+      apexDefeated:STORY_DRAGONS.apex.defeated,
+      apexHp:STORY_DRAGONS.apex.hp,
+      apexMaxHp:STORY_DRAGONS.apex.maxHp,
       hearthDecision:hearth
     });
     structure.applyHud(hud);
@@ -3596,6 +3703,10 @@ function tick(dt){
           S.keeperGateWarnAt=S.t+1.8;
           popup(`BEACON SEALED · ${keeperObjectiveSnapshot().remaining} SHRINES REMAIN`);
         }
+        continue;
+      }
+      if(S.chapter===4&&r.userData.routeIndex===11&&!STORY_DRAGONS.apex.defeated){
+        if((S.apexGateWarnAt||0)<=S.t){S.apexGateWarnAt=S.t+1.8;popup(`FINAL VANE SEALED · CROWNED MAW ${STORY_DRAGONS.apex.hp}/${STORY_DRAGONS.apex.maxHp}`);}
         continue;
       }
       setStormVaneState(r,true); r.userData.pop=1; S.score++;
@@ -3785,6 +3896,7 @@ function begin(opts={}){
   S.lobbyMode=opts.mode||S.lobbyMode||'story';
   S.duelMode=S.lobbyMode==='duel'; S.duelDead=false; S.duelSpawned=false;
   S.practiceMode=!!opts.practice||S.lobbyMode==='practice'||S.duelMode;
+  if(!S.duelMode&&!S.practiceMode)loadStoryDragons().catch(err=>surfaceBootError('story dragons unavailable',err?.message||err));
   menuEl.classList.remove('hub-open');
   $('lobbyHub').classList.remove('on'); $('lobbyHub').classList.add('hide');
   startAudio(); triggerRipple();
@@ -3792,6 +3904,8 @@ function begin(opts={}){
   $('shutter').classList.add('closed');
   setTimeout(()=>{
     S.started=true; S.flightT=0; S.grace=3; TOD.day=0.0; S.keepersWoke=false; S.hp=S.hpMax; S.hurt=0;
+    STORY_DRAGONS.companion.group.visible=false;STORY_DRAGONS.apex.group.visible=false;
+    STORY_DRAGONS.apex.hp=STORY_DRAGONS.apex.maxHp;STORY_DRAGONS.apex.defeated=false;STORY_DRAGONS.apex.fireCd=2.4;S.apexGateWarnAt=0;
     S.chapter=0; S.tutDone=false; S.altitudePeak=0; S.altitudeCollected=false;
     for(const r of tutRings){ r.userData.hit=false; r.material.opacity=.52; r.visible=true; }
     for(const r of rings) r.visible=false;
@@ -3806,7 +3920,7 @@ function begin(opts={}){
       simJumpChapter(Number(opts.chapterIndex));
       storyPop('Chapter checkpoint loaded.',4);
     } else {
-      storyPop('Stay close to the cliffs. Three rings — feel how she answers before the sea takes you seriously.',7);
+      storyPop('Rook, breathe with Sablewing. Three rings — and press TAB whenever you need the rider field card.',7);
     }
     for(const sl of searchlights){ sl.hp=sl.maxHp; sl.hbT=0; sl.fireCd=2+Math.random(); if(S.practiceMode) sl.alerted=0; }
     D.group.position.set(REST.x, REST.y+6, REST.z);
@@ -3827,6 +3941,8 @@ function reset(){
   startAudio(); D.group.position.set(REST.x,REST.y+6,REST.z); D.yaw=Math.PI; D.pitch=0.18; D.roll=0; D.speed=30; input.flap=false;
   S.done=false; S.flightT=0; S.detection=0; S.score=0; S.shake=0; S.fpv=false; S.nextThunder=S.t+5; S.shootCd=0;
   S.finishing=false; S.finishToken++; GATE.open=0; S.impactCd=0; S.alertStage=0; S.keeperGateWarnAt=0; S.storyGateWarnAt=0;
+  STORY_DRAGONS.companion.group.visible=false;STORY_DRAGONS.apex.group.visible=false;
+  STORY_DRAGONS.apex.hp=STORY_DRAGONS.apex.maxHp;STORY_DRAGONS.apex.defeated=false;STORY_DRAGONS.apex.fireCd=2.4;S.apexGateWarnAt=0;
   S.boost=0; S.accel=0; S.prevSpeed=30; S.boomed=false; S.charges=3; S.chargeT=-1; S.scatterCd=0; S.pulseCd=0; S.grace=3; S.launching=true;
   TOD.day=0.0; S.keepersWoke=false; ROG.amp=0; ROG.life=0; ROG.next=6; uRA.value=0;
   if(D.model) D.model.scale.setScalar(activeRig.scale||9);
@@ -3858,7 +3974,7 @@ function reset(){
   $('over').classList.add('hide'); $('litglow').style.opacity=0; $('warn').style.opacity=0;
   AU.fadeTo('music',0.4,600); AU.fadeTo('amb',0.5,600);
   S.started=true;
-  storyPop('Back to the cove. Three rings first — then follow the beacon road.',5);
+  storyPop('Back to the cove. Three bond rings first — TAB opens the rider field card.',5);
   $('shutter').classList.add('closed');
   setTimeout(()=>{ $('shutter').classList.remove('closed'); input.flap=true; AU.play('flap',0.5);
     setTimeout(()=>{ input.flap=false; },700); },900);
@@ -4130,6 +4246,8 @@ function simJumpChapter(n){
   S.started=true; S.done=false; S.launching=false; S.grace=3;
   menuEl.classList.add('hide','live'); $('hud').classList.add('on'); $('over').classList.add('hide');
   structure?.reset();
+  STORY_DRAGONS.companion.group.visible=false;STORY_DRAGONS.apex.group.visible=false;
+  STORY_DRAGONS.apex.hp=STORY_DRAGONS.apex.maxHp;STORY_DRAGONS.apex.defeated=false;STORY_DRAGONS.apex.fireCd=999;
   if(chapter===0){
     S.chapter=0; S.tutDone=false; S.altitudePeak=0; S.altitudeCollected=false; S.score=0;
     for(const r of tutRings){ r.userData.hit=false; r.material.opacity=.52; r.visible=true; }
@@ -4152,6 +4270,39 @@ function simJumpChapter(n){
     if(hud) structure.applyHud(hud);
   }
   return SIM.state();
+}
+function simStoryStage(kind='tutorial'){
+  const phase={tutorial:0,lighthouse:1,companion:3,apex:4}[kind]??0;
+  simJumpChapter(phase);S.launching=false;S.grace=999;S.flightT=[24,128,382,510][phase===0?0:phase===1?1:phase===3?2:3];
+  if(kind==='tutorial'){
+    S.bookOpen=true;$('book').classList.add('on');renderBook();
+    D.group.position.set(675,50,350);D.yaw=2.75;
+  }else if(kind==='lighthouse'){
+    S.score=2;for(let i=0;i<rings.length;i++)setStormVaneState(rings[i],i<2);
+    D.group.position.set(330,92,100);D.yaw=2.55;S.bookOpen=false;$('book').classList.remove('on');
+  }else if(kind==='companion'){
+    D.group.position.set(-395,132,-310);D.yaw=-.85;S.bookOpen=false;$('book').classList.remove('on');
+    STORY_DRAGONS.companion.group.position.set(-360,144,-286);
+  }else{
+    D.group.position.set(-55,154,505);D.yaw=2.82;S.bookOpen=false;$('book').classList.remove('on');
+    STORY_DRAGONS.apex.hp=STORY_DRAGONS.apex.maxHp;STORY_DRAGONS.apex.defeated=false;
+    STORY_DRAGONS.companion.group.position.set(-112,166,545);STORY_DRAGONS.apex.group.position.set(104,184,600);
+  }
+  tick(1/60);
+  const back=new THREE.Vector3(Math.sin(D.yaw),0,Math.cos(D.yaw));
+  camera.position.copy(D.group.position).addScaledVector(back,kind==='apex'?58:34).add(new THREE.Vector3(0,kind==='apex'?20:12,0));
+  if(kind==='apex')camera.position.set(0,220,405);
+  camera.lookAt(kind==='apex'?new THREE.Vector3(20,170,565):D.group.position.clone().add(new THREE.Vector3(0,3,0)));
+  camera.updateMatrixWorld(true);
+  const hud=structure?.tick({tutorialDone:phase?3:tutRings.filter(r=>r.userData.hit).length,apexDefeated:STORY_DRAGONS.apex.defeated,
+    apexHp:STORY_DRAGONS.apex.hp,apexMaxHp:STORY_DRAGONS.apex.maxHp,hearthDecision:hearthDecision.snapshot()});
+  if(hud)structure.applyHud(hud);
+  return {kind,journey:structure?.journey?.(),dragons:storyDragonSnapshot(),state:SIM.state(),hud};
+}
+function simDefeatStoryApex(){
+  STORY_DRAGONS.apex.hp=0;STORY_DRAGONS.apex.defeated=true;STORY_DRAGONS.apex.group.visible=false;
+  const hud=structure?.tick({tutorialDone:3,apexDefeated:true,apexHp:0,apexMaxHp:STORY_DRAGONS.apex.maxHp});if(hud)structure.applyHud(hud);
+  return {dragons:storyDragonSnapshot(),hud,state:SIM.state()};
 }
 function simJumpState(patch={}){
   if(patch.started!=null) S.started=!!patch.started;
@@ -4308,6 +4459,11 @@ window.SIM={
   jumpBeacon:simJumpBeacon, jumpChapter:simJumpChapter, jumpState:simJumpState,
   runSteps:simRunSteps, runUntil:simRunUntil, snapshot:simSnapshot,
   storyObjective:serpentObjectiveSnapshot,
+  storyJourney:()=>structure?.journey?.()??null,
+  loadStoryDragons,
+  storyDragons:storyDragonSnapshot,
+  storyStage:simStoryStage,
+  defeatStoryApex:simDefeatStoryApex,
   chooseHearth:choice=>hearthDecision.choose(choice,{time:S.t}),
   atmosphere:()=>({...ATMOSPHERE_STATE,phase:atmospherePhase(TOD.day),sceneFog:+scene.fog.density.toFixed(7),
     exposure:+renderer.toneMappingExposure.toFixed(3),reflectionProfile:poseidonOcean.snapshot().cycleProfile}),
@@ -4406,7 +4562,7 @@ window.SIM={
       palette:['basalt','weathered-bronze','cold-keeper-core','wind-shear-cyan']
     };
   },
-  win:()=>{ simJumpState({started:true,done:false,chapter:5,score:11,detection:0,day:0.2});
+  win:()=>{ simJumpState({started:true,done:false,chapter:4,score:11,detection:0,day:0.2});STORY_DRAGONS.apex.hp=0;STORY_DRAGONS.apex.defeated=true;STORY_DRAGONS.apex.group.visible=false;
     simJumpBeacon(11,{speed:36,yOffset:0}); return simRunUntil(s=>s.score>=12||s.done,{controls:{accel:true},maxSteps:2400}); },
   loseDetection:()=>{ simJumpState({started:true,done:false,chapter:2,score:2,detection:0.92,day:0.3});
     S.grace=0; D.group.position.set(110,44,18); D.yaw=Math.PI; D.speed=8;
@@ -4680,6 +4836,7 @@ window.SIM={
   }),
   worldMap:()=>crownfallRange.getSnapshot(),
   keeperHollow:()=>keeperHollowBiome.getSnapshot(),
+  cliffReady:()=>fabCliffReady,
   landmarkMetrics:()=>landmarkPath.getSnapshot(),
   objectiveVisibility:()=>{ const a=$('arrow'),r=a.getBoundingClientRect(); return {arrowOpacity:+getComputedStyle(a).opacity,
     arrowOnScreen:r.right>0&&r.left<innerWidth&&r.bottom>0&&r.top<innerHeight,

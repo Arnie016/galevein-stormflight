@@ -1,6 +1,8 @@
 {
-  "version": 1,
+  "version": 2,
   "game": "Galevein: Stormflight",
+  "journeyProfile": "authored-ten-minute-flight-v1",
+  "maxDurationSeconds": 600,
   "totalBeacons": 12,
   "tutorialRings": 3,
   "chapters": [
@@ -8,7 +10,11 @@
       "id": "first_flight",
       "index": 0,
       "roman": "I",
-      "title": "FIRST FLIGHT",
+      "title": "FIRST BOND",
+      "timeWindowSeconds": [0, 90],
+      "humanCue": "W/S sets pace · arrows steer · tap SPACE when Sablewing needs lift",
+      "phasePromise": "Learn her weight, not a list of buttons.",
+      "reward": "Sablewing trusts the saddle.",
       "regionId": "wake_cove",
       "storyBeat": "bond_dragon",
       "beaconRange": null,
@@ -24,21 +30,25 @@
         "narrative": "The stacks reclaim another attempt."
       },
       "hud": {
-        "chapterLabel": "Chapter I · First Flight",
-        "objectiveTemplate": "I · learn to fly — rings {tutorialDone}/3",
-        "goalText": "Clear three practice rings in the cove",
+        "chapterLabel": "Phase I · First Bond",
+        "objectiveTemplate": "Stay with Sablewing — bond rings {tutorialDone}/3",
+        "goalText": "Follow three low wind rings and learn her rhythm",
         "distanceLabel": "Next ring",
         "showHeightAboveWater": false,
         "subHints": ["Feel beat and brake before open water"]
       },
-      "storyLine": "Three rings. Learn her weight before the open water.",
-      "popupOnEnter": "CHAPTER I · FIRST FLIGHT"
+      "storyLine": "Rook, breathe with her. Three rings, then the open water.",
+      "popupOnEnter": "PHASE I · FIRST BOND"
     },
     {
       "id": "home_waters",
       "index": 1,
       "roman": "II",
-      "title": "HOME WATERS",
+      "title": "THREE LIGHTS",
+      "timeWindowSeconds": [90, 210],
+      "humanCue": "Press C to read the fog · fly through all four lighthouse vanes",
+      "phasePromise": "Relight a safe road for the fishing coast.",
+      "reward": "The drowned coast answers your echo.",
       "regionId": "keeper_shallows",
       "storyBeat": "rebuild_trust",
       "beaconRange": [1, 4],
@@ -54,21 +64,25 @@
         "narrative": "The keepers hold the shallows."
       },
       "hud": {
-        "chapterLabel": "Chapter II · Home Waters",
-        "objectiveTemplate": "II · home waters — beacons {score}/4 · echo at 1",
-        "goalText": "Reach four beacons through the keeper shallows",
+        "chapterLabel": "Phase II · Three Lights",
+        "objectiveTemplate": "Relight the lighthouse road — signals {score}/4",
+        "goalText": "Echo through the fog and wake the four coastal lights",
         "distanceLabel": "Next beacon",
         "showHeightAboveWater": true,
         "subHints": ["Press C to echo — lights reveal the road"]
       },
-      "storyLine": "Echo through the rain. The first lights are still slow.",
-      "popupOnEnter": "CHAPTER II · HOME WATERS"
+      "storyLine": "Three lighthouses are dark. Give the coast its horizon back.",
+      "popupOnEnter": "PHASE II · THREE LIGHTS"
     },
     {
       "id": "serpent_run",
       "index": 2,
       "roman": "III",
-      "title": "SERPENT RUN",
+      "title": "THE LOST WING",
+      "timeWindowSeconds": [210, 330],
+      "humanCue": "Climb to 120m · find the answering hearth · choose 1 or 2",
+      "phasePromise": "Follow a strange echo to a dragon left behind.",
+      "reward": "Neris, a young Tidevein, joins your flight.",
       "regionId": "serpent_reach",
       "storyBeat": "thread_canyon",
       "beaconRange": [5, 8],
@@ -84,21 +98,25 @@
         "narrative": "The serpent closes its jaws."
       },
       "hud": {
-        "chapterLabel": "Chapter III · Serpent Run",
-        "objectiveTemplate": "III · Serpent Run — beacons {score}/8 · dive and flock",
-        "goalText": "Map the harbor from 120m, resolve the Last Hearth, and reach beacon eight",
+        "chapterLabel": "Phase III · The Lost Wing",
+        "objectiveTemplate": "Trace the answering echo — signals {score}/8",
+        "goalText": "Map the harbor from 120m and answer the Last Hearth",
         "distanceLabel": "Next beacon",
         "showHeightAboveWater": true,
         "subHints": ["Canyon gates are optional cover rewards", "Beacon eight opens after 120m AGL and a Last Hearth choice"]
       },
-      "storyLine": "The canyon tightens. Dive, pull out, and break their lock.",
-      "popupOnEnter": "CHAPTER III · SERPENT RUN"
+      "storyLine": "That echo is not a lighthouse. Something alive is calling back.",
+      "popupOnEnter": "PHASE III · THE LOST WING"
     },
     {
       "id": "long_night",
       "index": 3,
       "roman": "IV",
-      "title": "THE LONG NIGHT",
+      "title": "STORMWAKE PURSUIT",
+      "timeWindowSeconds": [330, 465],
+      "humanCue": "Hold X for a charged lance · break all three wind shrines",
+      "phasePromise": "Protect Neris while the Keeper net closes.",
+      "reward": "The Tempest Gate road opens.",
       "regionId": "rib_wastes",
       "storyBeat": "destroy_tower",
       "beaconRange": [9, 11],
@@ -114,21 +132,25 @@
         "narrative": "Night takes the wastes before the gate."
       },
       "hud": {
-        "chapterLabel": "Chapter IV · The Long Night",
-        "objectiveTemplate": "IV · the long night — beacons {score}/11",
-        "goalText": "Cross the rib wastes and silence the Keeper wind shrines",
+        "chapterLabel": "Phase IV · Stormwake Pursuit",
+        "objectiveTemplate": "Break the pursuit net — signals {score}/11",
+        "goalText": "Shield Neris and silence the three Keeper wind shrines",
         "distanceLabel": "Next beacon",
         "showHeightAboveWater": false,
         "subHints": ["Hold X to charge plasma — break Keeper wind shrines", "Press F to hide in the flock"]
       },
-      "storyLine": "No more shelter. The keepers turn faster now.",
-      "popupOnEnter": "CHAPTER IV · THE LONG NIGHT"
+      "storyLine": "Neris is with you. Now the whole storm turns to follow.",
+      "popupOnEnter": "PHASE IV · STORMWAKE PURSUIT"
     },
     {
       "id": "tempest_gate",
       "index": 4,
       "roman": "V",
-      "title": "TEMPEST GATE",
+      "title": "CROWN OF THE GALE",
+      "timeWindowSeconds": [465, 600],
+      "humanCue": "Charge X into the Crowned Maw · pass the final vane when it falls",
+      "phasePromise": "Face the apex dragon guarding the way home.",
+      "reward": "The pair become a flight, not fugitives.",
       "regionId": "aurora_gate",
       "storyBeat": "nightfall_escape",
       "beaconRange": [12, 12],
@@ -144,15 +166,15 @@
         "narrative": "The gate is lost to nightfall."
       },
       "hud": {
-        "chapterLabel": "Chapter V · Tempest Gate",
-        "objectiveTemplate": "V · reach the Tempest Gate — {score}/12",
-        "goalText": "Reach the final beacon before full nightfall",
+        "chapterLabel": "Phase V · Crown of the Gale",
+        "objectiveTemplate": "Face the Crowned Maw — final signal {score}/12",
+        "goalText": "Bring down the apex dragon and cross the Tempest Gate",
         "distanceLabel": "Tempest Gate",
         "showHeightAboveWater": true,
         "subHints": ["Nightfall accelerates after beacon eleven", "The aurora marks home"]
       },
-      "storyLine": "One beacon remains. Reach the aurora before nightfall.",
-      "popupOnEnter": "CHAPTER V · TEMPEST GATE"
+      "storyLine": "The Crowned Maw owns this sky. Tonight, it learns to share it.",
+      "popupOnEnter": "PHASE V · CROWN OF THE GALE"
     }
   ],
   "metaObjectives": {

@@ -3,6 +3,7 @@
 // separate: the original six obstacle proxies are preserved exactly, while the
 // new outer shoulders use explicit route-checked proxies.
 import * as THREE from 'three';
+import { mergeGeometries } from '../../utils/BufferGeometryUtils.js';
 
 const TAU = Math.PI * 2;
 const PROFILE = 'keeper-hollow-biome-v1';
@@ -12,6 +13,9 @@ const SURFACE_TEXTURE_SIZE = 128;
 const BACKDROP_RIDGE_COUNT = 30;
 const BACKDROP_FOREST_COUNT = 240;
 const BACKDROP_CENTER = Object.freeze({ x:-360, z:70 });
+const FAB_CLIFF_PROFILE = 'fab-coastal-cliff-district-v2-lod1';
+const FAB_CLIFF_SOURCE_SHA256 = '24074e27bf821dd00df9ad8d912fd683a2b42d5c0682fda6c6ba0bd870e3a675';
+const FAB_SURFACE_TEXTURE_SIZE = 256;
 
 export const KEEPER_SHRINE_SITES = Object.freeze([
   Object.freeze({ id:'south-watch', x:-220, z:-220, baseH:42, yaw0:0, rate:.42 }),
@@ -86,6 +90,49 @@ function cliffDetailTextures(size = SURFACE_TEXTURE_SIZE) {
     return texture;
   };
   return { albedo:make(albedo, true), size };
+}
+
+// The source kit's advertised support PNGs are byte-identical, so the A/B does
+// not silently mislabel them as distinct PBR maps. This bounded runtime surface
+// derives albedo, normals and roughness from one deterministic height field.
+function fabCliffTextures(size = FAB_SURFACE_TEXTURE_SIZE) {
+  const height = new Float32Array(size * size);
+  const albedo = new Uint8Array(size * size * 4);
+  const normal = new Uint8Array(size * size * 4);
+  const roughness = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y += 1) for (let x = 0; x < size; x += 1) {
+    const sample = cliffSurfaceSample(x / size, y / size);
+    height[y * size + x] = sample.height;
+  }
+  const at = (x, y) => height[wrapInteger(y, size) * size + wrapInteger(x, size)];
+  for (let y = 0; y < size; y += 1) for (let x = 0; x < size; x += 1) {
+    const index = (y * size + x) * 4;
+    const h = at(x, y), dx = at(x + 1, y) - at(x - 1, y), dy = at(x, y + 1) - at(x, y - 1);
+    const length = Math.hypot(dx * 3.8, dy * 3.8, 1) || 1;
+    const shade = THREE.MathUtils.clamp(.57 + h * .16, .29, .82);
+    const lichen = Math.max(0, h - .30) * .20;
+    albedo[index] = clampByte((shade + lichen * .34) * 255);
+    albedo[index + 1] = clampByte((shade + lichen * .64) * 255);
+    albedo[index + 2] = clampByte((shade + lichen * .46) * 255);
+    albedo[index + 3] = 255;
+    normal[index] = clampByte((.5 - dx * 3.8 / length * .5) * 255);
+    normal[index + 1] = clampByte((.5 - dy * 3.8 / length * .5) * 255);
+    normal[index + 2] = clampByte((.5 + 1 / length * .5) * 255);
+    normal[index + 3] = 255;
+    const r = THREE.MathUtils.clamp(.77 - Math.abs(h) * .10 + Math.max(0, -.22 - h) * .28, .52, .92);
+    roughness[index] = roughness[index + 1] = roughness[index + 2] = clampByte(r * 255);
+    roughness[index + 3] = 255;
+  }
+  const make = (data, color = false) => {
+    const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(2.5, 3.5); texture.anisotropy = 4;
+    texture.minFilter = THREE.LinearMipmapLinearFilter; texture.magFilter = THREE.LinearFilter;
+    if (color) texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    return texture;
+  };
+  return { albedo:make(albedo, true), normal:make(normal), roughness:make(roughness), size };
 }
 
 function cliffRadius(v) {
@@ -235,6 +282,14 @@ export class KeeperHollowBiome {
     this.root.visible = false;
     this.root.userData.profile = PROFILE;
     this.root.userData.authored = true;
+    this.fabState = {
+      requested:false, ready:true, active:false, error:null, profile:null,
+      sourceSha256:null, sourceMeshes:0, runtimeMeshes:0, runtimeTriangles:0,
+      assetBytes:0, productionDefault:false
+    };
+    this.fabRoot = null;
+    this.fabMaterials = [];
+    this.fabTextures = null;
 
     this.cliffTextures = cliffDetailTextures();
     this.cliffMaterial = new THREE.MeshStandardMaterial({
@@ -377,6 +432,95 @@ export class KeeperHollowBiome {
     this.routeMinimumClearance = routeClearance(MASSES, this.route);
   }
 
+  applyFabCliffKit(sourceScene, metadata = {}) {
+    const sources = [];
+    sourceScene?.traverse?.((object) => {
+      if (object.isMesh && /^CL\d+_.*_LOD1$/.test(object.name)) sources.push(object);
+    });
+    sources.sort((a, b) => a.name.localeCompare(b.name));
+    if (sources.length !== 12) throw new Error(`Fab cliff candidate expected 12 primary meshes, found ${sources.length}`);
+
+    this.fabTextures = fabCliffTextures();
+    const palette = {
+      basalt:0x53636a, granite:0x74766e, moss:0x4f6957, wet:0x405b61, sandstone:0x857564
+    };
+    const material = new THREE.MeshStandardMaterial({
+      name:'Galevein_FabCliff_MergedPBR', color:0xffffff, vertexColors:true,
+      map:this.fabTextures.albedo, normalMap:this.fabTextures.normal,
+      normalScale:new THREE.Vector2(.66, .66), roughnessMap:this.fabTextures.roughness,
+      roughness:.92, metalness:.012, flatShading:false, fog:true,
+      emissive:0x07100e, emissiveIntensity:.03
+    });
+
+    this.fabRoot = new THREE.Group();
+    this.fabRoot.name = 'KeeperHollow_FabCoastalCliffDistrict';
+    let runtimeTriangles = 0;
+    const transformed = [];
+    for (let index = 0; index < MASSES.length; index += 1) {
+      const mass = MASSES[index], source = sources[index % sources.length];
+      const geometry = source.geometry.clone();
+      geometry.computeBoundingBox();
+      const bounds = geometry.boundingBox;
+      const center = bounds.getCenter(new THREE.Vector3());
+      const size = bounds.getSize(new THREE.Vector3());
+      geometry.translate(-center.x, -bounds.min.y, -center.z);
+      const key = source.material?.name?.toLowerCase().includes('moss') ? 'moss'
+        : source.material?.name?.toLowerCase().includes('wet') ? 'wet'
+          : source.material?.name?.toLowerCase().includes('sand') ? 'sandstone'
+            : source.material?.name?.toLowerCase().includes('basalt') ? 'basalt' : 'granite';
+      const color = new THREE.Color(palette[key]);
+      const colors = new Float32Array(geometry.attributes.position.count * 3);
+      for (let vertex = 0; vertex < geometry.attributes.position.count; vertex += 1) {
+        const shade = .91 + (hash(index * 4096 + vertex + 9700) - .5) * .12;
+        colors[vertex * 3] = color.r * shade;
+        colors[vertex * 3 + 1] = color.g * shade;
+        colors[vertex * 3 + 2] = color.b * shade;
+      }
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      const position = new THREE.Vector3(mass.x, -5, mass.z);
+      const quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(
+        (hash(index + 9100) - .5) * .08, hash(index + 9300) * TAU, (hash(index + 9500) - .5) * .06
+      ));
+      const scale = new THREE.Vector3(
+        mass.radius * 1.92 / Math.max(.001, size.x),
+        (mass.top + 5) / Math.max(.001, size.y),
+        mass.radius * 1.50 / Math.max(.001, size.z)
+      );
+      geometry.applyMatrix4(new THREE.Matrix4().compose(position, quaternion, scale));
+      geometry.computeBoundingSphere();
+      runtimeTriangles += (geometry.index?.count || geometry.attributes.position.count) / 3;
+      transformed.push(geometry);
+    }
+    const merged = mergeGeometries(transformed, false);
+    if (!merged) throw new Error('Fab cliff candidate geometry merge failed');
+    transformed.forEach(geometry => geometry.dispose());
+    merged.computeBoundingBox(); merged.computeBoundingSphere();
+    const district = new THREE.Mesh(merged, material);
+    district.name = 'KeeperHollow_FabCoastalCliffs_Merged';
+    district.castShadow = true; district.receiveShadow = true; district.frustumCulled = false;
+    this.fabRoot.add(district);
+    this.fabMaterials = [material];
+    this.root.add(this.fabRoot);
+    this.cliffs.visible = false;
+    this.fabState = {
+      requested:true, ready:true, active:true, error:null, profile:FAB_CLIFF_PROFILE,
+      sourceSha256:FAB_CLIFF_SOURCE_SHA256, sourceMeshes:sources.length,
+      placedModules:MASSES.length, runtimeMeshes:this.fabRoot.children.length,
+      runtimeTriangles:Math.round(runtimeTriangles),
+      assetBytes:Number(metadata.assetBytes || 227768), productionDefault:false
+    };
+    return this.getSnapshot();
+  }
+
+  setFabFailure(error) {
+    this.cliffs.visible = true;
+    this.fabState = {
+      ...this.fabState, requested:true, ready:true, active:false,
+      error:String(error?.message || error || 'unknown Fab cliff load error')
+    };
+    return this.getSnapshot();
+  }
+
   update(time = 0, day = 0, gust = 0) {
     this.cliffMaterial.emissiveIntensity = .04 + day * .08;
     this.forestMaterial.color.setHSL(.39 + day * .015, .36, .16 - day * .035);
@@ -396,9 +540,11 @@ export class KeeperHollowBiome {
   getSnapshot() {
     const triangles = (mesh) => Math.round(((mesh.geometry.index?.count || mesh.geometry.attributes.position.count) / 3) * mesh.count);
     const backdropTriangles = triangles(this.backdropRidges) + triangles(this.backdropForest);
+    const cliffTriangles = this.fabState.active ? this.fabState.runtimeTriangles : triangles(this.cliffs);
     return {
-      profile:PROFILE, authored:true, deterministic:true, externalAssets:0,
-      architecture:'continuous-eroded-cliff-bowl', cliffInstances:MASSES.length,
+      profile:PROFILE, authored:true, deterministic:true, externalAssets:this.fabState.active ? 1 : 0,
+      architecture:this.fabState.active ? 'fixed-fab-modular-cliff-bowl' : 'continuous-eroded-cliff-bowl',
+      cliffInstances:MASSES.length, geometryCandidate:{...this.fabState},
       valleyShoulders:MASSES.filter((mass) => mass.shoulder).length,
       shrineSupports:MASSES.filter((mass) => mass.shrine).length,
       forestInstances:this.forest.count, talusInstances:this.talus.count,
@@ -408,14 +554,17 @@ export class KeeperHollowBiome {
       atmosphericDepthProfile:'keeper-hollow-ridge-bands-v1', backdropMountainLayers:3,
       backdropMountainInstances:this.backdropRidges.count, backdropForestInstances:this.backdropForest.count,
       backdropDrawCalls:2, backdropTriangles, billboardSilhouettes:0, visualOnlyBackdrop:true,
-      surfaceProfile:'coastal-strata-pbr-v1', generatedSurfaceTextures:1,
-      surfaceTextureResolution:this.cliffTextures.size, uvLayout:'seam-safe-cylindrical-v1',
-      cliffShading:'smooth-generated-albedo', instanceColorVariants:MASSES.length,
+      surfaceProfile:this.fabState.active ? 'fab-coastal-generated-pbr-v1' : 'coastal-strata-pbr-v1',
+      generatedSurfaceTextures:this.fabState.active ? 3 : 1,
+      surfaceTextureResolution:this.fabState.active ? this.fabTextures.size : this.cliffTextures.size,
+      uvLayout:this.fabState.active ? 'source-icosphere-uv-v1' : 'seam-safe-cylindrical-v1',
+      cliffShading:this.fabState.active ? 'smooth-normal-roughness-pbr' : 'smooth-generated-albedo',
+      instanceColorVariants:this.fabState.active ? this.fabMaterials.length : MASSES.length,
       collisionContract:'chapter-iv-route-corridor-v2', routeAligned:true,
       routeMinimumClearance:this.routeMinimumClearance,
       shrineSites:KEEPER_SHRINE_SITES.map(site=>({id:site.id,x:site.x,z:site.z,baseH:site.baseH})),
-      triangles:triangles(this.cliffs) + triangles(this.forest) + triangles(this.talus) + triangles(this.wetAprons) + triangles(this.surf) + backdropTriangles,
-      visualOnlyForest:true, productionDefault:true
+      triangles:cliffTriangles + triangles(this.forest) + triangles(this.talus) + triangles(this.wetAprons) + triangles(this.surf) + backdropTriangles,
+      visualOnlyForest:true, productionDefault:!this.fabState.active
     };
   }
 
@@ -425,6 +574,9 @@ export class KeeperHollowBiome {
       mesh.geometry.dispose(); mesh.material.dispose();
     }
     for (const texture of Object.values(this.cliffTextures)) if (texture?.dispose) texture.dispose();
+    if (this.fabRoot) for (const mesh of this.fabRoot.children) mesh.geometry?.dispose?.();
+    for (const material of this.fabMaterials) material.dispose();
+    for (const texture of Object.values(this.fabTextures || {})) if (texture?.dispose) texture.dispose();
     this.root.clear();
   }
 }

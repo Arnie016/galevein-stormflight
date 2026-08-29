@@ -8,8 +8,8 @@ import * as THREE from 'three';
 
 export const LOBBY_MODES = Object.freeze({
   story: {
-    id: 'story', label: 'Story Campaign', sub: 'Five chapters · 12 beacons · one escape',
-    contract: 'Fly the beacon road · 12 beacons before nightfall', kind: 'campaign'
+    id: 'story', label: 'Ten-Minute Flight', sub: 'Five phases · one complete story · ten minutes max',
+    contract: 'Bond · relight · rescue · pursue · face the apex', kind: 'campaign'
   },
   practice: {
     id: 'practice', label: 'Practice', sub: 'Wake Cove rings · no keeper hunt',
@@ -25,7 +25,7 @@ export const LOBBY_MODES = Object.freeze({
   }
 });
 
-const CHAPTER_NAMES = ['First Flight', 'Home Waters', 'Serpent Run', 'The Long Night', 'Tempest Gate'];
+const CHAPTER_NAMES = ['First Bond', 'Three Lights', 'The Lost Wing', 'Stormwake Pursuit', 'Crown of the Gale'];
 
 /**
  * Authored Wake Perch lobby landmark.
@@ -227,12 +227,12 @@ export class LobbyHub {
     const definition = selected ? LOBBY_MODES[selected.mode] : null;
     if (world) {
       world.textContent = selected?.mode === 'chapter'
-        ? `Chapter · ${CHAPTER_NAMES[selected.chapterIndex] ?? 'First Flight'}`
+        ? `Phase · ${CHAPTER_NAMES[selected.chapterIndex] ?? 'First Bond'}`
         : (definition?.label ?? 'Select a route');
     }
     if (contract) {
       contract.textContent = selected?.mode === 'chapter'
-        ? `Resume ${CHAPTER_NAMES[selected.chapterIndex] ?? 'First Flight'} · checkpoint ready`
+        ? `Resume ${CHAPTER_NAMES[selected.chapterIndex] ?? 'First Bond'} · checkpoint ready`
         : (definition?.contract ?? 'Choose a route to prepare the flight contract');
     }
     if (launch) {
@@ -247,7 +247,7 @@ export class LobbyHub {
         ? ['ONLINE MATCHMAKING', 'SERVER AUTHORITY · FIFO 1V1', 'The match server owns damage, captures, victory, and respawn.']
         : ['LOCAL RIVAL LINK', 'TWO TABS · SAME DEVICE', 'This public build has no internet match server attached yet.'])
       : selected?.mode === 'story'
-        ? ['SOLO CAMPAIGN', 'FIVE CHAPTERS · 12 BEACONS', 'One authored route from Wake Perch to the Tempest Gate.']
+        ? ['SOLO CAMPAIGN', 'FIVE PHASES · TEN MINUTES MAX', 'One authored journey from first bond to apex showdown.']
         : selected?.mode === 'practice'
           ? ['TRAINING FLIGHT', 'THREE COVE RINGS · NO PURSUIT', 'Learn weight, climb, dive, and banking before the campaign.']
           : ['CHECKPOINT ROUTE', `CHAPTER ${selected?.chapterIndex ?? 0} READY`, 'Resume an authored story checkpoint.'];

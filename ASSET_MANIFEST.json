@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-28T18:43:18.413Z",
+  "generatedAt": "2026-08-29T09:03:24.021Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -65,8 +65,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 293497,
-      "sha256": "7f0816b9e3241d7687c846b22296a6681c573ff64caeb98daed4da5ca8874d3d"
+      "bytes": 305177,
+      "sha256": "1640f296c2c00ec0b1086284847cbea06ac4c3c9bbe74de33b68b3f11769d81f"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -215,8 +215,8 @@
     },
     {
       "path": "world-expansion/data/chapters.json",
-      "bytes": 6180,
-      "sha256": "180da3408f65745a95ebff9377679b8f5200216881369ef9c16bc9bab02ab9bc"
+      "bytes": 7537,
+      "sha256": "7df8853e256ab355e933ee892e25c9fa6e19cf9b2aedf8ab1d4a6ff66669b0b7"
     },
     {
       "path": "world-expansion/data/regions.json",
@@ -230,8 +230,8 @@
     },
     {
       "path": "world-expansion/modules/chapterDirector.js",
-      "bytes": 12010,
-      "sha256": "b3f11b99a8963cf8165f700c6d40ca30aaf1b95642fc807f91c35614981ce157"
+      "bytes": 13377,
+      "sha256": "eca4f6f671d3c56c8e36d158067fe28dfffcf1d474b945f99eb92c8d0ffd5c37"
     },
     {
       "path": "world-expansion/modules/cinematicDof.js",
@@ -255,8 +255,8 @@
     },
     {
       "path": "world-expansion/modules/gameStructure.js",
-      "bytes": 7145,
-      "sha256": "150288982d5786c55aceb962d05058f7998a419ebdac05c25a2a84178bc63373"
+      "bytes": 8264,
+      "sha256": "8c35a80b17bb40f7225c69de8c40a12f3f9d485b5bc79cff32312ce576b3e837"
     },
     {
       "path": "world-expansion/modules/hearthDecision.js",
@@ -270,8 +270,8 @@
     },
     {
       "path": "world-expansion/modules/keeperHollowBiome.js",
-      "bytes": 23947,
-      "sha256": "d181454b2587a2cc5324a0c3a584d821c15658817456a90d1b228977d2132d3f"
+      "bytes": 32129,
+      "sha256": "0c4fa49d395b640cd86fbfbd4f5986ce8dcbaa1317e436fc5b47bfae88abbc5c"
     },
     {
       "path": "world-expansion/modules/landmarkPath.js",
@@ -280,8 +280,8 @@
     },
     {
       "path": "world-expansion/modules/lobbyHub.js",
-      "bytes": 10866,
-      "sha256": "02549baa80953305b23780a91761bf2e28248ca126ff51bf1356a662d61f6020"
+      "bytes": 10887,
+      "sha256": "07c17fa3f53af6d96e21cd572cc72ee4705a5fcca6588d689c320a3671720edb"
     },
     {
       "path": "world-expansion/modules/localDuel.js",

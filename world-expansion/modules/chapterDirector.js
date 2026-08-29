@@ -36,6 +36,8 @@ export class ChapterDirector {
     this.regionById = Object.fromEntries(this.regions.map((region) => [region.id, region]));
     this.totalBeacons = chapterData.totalBeacons ?? DEFAULT_TOTAL_BEACONS;
     this.tutorialRings = chapterData.tutorialRings ?? DEFAULT_TUTORIAL_RINGS;
+    this.journeyProfile = chapterData.journeyProfile ?? 'chapter-route-v1';
+    this.maxDurationSeconds = chapterData.maxDurationSeconds ?? 600;
     this.metaObjectives = chapterData.metaObjectives ?? {};
 
     this.callbacks = {
@@ -222,6 +224,10 @@ export class ChapterDirector {
       if (td >= need) return `✓ ${need} towers shattered — the wastes open ahead`;
       return `⚔ Silence wind shrines — ${td}/${need} broken · hold X to charge plasma`;
     }
+    if (beat === 'nightfall_escape') {
+      if (state.apexDefeated) return '✓ Crowned Maw driven off — cross the final storm vane';
+      return `⚔ Crowned Maw — ${Math.max(0, state.apexHp ?? 10)}/${state.apexMaxHp ?? 10} resolve · hold X to charge`;
+    }
     const meta = this.metaObjectives[beat];
     if (meta && chapter.index > 0 && chapter.index < 4) return meta;
     return '';
@@ -244,6 +250,7 @@ export class ChapterDirector {
     const objectiveText = fillTemplate(hud.objectiveTemplate ?? '', vars);
     const distance = this.computeDistance(state.position, state.target);
     const missionBeatText = this.buildMissionBeat(chapter, state, vars);
+    const elapsedSeconds = clamp(state.flightT ?? 0, 0, this.maxDurationSeconds);
 
     return {
       chapterIndex: chapter.index,
@@ -266,6 +273,16 @@ export class ChapterDirector {
       storyLine: chapter.storyLine ?? '',
       popupOnEnter: chapter.popupOnEnter ?? '',
       metaObjective: this.metaObjectives[chapter.storyBeat] ?? '',
+      journeyProfile: this.journeyProfile,
+      journeyPhase: chapter.index + 1,
+      journeyTotalPhases: this.chapters.length,
+      journeyElapsedSeconds: elapsedSeconds,
+      journeyRemainingSeconds: Math.max(0, this.maxDurationSeconds - elapsedSeconds),
+      journeyMaxSeconds: this.maxDurationSeconds,
+      timeWindowSeconds: chapter.timeWindowSeconds ?? null,
+      humanCue: chapter.humanCue ?? '',
+      phasePromise: chapter.phasePromise ?? '',
+      reward: chapter.reward ?? '',
       skyPresetId: region?.skyPreset?.id ?? null,
       ambientLine: region?.ambientLine ?? ''
     };
@@ -310,6 +327,16 @@ export class ChapterDirector {
       completed: this.completed,
       failed: this.failed,
       failureReason: this.failureReason,
+      journeyProfile: this.journeyProfile,
+      maxDurationSeconds: this.maxDurationSeconds,
+      phases: this.chapters.map((chapter) => ({
+        id: chapter.id,
+        index: chapter.index,
+        title: chapter.title,
+        timeWindowSeconds: chapter.timeWindowSeconds ?? null,
+        humanCue: chapter.humanCue ?? '',
+        reward: chapter.reward ?? ''
+      })),
       hud: this.lastHud
     };
   }
