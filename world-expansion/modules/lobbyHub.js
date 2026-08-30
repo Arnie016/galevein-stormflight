@@ -8,20 +8,20 @@ import * as THREE from 'three';
 
 export const LOBBY_MODES = Object.freeze({
   story: {
-    id: 'story', label: 'Ten-Minute Flight', sub: 'Five phases · one complete story · ten minutes max',
-    contract: 'Bond · relight · rescue · pursue · face the apex', kind: 'campaign'
+    id: 'story', label: 'Story flight', sub: 'Five chapters · about ten minutes',
+    contract: 'Bond, relight the coast, rescue Neris, and face the apex.', kind: 'campaign'
   },
   practice: {
-    id: 'practice', label: 'Practice', sub: 'Wake Cove rings · no keeper hunt',
-    contract: 'Fly the cove route · 3 rings · no keeper hunt', kind: 'utility'
+    id: 'practice', label: 'Practice cove', sub: 'Three rings · no pursuit',
+    contract: 'Fly three rings without pursuit.', kind: 'utility'
   },
   duel: {
-    id: 'duel', label: 'Stormscar Duel', sub: '1v1 · three attacks · first to three',
-    contract: 'Fight above Stormscar Shelf · X precision · Z spread · R objective break', kind: 'versus'
+    id: 'duel', label: 'Stormscar duel', sub: '1v1 · three attacks · first to three',
+    contract: 'Fight above Stormscar Shelf. First to three wins.', kind: 'versus'
   },
   chapter: {
-    id: 'chapter', label: 'Chapter Select', sub: 'Jump to a saved chapter checkpoint',
-    contract: 'Resume a marked chapter checkpoint', kind: 'utility'
+    id: 'chapter', label: 'Checkpoint', sub: 'Continue from a reached chapter',
+    contract: 'Continue from a reached chapter.', kind: 'utility'
   }
 });
 
@@ -238,19 +238,21 @@ export class LobbyHub {
     if (launch) {
       launch.disabled = !selected;
       launch.textContent = selected?.mode === 'story'
-        ? 'LAUNCH STORY FLIGHT'
-        : (selected?.mode === 'duel' ? (this.duelTransport === 'server' ? 'FIND ONLINE RIVAL' : 'CREATE LOCAL 1V1')
-        : (selected ? 'FLY THIS ROUTE' : 'CHOOSE A ROUTE'));
+        ? 'Start story flight'
+        : (selected?.mode === 'duel' ? (this.duelTransport === 'server' ? 'Find online rival' : 'Create local 1v1')
+        : (selected ? 'Fly this route' : 'Choose a route'));
     }
-    const status = selected?.mode === 'duel'
+    const status = !selected
+      ? ['Next step', 'Choose a route', 'Select story, duel, practice, or a reached checkpoint.']
+      : selected.mode === 'duel'
       ? (this.duelTransport === 'server'
-        ? ['ONLINE MATCHMAKING', 'SERVER AUTHORITY · FIFO 1V1', 'The match server owns damage, captures, victory, and respawn.']
-        : ['LOCAL RIVAL LINK', 'TWO TABS · SAME DEVICE', 'This public build has no internet match server attached yet.'])
-      : selected?.mode === 'story'
-        ? ['SOLO CAMPAIGN', 'FIVE PHASES · TEN MINUTES MAX', 'One authored journey from first bond to apex showdown.']
-        : selected?.mode === 'practice'
-          ? ['TRAINING FLIGHT', 'THREE COVE RINGS · NO PURSUIT', 'Learn weight, climb, dive, and banking before the campaign.']
-          : ['CHECKPOINT ROUTE', `CHAPTER ${selected?.chapterIndex ?? 0} READY`, 'Resume an authored story checkpoint.'];
+        ? ['Selected', 'Online 1v1 matchmaking', 'The match server handles damage, victory, and respawns.']
+        : ['Selected', 'Local 1v1 · two tabs', 'Open a second tab on this device to meet your rival.'])
+      : selected.mode === 'story'
+        ? ['Selected', 'Story flight · five chapters', 'One complete journey from first bond to the apex showdown.']
+        : selected.mode === 'practice'
+          ? ['Selected', 'Practice cove · three rings', 'Learn weight, climbing, diving, and banking without pursuit.']
+          : ['Selected', `${CHAPTER_NAMES[selected.chapterIndex] ?? 'First Bond'} checkpoint`, 'Continue the story from this chapter.'];
     if (statusLabel) statusLabel.textContent = status[0];
     if (statusValue) statusValue.textContent = status[1];
     if (statusNote) statusNote.textContent = status[2];

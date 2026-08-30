@@ -29,7 +29,10 @@ export class LandmarkPath {
     if (!scene?.add) throw new TypeError('LandmarkPath requires a Three.js scene.');
     this.scene = scene;
     this.flightRoute = options.flightRoute || null;
-    this.allSites = options.sites || LANDMARK_SITES;
+    this.foundationMode = options.foundationMode === 'incumbent' ? 'incumbent' : 'terrain-islets';
+    this.allSites = (options.sites || LANDMARK_SITES).map((site) => ({
+      ...site, foundationMode: this.foundationMode
+    }));
     // Build the full authored map once. Region state may choose objectives and
     // nearby signal lights, but it never removes physical landmarks from the world.
     this.sites = this.allSites;
@@ -87,6 +90,10 @@ export class LandmarkPath {
             for (let level = 0; level < 3; level += 1) sum[level] += site.triangles[level];
             return sum;
           }, [0, 0, 0]);
+          const foundationTotals = perSite.reduce((sum, site) => {
+            for (let level = 0; level < 3; level += 1) sum[level] += site.foundationTriangles[level];
+            return sum;
+          }, [0, 0, 0]);
           if (totals[0] > LANDMARK_BUDGET.totalTriangles) {
             reject(new Error(`Landmark geometry totals ${totals[0]} triangles at LOD0, over the ${LANDMARK_BUDGET.totalTriangles} budget.`));
             return;
@@ -96,6 +103,10 @@ export class LandmarkPath {
             materials: 2,
             buildMs: +((typeof performance !== 'undefined' ? performance : Date).now() - started).toFixed(1),
             trianglesByLevel: totals,
+            foundationTrianglesByLevel: foundationTotals,
+            foundationPieces: perSite.reduce((sum, site) => sum + site.foundationPieces, 0),
+            groundedSites: perSite.filter((site) => site.foundationPieces > 0).length,
+            foundationCollisionProxies: proxies.filter((proxy) => proxy.foundation).length,
             shortest: Math.min(...perSite.map((site) => site.height)),
             tallest: Math.max(...perSite.map((site) => site.height)),
             perSite
@@ -212,6 +223,8 @@ export class LandmarkPath {
       procedural: true,
       generatedInCode: true,
       externalAssets: 0,
+      foundationMode: this.foundationMode,
+      foundationProfile: this.foundationMode === 'incumbent' ? 'submerged-footings-v1' : 'authored-rock-islets-v1',
       buildError: this.buildError ? String(this.buildError.message || this.buildError) : null,
       metrics: this.metrics,
       clearance: this.clearance,

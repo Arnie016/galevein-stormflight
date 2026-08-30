@@ -1,5 +1,14 @@
 # Third-party notices and asset provenance
 
+## GPU.js 2.24.0
+
+- Source: https://github.com/gpujs/gpu.js
+- License: MIT
+- Included file: `vendor/gpujs/gpu-browser-2.24.0.min.js`
+- License copy: `licenses/gpujs-2.24.0-MIT.txt`
+- Use: optional, asynchronous atmospheric compute experiment only
+- Provenance and adoption boundary: `GPU_COMPUTE_PROVENANCE.md`
+
 ## Sablewing creature
 
 `assets/galevein_sablewing.glb` is an original Galevein silhouette and material

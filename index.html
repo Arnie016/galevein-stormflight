@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galevein: Stormflight</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="galevein-build" content="stormflight-grounded-forest-r39">
+<meta name="galevein-build" content="stormflight-grounded-landmarks-r40">
 <meta name="galevein-duel-server" content="">
 <link rel="icon" href="data:,">
 <style>
@@ -12,6 +12,7 @@
     --sc1:rgba(89,240,213,.11); --sc2:rgba(255,194,122,.045);
     --px:0px; --py:0px;
     --display:'Cinzel', 'Palatino', serif; --body:'Cormorant Garamond', Georgia, serif;
+    --ui:-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --mono:ui-monospace, "SF Mono", Menlo, monospace; }
   html,body{ margin:0; height:100%; overflow:hidden; background:#04060d;
     font-family:var(--mono); color:#cfe0f5; }
@@ -481,58 +482,56 @@
   #lobbyHub{ position:absolute; inset:0; z-index:4; display:flex; align-items:center; justify-content:flex-start;
     padding-left:clamp(24px,6vw,96px); box-sizing:border-box; pointer-events:none; opacity:0; transition:opacity .5s; }
   #lobbyHub.on{ opacity:1; pointer-events:auto; }
-  #lobbyHub .lobby-hub-kicker{ font-family:var(--display); font-size:10px; letter-spacing:.3em;
-    color:var(--amber); text-transform:uppercase; pointer-events:none; align-self:flex-start; }
-  #lobbyHub .preflight-console{ width:min(88vw,560px); display:flex; flex-direction:column; align-items:stretch; gap:12px;
-    max-height:82vh; overflow:auto; padding:24px; border:1px solid rgba(112,203,187,.28); border-radius:16px;
+  #lobbyHub .lobby-hub-kicker{ font:650 13px/1.2 var(--ui); letter-spacing:.03em;
+    color:var(--amber); pointer-events:none; align-self:flex-start; }
+  #lobbyHub .preflight-console{ width:min(88vw,680px); display:flex; flex-direction:column; align-items:stretch; gap:14px;
+    max-height:86vh; overflow:auto; padding:28px 30px; border:1px solid rgba(112,203,187,.28); border-radius:18px;
     background:linear-gradient(145deg,rgba(8,17,24,.94),rgba(7,11,18,.84));
     box-shadow:0 24px 80px rgba(0,0,0,.48); backdrop-filter:blur(12px); }
-  #lobbyHub .lobby-promise{ font-family:var(--body); font-size:18px; line-height:1.38; color:#d8e2df; }
-  #lobbyHub .lobby-promise b{ display:block; margin-bottom:4px; font:700 22px var(--display); letter-spacing:.06em; color:#f1f5f1; }
-  #lobbyHub .preflight-label{ font-size:9px; letter-spacing:.24em; color:#8196bc; text-transform:uppercase; }
-  #lobbyHub .lobby-nodes{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  #lobbyHub .lobby-promise{ font:400 16px/1.5 var(--ui); color:#c6d2d4; max-width:58ch; }
+  #lobbyHub .lobby-promise b{ display:block; margin-bottom:7px; font:700 30px/1.15 var(--display); letter-spacing:.01em; color:#f1f5f1; }
+  #lobbyHub .preflight-label{ font:650 13px/1.25 var(--ui); letter-spacing:.01em; color:#a9b8ca; }
+  #lobbyHub .lobby-nodes{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   #lobbyHub .lobby-node{ cursor:pointer; min-width:0; padding:12px 14px; border-radius:9px;
     border:1px solid rgba(112,203,187,.22); background:linear-gradient(180deg,rgba(19,28,34,.88),rgba(9,15,20,.82));
     box-shadow:0 8px 32px rgba(0,0,0,.45); transition:transform .15s, border-color .15s, background .15s;
-    color:inherit; font:inherit; text-align:left; }
-  #lobbyHub .lobby-node[data-lobby-kind="primary"]{ min-height:132px; padding:15px 16px; position:relative; overflow:hidden; }
+    color:inherit; font-family:var(--ui); text-align:left; }
+  #lobbyHub .lobby-node[data-lobby-kind="primary"]{ min-height:154px; padding:20px; position:relative; overflow:hidden; }
   #lobbyHub .lobby-node[data-lobby-kind="primary"]::after{ content:''; position:absolute; inset:auto -25px -42px auto;
     width:110px; height:110px; border:1px solid rgba(89,240,213,.12); border-radius:50%; }
-  #lobbyHub .lobby-node[data-lobby-kind="utility"]{ padding:9px 12px; background:rgba(8,14,19,.74); }
+  #lobbyHub .lobby-node[data-lobby-kind="utility"]{ padding:13px 16px; background:rgba(8,14,19,.74); }
   #lobbyHub .lobby-node:hover{ transform:translateY(-2px); border-color:rgba(89,240,213,.72); }
   #lobbyHub .lobby-node.on{ transform:none; border-color:rgba(89,240,213,.88);
     background:linear-gradient(180deg,rgba(25,58,58,.94),rgba(11,29,31,.9)); box-shadow:inset 3px 0 0 var(--teal),0 10px 32px rgba(12,85,83,.2); }
   #lobbyHub .lobby-node:focus-visible{ outline:2px solid var(--teal); outline-offset:3px; }
-  #lobbyHub .lobby-node b{ display:block; font-family:var(--display); font-size:15px; letter-spacing:.18em; color:#eaf1ff; }
-  #lobbyHub .lobby-node i{ display:block; margin-top:6px; font-size:10px; color:#8fa0c2; font-style:normal; line-height:1.4; }
-  #lobbyHub .lobby-mode-kicker{ display:block; margin-bottom:9px; font:700 8px var(--mono); letter-spacing:.24em; color:var(--amber); }
-  #lobbyHub .lobby-mode-meta{ display:block; margin-top:13px; font:700 9px var(--mono); letter-spacing:.13em; color:#59f0d5; }
+  #lobbyHub .lobby-node b{ display:block; font:680 19px/1.2 var(--ui); letter-spacing:-.01em; color:#f1f5f7; }
+  #lobbyHub .lobby-node i{ display:block; margin-top:8px; font:400 14px/1.45 var(--ui); color:#aebccd; font-style:normal; }
+  #lobbyHub .lobby-mode-kicker{ display:block; margin-bottom:10px; font:650 13px/1.2 var(--ui); letter-spacing:.02em; color:var(--amber); }
+  #lobbyHub .lobby-mode-meta{ display:block; margin-top:14px; font:650 13px/1.3 var(--ui); letter-spacing:.01em; color:#72e7d2; }
   #lobbyHub .lobby-utilities{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  #lobbyTransport{ display:grid; grid-template-columns:auto 1fr; gap:5px 14px; align-items:center; padding:10px 12px;
+  #lobbyTransport{ display:grid; grid-template-columns:auto 1fr; gap:4px 14px; align-items:center; padding:13px 16px;
     border:1px solid rgba(255,194,122,.24); border-radius:9px; background:linear-gradient(90deg,rgba(54,39,29,.54),rgba(10,20,24,.5)); }
-  #lobbyTransport span{ grid-row:1/3; font:700 8px var(--mono); letter-spacing:.2em; color:var(--amber); }
-  #lobbyTransport b{ font:700 10px var(--display); letter-spacing:.14em; color:#eaf1ff; }
-  #lobbyTransport i{ font:9px var(--mono); line-height:1.35; color:#8fa0c2; font-style:normal; }
-  #flightLoadout{ padding:8px 12px 7px; border-radius:9px; border:1px solid rgba(112,203,187,.18); background:rgba(5,11,15,.5); }
+  #lobbyTransport span{ grid-row:1/3; font:650 13px/1.2 var(--ui); color:var(--amber); }
+  #lobbyTransport b{ font:650 15px/1.3 var(--ui); letter-spacing:0; color:#eaf1ff; }
+  #lobbyTransport i{ font:400 13px/1.4 var(--ui); color:#aebccd; font-style:normal; }
+  #flightLoadout{ padding:11px 14px 10px; border-radius:9px; border:1px solid rgba(112,203,187,.18); background:rgba(5,11,15,.5); }
   #flightLoadout #rigPicker{ margin:6px 0 0; }
   #flightLoadout #rigPicker .rig{ cursor:default; }
-  #flightReview{ padding:12px 14px; border:1px solid rgba(89,240,213,.3); border-radius:10px;
-    background:linear-gradient(135deg,rgba(17,37,39,.9),rgba(11,17,22,.9)); box-shadow:0 12px 34px rgba(0,0,0,.35); }
-  #flightReview .review-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; text-align:left; }
-  #flightReview .review-cell{ min-width:0; }
-  #flightReview .review-cell span{ display:block; font-size:9px; letter-spacing:.18em; color:#7f96ba; }
-  #flightReview .review-cell b{ display:block; margin-top:3px; font-family:var(--display); font-size:12px; letter-spacing:.1em; color:#eaf1ff; }
-  #flightReview .review-contract{ grid-column:1/-1; font-size:10px; line-height:1.45; color:#b7c5df; }
-  #flightReview .review-contract span{ color:#7f96ba; letter-spacing:.15em; }
-  #flightReview .lobby-launch{ width:100%; margin-top:10px; padding:10px 16px; border:1px solid rgba(89,240,213,.72); border-radius:8px;
-    background:linear-gradient(180deg,rgba(49,173,165,.56),rgba(31,89,110,.64)); color:#ecfffb; font:700 12px var(--display); letter-spacing:.24em; cursor:pointer; }
+  #flightLoadout #rigPicker .rig{ min-width:220px; padding:9px 16px; font:500 13px var(--ui); letter-spacing:0; }
+  #flightLoadout #rigPicker .rig b{ font:680 16px/1.25 var(--ui); letter-spacing:0; }
+  #flightLoadout #rigPicker .rig i{ margin-top:3px; font:400 13px/1.25 var(--ui); }
+  #flightReview{ border-radius:10px; }
+  #flightReview .lobby-launch{ width:100%; padding:13px 18px; border:1px solid rgba(89,240,213,.72); border-radius:9px;
+    background:linear-gradient(180deg,rgba(49,173,165,.64),rgba(31,89,110,.72)); color:#ecfffb; font:700 15px/1.2 var(--ui); letter-spacing:.01em; cursor:pointer; }
   #flightReview .lobby-launch:disabled{ cursor:not-allowed; opacity:.45; filter:saturate(.45); }
   #flightReview .lobby-launch:not(:disabled):hover{ filter:brightness(1.18); transform:translateY(-1px); }
   @media (max-width:760px){
     #lobbyHub{ justify-content:center; padding:18px; }
-    #lobbyHub .preflight-console{ width:min(92vw,560px); padding:18px; }
+    #lobbyHub .preflight-console{ width:min(92vw,680px); max-height:90vh; padding:20px; }
     #lobbyHub .lobby-nodes{ grid-template-columns:1fr; }
-    #lobbyHub .lobby-node[data-lobby-kind="primary"]{ min-height:112px; }
+    #lobbyHub .lobby-node[data-lobby-kind="primary"]{ min-height:0; }
+    #lobbyHub .lobby-promise b{ font-size:26px; }
+    #lobbyHub .lobby-utilities{ grid-template-columns:1fr; }
   }
   #menu.hub-open .card > div:first-child,#menu.hub-open .playwrap,#menu.hub-open .dock{ opacity:0; transform:translateY(10px) scale(.98); filter:blur(5px); pointer-events:none; }
   #menu.hub-open::before,#menu.hub-open::after,#menu.hub-open #sheen,#menu.hub-open .ripple{ opacity:0; animation:none; }
@@ -747,29 +746,23 @@
     </div>
     <div id="lobbyHub" class="hide">
       <div class="preflight-console">
-        <div class="lobby-hub-kicker">Wake Perch · flight operations</div>
-        <div class="lobby-promise"><b>Choose one journey.</b>Fly a ten-minute tale of trust and rescue, or meet a rival over Stormscar Shelf.</div>
-        <div class="preflight-label">Primary routes</div>
+        <div class="lobby-hub-kicker">Wake Perch</div>
+        <div class="lobby-promise"><b>Choose your flight</b>Continue Sablewing's story or enter a focused 1v1 duel.</div>
         <div class="lobby-nodes" aria-label="Flight route">
-          <button class="lobby-node" type="button" data-lobby-kind="primary" data-lobby-mode="story" aria-pressed="false"><span class="lobby-mode-kicker">CAMPAIGN · SOLO</span><b>THE TEN-MINUTE FLIGHT</b><i>Bond, relight the coast, rescue Neris, and face the Crowned Maw.</i><span class="lobby-mode-meta">5 PHASES · 10 MIN MAX · 1 COMPLETE ARC</span></button>
-          <button class="lobby-node" type="button" data-lobby-kind="primary" data-lobby-mode="duel" aria-pressed="false"><span class="lobby-mode-kicker">VERSUS · 1V1</span><b>STORMSCAR DUEL</b><i>Three distinct attacks, a contested Stormheart, death and respawn.</i><span class="lobby-mode-meta">FIRST TO 3 · SERVER-READY COMBAT</span></button>
+          <button class="lobby-node" type="button" data-lobby-kind="primary" data-lobby-mode="story" aria-pressed="false"><span class="lobby-mode-kicker">Story</span><b>The ten-minute flight</b><i>Bond with Sablewing, relight the coast, rescue Neris, and face the Crowned Maw.</i><span class="lobby-mode-meta">Five chapters · about ten minutes</span></button>
+          <button class="lobby-node" type="button" data-lobby-kind="primary" data-lobby-mode="duel" aria-pressed="false"><span class="lobby-mode-kicker">1v1 duel</span><b>Stormscar duel</b><i>Fight a rival with three distinct attacks, knockouts, and respawns.</i><span class="lobby-mode-meta">First to three</span></button>
         </div>
         <div class="lobby-utilities" aria-label="Flight utilities">
-          <button class="lobby-node" type="button" data-lobby-kind="utility" data-lobby-mode="practice" aria-pressed="false"><b>PRACTICE COVE</b><i>Three rings · no keeper pursuit</i></button>
-          <button class="lobby-node" type="button" data-lobby-kind="utility" data-lobby-mode="chapter" aria-pressed="false"><b>CHECKPOINTS</b><i>Resume a reached chapter</i></button>
+          <button class="lobby-node" type="button" data-lobby-kind="utility" data-lobby-mode="practice" aria-pressed="false"><b>Practice cove</b><i>Three rings. No pursuit.</i></button>
+          <button class="lobby-node" type="button" data-lobby-kind="utility" data-lobby-mode="chapter" aria-pressed="false"><b>Checkpoints</b><i>Continue from a reached chapter.</i></button>
         </div>
-        <div id="lobbyTransport" aria-live="polite"><span data-lobby-status-label>SOLO CAMPAIGN</span><b data-lobby-status-value>FIVE PHASES · TEN MINUTES MAX</b><i data-lobby-status-note>One authored journey from first bond to apex showdown.</i></div>
+        <div id="lobbyTransport" aria-live="polite"><span data-lobby-status-label>Selected</span><b data-lobby-status-value>Story flight · five chapters</b><i data-lobby-status-note>One complete journey from first bond to the apex showdown.</i></div>
         <div id="flightLoadout">
-          <div class="preflight-label">Player / mount</div>
+          <div class="preflight-label">Your dragon</div>
           <div id="rigPicker" aria-label="Dragon mount"></div>
         </div>
         <div id="flightReview" aria-live="polite">
-          <div class="review-grid">
-            <div class="review-cell"><span>ROUTE</span><b data-lobby-world>STORY</b></div>
-            <div class="review-cell"><span>MOUNT</span><b id="flightMount">STORMLANCE</b></div>
-            <div class="review-contract"><span>STORY PROMISE · </span><b data-lobby-contract>Bond · relight · rescue · pursue · face the apex</b></div>
-          </div>
-          <button class="lobby-launch" type="button" data-lobby-launch>LAUNCH FROM WAKE PERCH</button>
+          <button class="lobby-launch" type="button" data-lobby-launch>Start story flight</button>
         </div>
       </div>
       <div id="lobbyChapterPanel" data-lobby-chapter-panel>
@@ -846,6 +839,7 @@ import { LobbyHub, LobbyMarkers } from './world-expansion/modules/lobbyHub.js';
 import { LocalDuelSession } from './world-expansion/modules/localDuel.js';
 import { createPoseidonOceanLayer } from './world-expansion/modules/poseidonOceanLayer.js';
 import { GaleveinWindField } from './world-expansion/modules/windField.js';
+import { GaleveinAtmosphereCompute } from './world-expansion/modules/gpuAtmosphereField.js';
 import { CrownfallRange } from './world-expansion/modules/crownfallRange.js';
 import { DrownedHearthDecision } from './world-expansion/modules/hearthDecision.js';
 import { SerpentCoast } from './world-expansion/modules/serpentCoast.js';
@@ -865,6 +859,15 @@ const worldRandom=seededRandom(WORLD_SEED);
 const windField=new GaleveinWindField({seed:WORLD_SEED});
 let CURRENT_WIND=windField.sample(0);
 let CURRENT_WIND_FORCES=windField.flightForces(CURRENT_WIND,Math.PI);
+const COMPUTE_PARAMS=new URLSearchParams(location.search);
+const requestedComputeMode=(COMPUTE_PARAMS.get('compute')||'off').toLowerCase();
+const atmosphereCompute=new GaleveinAtmosphereCompute({
+  seed:WORLD_SEED,
+  mode:['gpujs','auto','cpu'].includes(requestedComputeMode)?requestedComputeMode:'off',
+  forceNoWebGPU:COMPUTE_PARAMS.get('forceNoComputeWebGPU')==='1'
+});
+const atmosphereComputeReady=atmosphereCompute.init();
+addEventListener('pagehide',()=>{ atmosphereCompute.destroy().catch(()=>{}); },{once:true});
 const bootErrors=[];
 function surfaceBootError(kind, detail){
   const msg=`${kind}: ${detail}`;
@@ -1110,9 +1113,10 @@ const poseidonOcean=createPoseidonOceanLayer({
   }
 });
 poseidonOcean.start(localStorage.getItem('galevein_gfx')||'med');
-const LOCAL_FOREST_PARAMS=new URLSearchParams(location.search);
-const LOCAL_FOREST_INCUMBENT=['127.0.0.1','localhost','[::1]'].includes(location.hostname)
-  && LOCAL_FOREST_PARAMS.get('forest')==='incumbent';
+const LOCAL_SCENE_PARAMS=new URLSearchParams(location.search);
+const LOCAL_SCENE_HOST=['127.0.0.1','localhost','[::1]'].includes(location.hostname);
+const LOCAL_FOREST_INCUMBENT=LOCAL_SCENE_HOST&&LOCAL_SCENE_PARAMS.get('forest')==='incumbent';
+const LOCAL_FOUNDATION_INCUMBENT=LOCAL_SCENE_HOST&&LOCAL_SCENE_PARAMS.get('foundations')==='incumbent';
 const horizonDirector = new HorizonDirector(scene, camera,{forestMode:LOCAL_FOREST_INCUMBENT?'incumbent':'ridge-anchored'});
 const refreshSeaFog=()=>{
   sea.material.uniforms.fogColor.value.copy(scene.fog.color);
@@ -1778,7 +1782,8 @@ function nextObjectiveTarget(){
     : rings.find(r=>!r.userData.hit);
   return nb?.position??null;
 }
-const landmarkPath=new LandmarkPath(scene,{flightRoute:route});
+const landmarkPath=new LandmarkPath(scene,{flightRoute:route,
+  foundationMode:LOCAL_FOUNDATION_INCUMBENT?'incumbent':'terrain-islets'});
 const landmarkReady=landmarkPath.build();
 landmarkReady.then(async ()=>{
   for(const c of landmarkPath.getCollisionProxies()) colliders.push({x:c.x,z:c.z,r:c.radius,top:c.top,landmark:c.id});
@@ -4504,7 +4509,9 @@ function loop(now){ requestAnimationFrame(loop);
   frameTimes.push(dt*1000); if(frameTimes.length>900)frameTimes.shift();
   fpsE+=(1/Math.max(dt,1e-3)-fpsE)*0.06; fpsAcc+=dt;
   if(fpsAcc>0.35){ fpsAcc=0; $('fpsV').textContent=Math.round(fpsE); }
-  tick(dt); render(dt);
+  tick(dt);
+  atmosphereCompute.update(now,{frameMs:dt*1000,dt,wind:CURRENT_WIND.direction,gust:CURRENT_WIND.gust});
+  render(dt);
 }
 loop(last);
 
@@ -5029,6 +5036,27 @@ window.SIM={
     camera.lookAt(new THREE.Vector3(...spec.target));render(1/60);
     return {view,position:spec.position,target:spec.target,horizon:horizonDirector.getSnapshot(),anchorProof:SIM.horizonAnchorProof(),state:SIM.state()};
   },
+  landmarkFoundationStage:(view='gate')=>{
+    const views={
+      gate:{position:[400,54,288],target:[500,8,460],day:.10,site:'wake-arch'},
+      arcade:{position:[52,48,116],target:[-150,5,35],day:.38,site:'keeper-arcade'},
+      harbor:{position:[-330,58,-56],target:[-525,7,-216],day:.72,site:'keeper-works'}
+    };
+    const spec=views[view]||views.gate;
+    simJumpChapter(1);S.finishToken++;
+    S.started=true;S.done=true;S.finishing=false;S.captureKind=null;S.fpv=false;S.shake=0;S.boost=0;S.accel=0;
+    S.chapter=1;S.tutDone=true;S.score=2;S.grace=999;TOD.day=spec.day;uDay.value=TOD.day;driveTimeOfDay(0);
+    menuEl.classList.add('hide','live');$('hud').classList.add('on');$('over').classList.add('hide');$('ach').classList.remove('on');
+    for(const ring of rings)ring.visible=false;
+    popEl.textContent='';popEl.style.animation='none';storyEl.textContent='';storyEl.style.animation='none';
+    landmarkPath.root.visible=true;horizonDirector.root.visible=true;
+    D.group.position.fromArray(spec.position);D.yaw=simHeadingTo(...spec.target);D.pitch=-.08;D.roll=0;D.speed=24;
+    D.group.rotation.set(0,D.yaw,0);D.group.rotateX(D.pitch*.75);D.prevYaw=D.yaw;D.prevPitch=D.pitch;S.prevSpeed=D.speed;
+    camera.position.copy(D.group.position).add(new THREE.Vector3(Math.sin(D.yaw)*27,12,Math.cos(D.yaw)*27));
+    camera.lookAt(new THREE.Vector3(...spec.target));landmarkPath.update(D.group.position);
+    $('spdV').textContent=Math.round(D.speed);$('altV').textContent=Math.round(D.group.position.y);render(1/60);
+    return {view,site:spec.site,position:spec.position,target:spec.target,landmarks:landmarkPath.getSnapshot(),state:SIM.state()};
+  },
   serpentCoastStage:(view='approach')=>{
     const views={
       approach:{position:[335,150,-245],target:[520,16,-420],day:.14},
@@ -5255,6 +5283,11 @@ window.SIM={
     webgpu:poseidonOcean.snapshot().wind,
     proof:windField.proof()
   }),
+  atmosphereCompute:()=>atmosphereCompute.snapshot(),
+  atmosphereComputeReady:()=>atmosphereComputeReady,
+  suspendAtmosphereCompute:(value=true)=>atmosphereCompute.setSuspended(value),
+  destroyAtmosphereCompute:()=>atmosphereCompute.destroy(),
+  runAtmosphereComputeBenchmark:(options={})=>atmosphereCompute.benchmark(options),
   stormfire:()=>({profile:'pooled-stormfire-breath-v1',pool:FX.breath.length,
     active:FX.breath.filter(entry=>entry.mesh.visible).length,
     tongueActive:FX.tongues.filter(entry=>entry.mesh.visible).length,

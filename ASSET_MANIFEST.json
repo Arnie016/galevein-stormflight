@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-29T17:09:19.118Z",
+  "generatedAt": "2026-08-30T04:15:40.217Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -64,9 +64,19 @@
       "sha256": "65940fc34d084f67eff155fc77c820072825675d53182dc938d13617e5f7dbad"
     },
     {
+      "path": "GPU_COMPUTE_PROVENANCE.md",
+      "bytes": 1718,
+      "sha256": "3cc5d181e6bae59ad0555b1ac8488576c414e4bbbc84552975b6d42bd6bea6dc"
+    },
+    {
       "path": "index.html",
-      "bytes": 333766,
-      "sha256": "d3131dc0b8ea12a0db29d8e2b5dccde4e3fd9e3b4deb4e7d12f7e856d9e7388e"
+      "bytes": 335775,
+      "sha256": "e913fe2da0ca0e9be4113497f512e0c493bab21768a8444735a7060ca42f4f6f"
+    },
+    {
+      "path": "licenses/gpujs-2.24.0-MIT.txt",
+      "bytes": 1072,
+      "sha256": "b5a4c63459a9411286766fd3b0a1a5ffdfe8533d7dd3d8295b0b51d7193aa8c7"
     },
     {
       "path": "licenses/poseidon-MIT.txt",
@@ -100,8 +110,8 @@
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
-      "bytes": 3075,
-      "sha256": "cb2c2d91728b20c432a878f14c22e3bf262ba03f18210572a9f280fa57eab60f"
+      "bytes": 3387,
+      "sha256": "dd2f9d1602842ffe4a1d8ba654429fbad86f65563e6a01d3f764ac521f578d1f"
     },
     {
       "path": "utils/BufferGeometryUtils.js",
@@ -132,6 +142,11 @@
       "path": "vendor/GLTFLoader.js",
       "bytes": 109831,
       "sha256": "32e8ea1535e3016302dec82371beccd60e9cd371ee09fd8daee2ac45e8148a56"
+    },
+    {
+      "path": "vendor/gpujs/gpu-browser-2.24.0.min.js",
+      "bytes": 640086,
+      "sha256": "68d8be4bcb15e755d396268b9045fa6e157a818701237e72df2f8f9ea38991ed"
     },
     {
       "path": "vendor/poseidon-ocean/atmosphere.js",
@@ -259,6 +274,11 @@
       "sha256": "8c35a80b17bb40f7225c69de8c40a12f3f9d485b5bc79cff32312ce576b3e837"
     },
     {
+      "path": "world-expansion/modules/gpuAtmosphereField.js",
+      "bytes": 12694,
+      "sha256": "414e4da58d2106102cc8d6f083f39186e673b225d2ea610460c96ac27b840b53"
+    },
+    {
       "path": "world-expansion/modules/hearthDecision.js",
       "bytes": 4649,
       "sha256": "bf9dad232e66d02b6cfaec5586459b2dd833dc5a3fb657a88a27607037217261"
@@ -275,13 +295,13 @@
     },
     {
       "path": "world-expansion/modules/landmarkPath.js",
-      "bytes": 10198,
-      "sha256": "87420817a01af2ea18423e7ab5b025cc88a15e929de7f336006a38dc6ccde7bb"
+      "bytes": 11082,
+      "sha256": "31021eca0c5d6053b8ccefdf28de4f6d65973698382bda1a63264f8be7f110bb"
     },
     {
       "path": "world-expansion/modules/lobbyHub.js",
-      "bytes": 10887,
-      "sha256": "07c17fa3f53af6d96e21cd572cc72ee4705a5fcca6588d689c320a3671720edb"
+      "bytes": 10893,
+      "sha256": "28f79ada182206a85b63cb38ebe66c6fcfd969e3b1c7a1ae774c6f55c07c8d14"
     },
     {
       "path": "world-expansion/modules/localDuel.js",
@@ -300,8 +320,8 @@
     },
     {
       "path": "world-expansion/modules/proceduralLandmarks.js",
-      "bytes": 60303,
-      "sha256": "e8cf3aea822677d2f9c80400fb678097b209dc218422a0fb08c61859cddd0423"
+      "bytes": 64707,
+      "sha256": "f079eec963ef0e63ad3e733b88b630fbe23253df81fbffabd86815fd5874af2b"
     },
     {
       "path": "world-expansion/modules/serpentCoast.js",

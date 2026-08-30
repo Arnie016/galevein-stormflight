@@ -52,6 +52,7 @@ const CULL_DISTANCE = 2300;
 
 // How far every water-meeting mass continues below the site origin.
 const FOUNDATION_DROP = 34;
+export const LANDMARK_FOUNDATION_PROFILE = 'authored-rock-islets-v1';
 
 /* ------------------------------------------------------------------- random --- */
 
@@ -83,6 +84,47 @@ function ridgeGeometry(width, height, depth) {
   for (let i = 0; i < tris.length; i += 1) positions.set(tris[i], i * 3);
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+// Three concentric shelves turn a support footprint into a readable rock islet. The
+// outer ring sits below the lowest ocean trough while the center meets the structure
+// slightly above the waterline. Irregular radii keep repeated piers from reading as
+// cloned cones, and the whole result is merged into the landmark stone mesh.
+function foundationGeometry(piece, segments, seed) {
+  const random = makeRandom(seed);
+  const positions = [[0, piece.topY + .35, 0]];
+  for (let ring = 1; ring <= 3; ring += 1) {
+    const factor = ring === 1 ? .42 : ring === 2 ? .73 : 1;
+    const baseY = ring === 1 ? piece.topY : ring === 2 ? piece.topY - 3.2 : piece.rimY;
+    for (let segment = 0; segment < segments; segment += 1) {
+      const angle = TAU * segment / segments;
+      const fracture = .86 + random() * .25;
+      positions.push([
+        Math.cos(angle) * piece.rx * factor * fracture,
+        baseY + (random() - .5) * (ring === 3 ? 2.4 : 1.25),
+        Math.sin(angle) * piece.rz * factor * fracture
+      ]);
+    }
+  }
+  const indices = [];
+  for (let segment = 0; segment < segments; segment += 1) {
+    const next = (segment + 1) % segments;
+    indices.push(0, 1 + next, 1 + segment);
+  }
+  for (let ring = 0; ring < 2; ring += 1) {
+    const inner = 1 + ring * segments;
+    const outer = inner + segments;
+    for (let segment = 0; segment < segments; segment += 1) {
+      const next = (segment + 1) % segments;
+      indices.push(inner + segment, inner + next, outer + segment);
+      indices.push(inner + next, outer + next, outer + segment);
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions.flat(), 3));
+  geometry.setIndex(indices);
   geometry.computeVertexNormals();
   return geometry;
 }
@@ -314,6 +356,44 @@ class SiteBuilder {
   }
 
   buckets() { return { stone: this.stone, signal: this.signal }; }
+}
+
+function foundationPieces(site, spec) {
+  const rimY = -site.position[1] - 8;
+  const piece = (dx, dz, rx, rz, topY = .3) => ({ dx, dz, rx, rz, topY, rimY });
+  if (site.archetype === 'seagate') {
+    return [-1, 1].map((side) => piece(side * spec.span / 2, 0,
+      spec.baseRadius * 2.55, spec.baseRadius * 2.2));
+  }
+  if (site.archetype === 'beacon') {
+    return [piece(0, 0, spec.baseRadius * 3.1, spec.baseRadius * 2.8, .55)];
+  }
+  if (site.archetype === 'harbor') {
+    // A low central reef makes the pile depth legible but keeps water under the deck.
+    return [piece(0, 0, spec.span * .34, spec.depth * .32, -site.position[1] + 1.1)];
+  }
+  if (site.archetype === 'viaduct') {
+    const bayWidth = spec.span / spec.bays;
+    return Array.from({ length: spec.bays + 1 }, (unused, index) =>
+      piece((index / spec.bays - .5) * spec.span, 0, bayWidth * .5, spec.depth * 1.28));
+  }
+  return [piece(0, 0, spec.depth * .66, spec.span * .64, .45)];
+}
+
+function buildTerrainFoundation(builder, site, spec) {
+  const pieces = foundationPieces(site, spec);
+  const segments = site.archetype === 'viaduct'
+    ? (builder.near ? 12 : builder.mid ? 6 : 5)
+    : site.archetype === 'seagate'
+      ? (builder.near ? 18 : builder.mid ? 12 : 3)
+      : (builder.near ? 18 : builder.mid ? 12 : 8);
+  let triangles = 0;
+  pieces.forEach((piece, index) => {
+    const geometry = foundationGeometry(piece, segments, site.seed + 19001 + index * 131);
+    triangles += triangleCount(geometry);
+    builder.rock(geometry, [piece.dx, 0, piece.dz], null, null, .62 + (index % 3) * .045);
+  });
+  return { profile: LANDMARK_FOUNDATION_PROFILE, pieces: pieces.length, triangles };
 }
 
 /* --------------------------------------------------------------- archetypes --- */
@@ -951,12 +1031,25 @@ function toWorld(site, disc) {
 // the identical function the game runs.
 export function siteProxies(site) {
   const spec = specFor(site);
+  const foundation = site.foundationMode === 'terrain-islets'
+    ? foundationPieces(site, spec).map((piece, index) => {
+      const world = toWorld(site, {
+        dx: piece.dx, dz: piece.dz,
+        radius: Math.min(piece.rx, piece.rz) * .62
+      });
+      return {
+        id: `${site.id}-foundation-${index}`, x: world.x, z: world.z,
+        radius: world.radius, top: site.position[1] + piece.topY + 1.2,
+        foundation: true
+      };
+    })
+    : [];
   return {
     spec,
-    collision: PROXIES[site.archetype](spec).map((proxy, index) => {
+    collision: [...PROXIES[site.archetype](spec).map((proxy, index) => {
       const world = toWorld(site, proxy);
       return { id: `${site.id}-${index}`, x: world.x, z: world.z, radius: world.radius, top: site.position[1] + proxy.top };
-    }),
+    }), ...foundation],
     footprint: FOOTPRINTS[site.archetype](spec).map((disc, index) => {
       const world = toWorld(site, disc);
       return { id: `${site.id}#${index}`, site: site.id, ...world };
@@ -1043,6 +1136,9 @@ export function createLandmarkMaterials() {
 // enforce the budget.
 function buildLevel(site, spec, detail, materials) {
   const builder = new SiteBuilder(site.palette, makeRandom(site.seed + detail * 977), detail);
+  const foundation = site.foundationMode === 'terrain-islets'
+    ? buildTerrainFoundation(builder, site, spec)
+    : { profile: 'submerged-footings-v1', pieces: 0, triangles: 0 };
   ARCHETYPES[site.archetype].build(builder, spec);
   const { stone, signal } = builder.buckets();
   const level = new THREE.Group();
@@ -1064,7 +1160,7 @@ function buildLevel(site, spec, detail, materials) {
     level.add(mesh);
     triangles += triangleCount(signalGeometry);
   }
-  return { level, triangles, drawCalls: level.children.length };
+  return { level, triangles, drawCalls: level.children.length, foundation };
 }
 
 export function buildLandmarkSite(site, materials) {
@@ -1103,6 +1199,9 @@ export function buildLandmarkSite(site, materials) {
       archetype: site.archetype,
       triangles: levels.map((entry) => entry.triangles),
       drawCalls: levels.map((entry) => entry.drawCalls),
+      foundationProfile: levels[0].foundation.profile,
+      foundationPieces: levels[0].foundation.pieces,
+      foundationTriangles: levels.map((entry) => entry.foundation.triangles),
       size: size.toArray().map((value) => +value.toFixed(1)),
       height: +size.y.toFixed(1)
     }
