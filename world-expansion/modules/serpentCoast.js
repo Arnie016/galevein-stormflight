@@ -4,6 +4,7 @@ const PROFILE = 'serpent-coast-fixed-landmass-v1';
 const ANCHOR = Object.freeze({ x: 520, y: 0, z: -420 });
 const EXTENT = Object.freeze({ x: 165, z: 205 });
 const GRID = Object.freeze({ x: 34, z: 42 });
+const TERRACED_GRID = Object.freeze({ x: 52, z: 64 });
 const FOREST_COUNT = 128;
 const TALUS_COUNT = 112;
 
@@ -46,9 +47,10 @@ export function serpentCoastHeight(x, z) {
   return height;
 }
 
-function coastGeometry() {
-  const width = GRID.x + 1;
-  const depth = GRID.z + 1;
+function coastGeometry(mode = 'camera-safe-terraces') {
+  const grid = mode === 'incumbent' ? GRID : TERRACED_GRID;
+  const width = grid.x + 1;
+  const depth = grid.z + 1;
   const positions = new Float32Array(width * depth * 3);
   const colors = new Float32Array(width * depth * 3);
   const indices = [];
@@ -60,8 +62,8 @@ function coastGeometry() {
 
   for (let iz = 0; iz < depth; iz += 1) {
     for (let ix = 0; ix < width; ix += 1) {
-      const u = ix / GRID.x;
-      const v = iz / GRID.z;
+      const u = ix / grid.x;
+      const v = iz / grid.z;
       const x = (u * 2 - 1) * EXTENT.x;
       const z = (v * 2 - 1) * EXTENT.z;
       const worldX = ANCHOR.x + x;
@@ -77,13 +79,23 @@ function coastGeometry() {
       colors.set([color.r, color.g, color.b], offset);
     }
   }
-  for (let iz = 0; iz < GRID.z; iz += 1) {
-    for (let ix = 0; ix < GRID.x; ix += 1) {
+  let visibleCells = 0;
+  for (let iz = 0; iz < grid.z; iz += 1) {
+    for (let ix = 0; ix < grid.x; ix += 1) {
       const a = iz * width + ix;
       const b = a + 1;
       const c = a + width;
       const d = c + 1;
+      if (mode !== 'incumbent') {
+        const ay = positions[a * 3 + 1], by = positions[b * 3 + 1];
+        const cy = positions[c * 3 + 1], dy = positions[d * 3 + 1];
+        // The Poseidon ocean owns the water plane. Dropping cells which are
+        // wholly submerged removes the black rectangular platform around the
+        // island while retaining shoreline-crossing triangles and fixed land.
+        if (Math.max(ay, by, cy, dy) < -2) continue;
+      }
       indices.push(a, c, b, b, c, d);
+      visibleCells += 1;
     }
   }
   const geometry = new THREE.BufferGeometry();
@@ -92,7 +104,35 @@ function coastGeometry() {
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
+  geometry.userData.visibleCells = visibleCells;
+  geometry.userData.grid = { ...grid };
   return geometry;
+}
+
+function coastDetailTextures(size = 128) {
+  const normal = new Uint8Array(size * size * 4);
+  const roughness = new Uint8Array(size * size * 4);
+  const signal = (u, v) => Math.sin(u * Math.PI * 12 + Math.sin(v * 11) * .8) * .52 +
+    Math.cos(v * Math.PI * 17 - Math.sin(u * 9) * .6) * .31 + Math.sin((u + v) * Math.PI * 29) * .17;
+  const step = 1 / size;
+  for (let y = 0; y < size; y += 1) for (let x = 0; x < size; x += 1) {
+    const u = x / size, v = y / size;
+    const dx = signal(u + step, v) - signal(u - step, v);
+    const dy = signal(u, v + step) - signal(u, v - step);
+    const nx = -dx * 1.8, ny = -dy * 1.8, nz = 1;
+    const length = Math.hypot(nx, ny, nz), offset = (y * size + x) * 4;
+    normal[offset] = Math.round((nx / length * .5 + .5) * 255);
+    normal[offset + 1] = Math.round((ny / length * .5 + .5) * 255);
+    normal[offset + 2] = Math.round((nz / length * .5 + .5) * 255); normal[offset + 3] = 255;
+    const rough = 224 + Math.round(Math.abs(signal(u, v)) * 24);
+    roughness[offset] = roughness[offset + 1] = roughness[offset + 2] = rough; roughness[offset + 3] = 255;
+  }
+  const make = (data) => {
+    const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping; texture.repeat.set(4, 5);
+    texture.anisotropy = 4; texture.needsUpdate = true; return texture;
+  };
+  return { normal:make(normal), roughness:make(roughness), size };
 }
 
 function shorelineGeometry() {
@@ -126,15 +166,23 @@ export class SerpentCoast {
     if (!scene?.add) throw new TypeError('SerpentCoast requires a Three.js scene.');
     this.scene = scene;
     this.flightRoute = options.flightRoute ?? [];
+    this.geologyMode = options.geologyMode === 'incumbent' ? 'incumbent' : 'camera-safe-terraces';
     this.root = new THREE.Group();
     this.root.name = 'SerpentReach_FixedCinderCoast';
     this.root.position.set(ANCHOR.x, ANCHOR.y, ANCHOR.z);
     this.root.userData.profile = PROFILE;
     this.root.userData.worldAnchored = true;
 
-    this.land = new THREE.Mesh(coastGeometry(), new THREE.MeshLambertMaterial({
-      vertexColors: true, flatShading: false, fog: true
-    }));
+    this.detailTextures = this.geologyMode === 'incumbent' ? null : coastDetailTextures();
+    const landMaterial = this.geologyMode === 'incumbent'
+      ? new THREE.MeshLambertMaterial({ vertexColors:true, flatShading:false, fog:true })
+      : new THREE.MeshStandardMaterial({
+        vertexColors:true, roughness:.93, metalness:.018, flatShading:false, fog:true,
+        emissive:0x081110, emissiveIntensity:.025,
+        normalMap:this.detailTextures.normal, normalScale:new THREE.Vector2(.22,.22),
+        roughnessMap:this.detailTextures.roughness
+      });
+    this.land = new THREE.Mesh(coastGeometry(this.geologyMode), landMaterial);
     this.land.name = 'SerpentReach_ContinuousCoastalTerrain';
     // The world moon already shades the terrain. Re-rendering this entire
     // 330x410m surface into the shadow atlas doubled median frame time.
@@ -222,6 +270,7 @@ export class SerpentCoast {
     }).filter(sample => sample.within);
     return {
       profile: PROFILE,
+      geologyMode: this.geologyMode,
       placementMode: 'fixed-authored-world-v1',
       worldAnchored: true,
       cameraRelative: false,
@@ -232,6 +281,11 @@ export class SerpentCoast {
       footprint: { width: EXTENT.x * 2, length: EXTENT.z * 2 },
       architecture: 'continuous-cinder-headland-and-tidal-shelf',
       terrainTriangles: (geometry.index?.count || geometry.attributes.position.count) / 3,
+      terrainGrid: { ...geometry.userData.grid },
+      visibleTerrainCells: geometry.userData.visibleCells,
+      submergedRectangularSkirt: this.geologyMode === 'incumbent',
+      generatedSurfaceTextures: this.detailTextures ? 2 : 0,
+      surfaceTextureResolution: this.detailTextures?.size ?? 0,
       shorelineProfile: 'closed-irregular-fixed-break-v1',
       shorelineSegments: 112,
       forestInstances: this.forest.count,
@@ -243,6 +297,16 @@ export class SerpentCoast {
       routeSamples,
       minimumRouteVerticalClearance: Math.min(...routeSamples.map(sample => sample.verticalClearance))
     };
+  }
+
+  dispose() {
+    this.scene.remove(this.root);
+    for (const mesh of [this.land, this.foam, this.forest, this.talus]) {
+      mesh.geometry.dispose(); mesh.material.dispose();
+    }
+    if (this.detailTextures) for (const texture of Object.values(this.detailTextures)) {
+      if (texture?.dispose) texture.dispose();
+    }
   }
 }
 

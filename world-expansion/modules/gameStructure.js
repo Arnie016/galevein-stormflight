@@ -139,7 +139,7 @@ function createRuntime(S, D, landmarkPath, options) {
       const clockEl = dom.journeyClock ?? (typeof document !== 'undefined' ? document.getElementById('journeyClock') : null);
       const railEl = dom.journeyRail ?? (typeof document !== 'undefined' ? document.getElementById('journeyRail') : null);
 
-      if (objText) objText.textContent = hud.objectiveText;
+      if (objText) objText.textContent = hud.missionBeatText || hud.objectiveText;
       if (beaconV) beaconV.textContent = `${S.score ?? 0}/${totalBeacons}`;
       if (chapterEl) chapterEl.textContent = hud.chapterLabel;
       if (distEl) distEl.textContent = hud.distanceText;
@@ -147,11 +147,8 @@ function createRuntime(S, D, landmarkPath, options) {
         heightEl.textContent = hud.heightText ?? '';
         heightEl.style.display = hud.heightText ? '' : 'none';
       }
-      if (beatEl) {
-        beatEl.textContent = hud.missionBeatText ?? '';
-        beatEl.classList.toggle('on', !!hud.missionBeatText);
-      }
-      if (cueEl) cueEl.textContent = hud.humanCue ?? '';
+      if (beatEl) { beatEl.textContent = ''; beatEl.classList.remove('on'); }
+      if (cueEl) cueEl.textContent = '';
       if (clockEl) {
         const remaining = Math.max(0, Math.ceil(hud.journeyRemainingSeconds ?? 0));
         clockEl.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;

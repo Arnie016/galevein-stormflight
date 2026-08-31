@@ -8,10 +8,20 @@ const PROFILE = 'bounded-reach-island-v4';
 const LAYER_COUNTS = Object.freeze({ forest: 320, skyMonoliths: 4 });
 const FIXED_WORLD_ANCHOR = Object.freeze({ x:-20, y:0, z:110 });
 const FIXED_ROUTE_HEADING = Math.atan2(-700, 530);
-const RIDGE_SPECS = Object.freeze([
+const INCUMBENT_RIDGE_SPECS = Object.freeze([
   Object.freeze({ id:'near', sections:48, inner:520, width:390, start:-980, end:1660, height:370, opening:185 }),
   Object.freeze({ id:'mid', sections:56, inner:980, width:560, start:-1450, end:2320, height:545, opening:250 }),
   Object.freeze({ id:'far', sections:64, inner:1580, width:780, start:-2100, end:3180, height:720, opening:340 })
+]);
+// The route reaches 604m from the basin centre line at beacon nine. The old
+// 520m inner wall therefore crossed the authored road and became a full-screen
+// slab in the chase camera. These walls remain immutable world geometry, but
+// sit beyond a protected 650m valley and gain height so the world reads larger
+// without crowding the rider.
+const TERRACED_RIDGE_SPECS = Object.freeze([
+  Object.freeze({ id:'near', sections:72, inner:720, width:470, start:-1080, end:1760, height:455, opening:205 }),
+  Object.freeze({ id:'mid', sections:72, inner:1240, width:650, start:-1580, end:2450, height:650, opening:285 }),
+  Object.freeze({ id:'far', sections:80, inner:1900, width:900, start:-2240, end:3340, height:850, opening:390 })
 ]);
 const GROVE_WINDOWS = Object.freeze([
   Object.freeze([.07, .23]), Object.freeze([.29, .47]),
@@ -231,6 +241,8 @@ export class HorizonDirector {
       options.anchorZ ?? FIXED_WORLD_ANCHOR.z
     );
     this.routeHeading = options.routeHeading ?? FIXED_ROUTE_HEADING;
+    this.geologyMode = options.geologyMode === 'incumbent' ? 'incumbent' : 'camera-safe-terraces';
+    this.ridgeSpecs = this.geologyMode === 'incumbent' ? INCUMBENT_RIDGE_SPECS : TERRACED_RIDGE_SPECS;
     this.forestMode = options.forestMode === 'incumbent' ? 'incumbent' : 'ridge-anchored';
     this.placementRevision = 0;
     this.placementSignature = null;
@@ -241,12 +253,13 @@ export class HorizonDirector {
     this.root.userData.visualOnly = true;
     this.root.userData.profile = PROFILE;
 
+    const hardFacets = this.geologyMode === 'incumbent';
     const ridgeMaterials = [
-      new THREE.MeshStandardMaterial({ color: 0x71807b, vertexColors:true, roughness:.97, metalness:.01, flatShading:true, fog:true, emissive:0x101b19, emissiveIntensity:.05 }),
-      new THREE.MeshStandardMaterial({ color: 0x78858a, vertexColors:true, roughness:.99, metalness:0, flatShading:true, fog:true, emissive:0x10171a, emissiveIntensity:.035 }),
+      new THREE.MeshStandardMaterial({ color: 0x71807b, vertexColors:true, roughness:.94, metalness:.015, flatShading:hardFacets, fog:true, emissive:0x101b19, emissiveIntensity:.05 }),
+      new THREE.MeshStandardMaterial({ color: 0x78858a, vertexColors:true, roughness:.97, metalness:.006, flatShading:hardFacets, fog:true, emissive:0x10171a, emissiveIntensity:.035 }),
       new THREE.MeshBasicMaterial({ color: 0x89939a, vertexColors:true, fog:true })
     ];
-    this.layers = RIDGE_SPECS.map((spec, index) => new THREE.Mesh(
+    this.layers = this.ridgeSpecs.map((spec, index) => new THREE.Mesh(
       continuousRidgeGeometry(spec, index, this.anchor, this.routeHeading),
       ridgeMaterials[index]
     ));
@@ -315,7 +328,7 @@ export class HorizonDirector {
     for (let index = 0; index < LAYER_COUNTS.forest; index += 1) {
       const side = index % 2 ? 1 : -1;
       const layerIndex = index % 7 === 0 ? 1 : 0;
-      const spec = RIDGE_SPECS[layerIndex];
+      const spec = this.ridgeSpecs[layerIndex];
       const progress = Math.floor(index / 2) / (LAYER_COUNTS.forest / 2 - 1);
       const along = spec.start + (spec.end - spec.start) * (.08 + progress * .84)
         + (seeded(index + 4100) - .5) * 105;
@@ -354,7 +367,7 @@ export class HorizonDirector {
     let maximumRootGap = -Infinity;
     let minimumRootGap = Infinity;
     for (const { layerIndex, count } of plan) {
-      const spec = RIDGE_SPECS[layerIndex];
+      const spec = this.ridgeSpecs[layerIndex];
       const perWindowSide = Math.ceil(count / (GROVE_WINDOWS.length * 2));
       for (let local = 0; local < count; local += 1) {
         const side = local % 2 ? 1 : -1;
@@ -467,18 +480,20 @@ export class HorizonDirector {
       routeHeadingDegrees: +(THREE.MathUtils.radToDeg(this.routeHeading)).toFixed(1),
       placementRevision: this.placementRevision,
       placementSignature: this.placementSignature,
+      geologyMode: this.geologyMode,
+      protectedValleyHalfWidth: this.geologyMode === 'incumbent' ? 500 : 650,
       cameraFar: this.cameraFar,
       fogDensity: this.fogDensity,
-      instances: RIDGE_SPECS.reduce((sum, spec) => sum + spec.sections, 0),
+      instances: this.ridgeSpecs.reduce((sum, spec) => sum + spec.sections, 0),
       islandInstances: LAYER_COUNTS.skyMonoliths,
       mountainLayers: 3,
       continuousRidgeWalls: 6,
       detachedMountainInstances: 0,
-      ridgeGeometryMode: 'continuous-fixed-walls-v1',
-      ridgeSections: RIDGE_SPECS.map(spec => spec.sections),
+      ridgeGeometryMode: this.geologyMode === 'incumbent' ? 'continuous-fixed-walls-v1' : 'continuous-camera-safe-terraces-v2',
+      ridgeSections: this.ridgeSpecs.map(spec => spec.sections),
       ridgeTriangles: this.layers.reduce((sum, layer) => sum + (layer.geometry.index?.count || 0) / 3, 0),
-      valleyFloorWidth: RIDGE_SPECS[0].inner * 2,
-      longitudinalSpan: RIDGE_SPECS[2].end - RIDGE_SPECS[2].start,
+      valleyFloorWidth: this.ridgeSpecs[0].inner * 2,
+      longitudinalSpan: this.ridgeSpecs[2].end - this.ridgeSpecs[2].start,
       forestInstances: LAYER_COUNTS.forest,
       forestMode: this.forestMode,
       forestAttachment: this.forestMode === 'incumbent' ? 'slope-sampled-v1' : 'rendered-ridge-anchored-v2',

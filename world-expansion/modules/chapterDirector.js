@@ -202,7 +202,7 @@ export class ChapterDirector {
     if (beat === 'thread_canyon') {
       const hearth = state.hearthDecision;
       if (hearth?.status === 'prompted') {
-        return '◈ The Last Hearth is calling. [1] Answer it. [2] Slip past.';
+        return 'Choose the Last Hearth\'s fate.';
       }
       const target = 120;
       const peak = state.altitudePeak ?? 0;
@@ -221,12 +221,12 @@ export class ChapterDirector {
     if (beat === 'destroy_tower') {
       const td = vars.towersDestroyed ?? 0;
       const need = Math.min(3, state.towerTarget ?? 3);
-      if (td >= need) return `✓ The last shrine falls quiet. The wastes lie open.`;
-      return `⚔ Silence the wind shrines. ${td}/${need} broken. Hold X for stormfire.`;
+      if (td >= need) return 'The last shrine is quiet. Reach the final vane.';
+      return `Silence the wind shrines. ${td}/${need}`;
     }
     if (beat === 'nightfall_escape') {
-      if (state.apexDefeated) return '✓ The Crowned Maw breaks away. Cross the final vane.';
-      return `⚔ Crowned Maw. ${Math.max(0, state.apexHp ?? 10)}/${state.apexMaxHp ?? 10} resolve. Hold X to charge.`;
+      if (state.apexDefeated) return 'Cross the final vane.';
+      return `Break the Crowned Maw. ${Math.max(0, state.apexHp ?? 10)}/${state.apexMaxHp ?? 10} resolve`;
     }
     const meta = this.metaObjectives[beat];
     if (meta && chapter.index > 0 && chapter.index < 4) return meta;

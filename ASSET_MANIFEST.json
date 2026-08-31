@@ -1,6 +1,6 @@
 {
   "artifact": "Galevein: Stormflight public demo",
-  "generatedAt": "2026-08-30T04:15:40.217Z",
+  "generatedAt": "2026-08-31T08:59:58.777Z",
   "policy": "explicit allowlist; no retired prototype rigs, source packs, reports, or local production sources",
   "files": [
     {
@@ -70,8 +70,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 335775,
-      "sha256": "e913fe2da0ca0e9be4113497f512e0c493bab21768a8444735a7060ca42f4f6f"
+      "bytes": 336298,
+      "sha256": "ab045c51ff982f4fe1cd038c11333ca61ac148311d177365ede30a3ef0d5725d"
     },
     {
       "path": "licenses/gpujs-2.24.0-MIT.txt",
@@ -245,8 +245,8 @@
     },
     {
       "path": "world-expansion/modules/chapterDirector.js",
-      "bytes": 13367,
-      "sha256": "a077939bd97d09ce1a05f387c673054d41edaa98137be1e9739330240c4f038d"
+      "bytes": 13251,
+      "sha256": "74b87ab79f57da60b00e958652037739ac283dade9c9f661c105a6daeaedab32"
     },
     {
       "path": "world-expansion/modules/cinematicDof.js",
@@ -270,8 +270,8 @@
     },
     {
       "path": "world-expansion/modules/gameStructure.js",
-      "bytes": 8264,
-      "sha256": "8c35a80b17bb40f7225c69de8c40a12f3f9d485b5bc79cff32312ce576b3e837"
+      "bytes": 8203,
+      "sha256": "18e9745c8a81a1d72435355f5a9cf0eb928b8945714006bb839ab96f9020f39d"
     },
     {
       "path": "world-expansion/modules/gpuAtmosphereField.js",
@@ -285,8 +285,8 @@
     },
     {
       "path": "world-expansion/modules/horizonDirector.js",
-      "bytes": 23182,
-      "sha256": "bbbb97adf30821fdcf1922393a68918106e49d2d6957445c990d9e91386aaea2"
+      "bytes": 24427,
+      "sha256": "d2dbee1104936334d9b5111390733dd4d8454fa62a35cccefd30e27c908bbf12"
     },
     {
       "path": "world-expansion/modules/keeperHollowBiome.js",
@@ -325,8 +325,8 @@
     },
     {
       "path": "world-expansion/modules/serpentCoast.js",
-      "bytes": 10325,
-      "sha256": "42d558bc2d92d832857ab3736c21745696cd59f7c924ee1c2d722f49de80bcbc"
+      "bytes": 13786,
+      "sha256": "ab7751deb5f3dee96482e5528f9188c5fc0f77d8506aa03fd0b017ef84176f3c"
     },
     {
       "path": "world-expansion/modules/windField.js",

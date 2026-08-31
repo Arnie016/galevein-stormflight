@@ -116,19 +116,15 @@
     background:rgba(2,8,13,.22); box-shadow:inset 0 0 0 2px rgba(2,8,13,.18); transition:all .28s ease; }
   .objective-mark.done{ border-color:#ffc27a; background:rgba(255,194,122,.16); box-shadow:0 0 10px rgba(255,194,122,.24); }
   .objective-mark.done::after{ content:'✓'; position:absolute; inset:-4px -2px 0; color:#ffc27a; font:900 15px var(--body); }
-  #missionBeat{ display:none; margin-top:5px; font-size:11px; letter-spacing:.8px; color:#ffbe6a;
-    font-family:var(--mono); }
-  #missionBeat.on{ display:block; }
+  /* One objective owns the centre HUD. The former second mission line and
+     subtitle-style coach cue duplicated it and made the game read like a demo. */
+  #missionBeat,#coachCue,#storyline{ display:none !important; }
   #journeyRail{ position:static; display:flex; align-items:center; justify-content:center; width:max-content; margin:8px auto 0;
     gap:5px; padding:4px 8px; border-radius:18px; background:rgba(5,10,18,.52); border:1px solid rgba(89,240,213,.16); }
   .journey-step{ display:block; width:24px; height:3px; border-radius:4px; background:rgba(207,224,245,.18); transition:all .25s; }
   .journey-step.done{ background:rgba(89,240,213,.7); }
   .journey-step.current{ width:42px; background:#ffc27a; box-shadow:0 0 10px rgba(255,194,122,.55); }
   #journeyClock{ margin-left:5px; min-width:42px; color:#dbe7fb; font:700 9px var(--mono); letter-spacing:.08em; }
-  #coachCue{ position:absolute; left:50%; bottom:70px; transform:translateX(-50%); max-width:min(680px,calc(100vw - 36px));
-    padding:8px 13px; border-radius:8px; border:1px solid rgba(255,194,122,.34); border-left:3px solid #ffc27a;
-    background:linear-gradient(90deg,rgba(7,14,22,.86),rgba(8,18,23,.72)); color:#e8f3f0; font:700 10px var(--mono);
-    letter-spacing:.06em; text-align:center; text-shadow:0 1px 10px #000; }
   #restCue{ position:absolute; left:50%; bottom:111px; transform:translate(-50%,8px); opacity:0;
     padding:7px 13px; border-radius:18px; border:1px solid rgba(255,194,122,.38);
     background:rgba(7,15,18,.78); color:#f4e7cc; font:700 10px var(--mono); letter-spacing:.12em;
@@ -247,50 +243,57 @@
     border-top:1px dotted rgba(90,60,25,.5); padding-top:9px; }
 
   /* The field card is a saddle-mounted reference, not a pause menu. */
-  #book{ position:fixed; inset:auto 22px 58px auto; z-index:4; display:block; width:min(390px,calc(100vw - 34px));
+  #book{ position:fixed; inset:auto 62px 58px auto; z-index:4; display:block; width:min(440px,calc(100vw - 36px));
     background:none; opacity:0; pointer-events:none; perspective:900px;
     transform:translate(34px,24px) rotate(3deg) rotateY(-7deg) scale(.94); transform-origin:100% 100%;
     transition:opacity .24s ease,transform .34s cubic-bezier(.2,.9,.25,1); }
   #book.on{ opacity:1; pointer-events:auto; transform:translate(0,0) rotate(2.2deg) rotateY(-5deg) scale(1); }
-  #bookInner,#book.on #bookInner{ width:auto; max-height:none; overflow:visible; padding:12px 14px 13px;
+  #bookInner,#book.on #bookInner{ width:auto; max-height:none; overflow:visible; padding:15px 17px 15px;
     transform:none; border:1px solid rgba(57,36,15,.74); border-radius:7px;
     clip-path:polygon(1% 3%,7% 1%,14% 2.2%,23% .7%,34% 2%,45% .5%,57% 1.8%,68% .6%,79% 2%,90% .7%,99% 2%,
       98.7% 15%,100% 28%,98.8% 42%,99.7% 56%,98.6% 70%,99.4% 84%,98% 98%,87% 99.2%,75% 98.1%,
       62% 99.4%,49% 98%,36% 99.3%,23% 98.1%,10% 99.2%,1% 97%,1.7% 82%,.5% 67%,1.5% 51%,.4% 35%,1.5% 19%);
     background:
-      radial-gradient(circle at 14% 72%,rgba(78,45,15,.19),transparent 24%),
-      radial-gradient(circle at 84% 18%,rgba(82,46,14,.16),transparent 22%),
-      repeating-linear-gradient(94deg,rgba(108,73,32,.045) 0 2px,transparent 2px 5px),
-      linear-gradient(155deg,#d9c18f,#c6a66d 58%,#ab8956);
-    box-shadow:0 22px 54px rgba(0,0,0,.58),0 0 0 2px rgba(215,180,113,.12),inset 0 0 34px rgba(70,40,14,.3); }
-  #bookInner::before{ top:-2px; height:8px; border-radius:7px 7px 0 0; opacity:.72; }
+      radial-gradient(circle at 14% 72%,rgba(68,37,11,.24),transparent 24%),
+      radial-gradient(circle at 84% 18%,rgba(72,39,10,.22),transparent 22%),
+      radial-gradient(ellipse at 50% 112%,rgba(45,25,8,.34),transparent 46%),
+      repeating-linear-gradient(94deg,rgba(91,57,22,.06) 0 2px,transparent 2px 5px),
+      repeating-linear-gradient(3deg,rgba(74,44,15,.035) 0 1px,transparent 1px 6px),
+      linear-gradient(155deg,#dcc696,#c4a367 58%,#9f7a45);
+    box-shadow:0 24px 58px rgba(0,0,0,.64),0 0 0 2px rgba(215,180,113,.13),inset 0 0 46px rgba(58,30,8,.38); }
+  #bookInner::before{ top:-3px; height:10px; border-radius:7px 7px 0 0; opacity:.82;
+    background:linear-gradient(180deg,#24170b,#573718 55%,#2f1d0d); }
+  #bookInner::after{ content:'G'; position:absolute; right:13px; bottom:11px; width:27px; height:27px;
+    display:grid; place-items:center; border-radius:50%; color:rgba(255,225,174,.82); background:#713a28;
+    border:2px solid rgba(74,31,20,.72); box-shadow:0 2px 7px rgba(0,0,0,.38),inset 0 0 0 2px rgba(210,133,77,.25);
+    font:900 12px var(--display); transform:rotate(-9deg); }
   #book .bk-head{ display:flex; align-items:center; justify-content:center; gap:9px; margin:2px 0 7px;
     padding:0 0 7px; border-bottom:1px solid rgba(70,43,17,.52); }
   #book .bk-rune{ font-size:12px; }
-  #book .bk-title{ font-size:15px; line-height:1; letter-spacing:.19em; }
+  #book .bk-title{ font-size:17px; line-height:1; letter-spacing:.17em; }
   #book .bk-sub{ display:none; }
   .flight-gesture-grid{ display:grid; grid-template-columns:1fr 1fr; border:1px solid rgba(64,39,16,.5); }
-  .flight-gesture{ position:relative; min-height:104px; padding:5px 6px 7px; box-sizing:border-box; text-align:center;
+  .flight-gesture{ position:relative; min-height:114px; padding:6px 7px 8px; box-sizing:border-box; text-align:center;
     border-right:1px solid rgba(64,39,16,.42); border-bottom:1px solid rgba(64,39,16,.42); overflow:hidden; }
   .flight-gesture:nth-child(2n){ border-right:0; }
   .flight-gesture:nth-last-child(-n+2){ border-bottom:0; }
-  .flight-gesture svg{ display:block; width:100%; height:66px; overflow:visible; }
-  .flight-gesture .dragon-line{ fill:none; stroke:#30200f; stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round; }
+  .flight-gesture svg{ display:block; width:100%; height:72px; overflow:visible; }
+  .flight-gesture .dragon-line{ fill:none; stroke:#291a0b; stroke-width:2.25; stroke-linecap:round; stroke-linejoin:round; }
   .flight-gesture .motion-line{ fill:none; stroke:#6e4620; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
   .flight-gesture .motion-fill{ fill:#6e4620; }
-  .flight-gesture strong{ display:block; color:#35220f; font:800 10px var(--display); letter-spacing:.12em; }
+  .flight-gesture strong{ display:block; color:#30200e; font:900 11px var(--display); letter-spacing:.10em; }
   .flight-gesture kbd{ display:inline-block; min-width:16px; margin-top:3px; padding:1px 4px; color:#2d1c0b;
     border:1px solid rgba(55,33,13,.72); border-radius:2px; background:rgba(245,224,180,.28); font:800 9px var(--mono); }
   .gesture-mark{ position:absolute; right:6px; top:5px; width:12px; height:12px; border-radius:50%;
     border:1px solid rgba(58,35,14,.34); color:transparent; font:900 10px/12px var(--body); transition:.2s ease; }
-  .flight-gesture.discovered{ background:rgba(245,224,180,.18); }
+  .flight-gesture.discovered{ background:rgba(245,224,180,.22); }
   .flight-gesture.discovered .gesture-mark{ color:#3d6c59; border-color:#3d6c59; box-shadow:0 0 0 2px rgba(61,108,89,.08); }
-  #book .bk-foot{ display:flex; justify-content:space-between; gap:10px; margin-top:7px; padding-top:7px;
-    font:italic 10px var(--body); letter-spacing:.03em; }
-  #book .bk-foot b{ color:#3b2814; font:800 8px var(--mono); letter-spacing:.13em; }
+  #book .bk-foot{ display:flex; justify-content:space-between; gap:10px; margin:9px 38px 0 0; padding-top:8px;
+    font:italic 11px var(--body); letter-spacing:.02em; }
+  #book .bk-foot b{ color:#3b2814; font:900 9px var(--mono); letter-spacing:.11em; }
   #ctrlhint{ display:none; }
   @media (max-width:720px){
-    #book{ right:10px; bottom:46px; width:min(350px,calc(100vw - 20px)); }
+    #book{ right:10px; bottom:42px; width:min(370px,calc(100vw - 20px)); }
     .flight-gesture{ min-height:91px; } .flight-gesture svg{ height:54px; }
     #hudBR{ display:none; } #coachCue{ bottom:18px; }
   }
@@ -1117,7 +1120,11 @@ const LOCAL_SCENE_PARAMS=new URLSearchParams(location.search);
 const LOCAL_SCENE_HOST=['127.0.0.1','localhost','[::1]'].includes(location.hostname);
 const LOCAL_FOREST_INCUMBENT=LOCAL_SCENE_HOST&&LOCAL_SCENE_PARAMS.get('forest')==='incumbent';
 const LOCAL_FOUNDATION_INCUMBENT=LOCAL_SCENE_HOST&&LOCAL_SCENE_PARAMS.get('foundations')==='incumbent';
-const horizonDirector = new HorizonDirector(scene, camera,{forestMode:LOCAL_FOREST_INCUMBENT?'incumbent':'ridge-anchored'});
+const LOCAL_GEOLOGY_INCUMBENT=LOCAL_SCENE_HOST&&LOCAL_SCENE_PARAMS.get('geology')==='incumbent';
+const horizonDirector = new HorizonDirector(scene, camera,{
+  forestMode:LOCAL_FOREST_INCUMBENT?'incumbent':'ridge-anchored',
+  geologyMode:LOCAL_GEOLOGY_INCUMBENT?'incumbent':'camera-safe-terraces'
+});
 const refreshSeaFog=()=>{
   sea.material.uniforms.fogColor.value.copy(scene.fog.color);
   sea.material.uniforms.fogDensity.value=scene.fog.density;
@@ -1608,7 +1615,8 @@ const route=[[520,58,340],[400,68,180],[260,68,20],[-60,72,-150],            // 
 const LOCAL_ENV_PARAMS=new URLSearchParams(location.search);
 const LOCAL_FAB_CLIFF_CANDIDATE=['127.0.0.1','localhost','[::1]'].includes(location.hostname)
   && LOCAL_ENV_PARAMS.get('cliffs')==='fab';
-serpentCoast=new SerpentCoast(scene,{flightRoute:route});
+serpentCoast=new SerpentCoast(scene,{flightRoute:route,
+  geologyMode:LOCAL_GEOLOGY_INCUMBENT?'incumbent':'camera-safe-terraces'});
 for(const proxy of serpentCoast.getCollisionProxies()) colliders.push({
   x:proxy.x,z:proxy.z,r:proxy.radius,top:proxy.top,serpentCoast:true,id:proxy.id
 });
@@ -1794,7 +1802,7 @@ landmarkReady.then(async ()=>{
     getHeightAboveWater:(pos)=>pos.y-waveH(pos.x,pos.z,S.t),
     getObjectiveTarget:nextObjectiveTarget,
     getTowersDestroyed:()=>searchlights.filter(s=>s.disabled>0).length,
-    onChapterStory:(chapter)=>{ if(chapter.popupOnEnter) popup(chapter.popupOnEnter); if(chapter.storyLine) storyPop(chapter.storyLine,5.5);
+    onChapterStory:(chapter)=>{
       if(chapter.id==='long_night')achievement('NERIS JOINS THE FLIGHT','the young Tidevein chooses your wing','COMPANION','DRAGON BONDED');
       if(chapter.id==='tempest_gate')achievement('THE CROWNED MAW','an apex dragon bars the final vane','CHARGE X','FINAL PHASE'); },
     onRegionStory:(region)=>{ if(region.ambientLine){ storyPop(region.ambientLine,6); AU.play('ring',0.35); } },
@@ -2972,8 +2980,7 @@ function updateShocks(dt){
 const popEl=document.getElementById('popup');
 function popup(text){ popEl.textContent=text; popEl.style.animation='none'; void popEl.offsetWidth; popEl.style.animation='pop 0.9s ease-out'; }
 const storyEl=document.getElementById('storyline');
-function storyPop(text,dur=5){ storyEl.textContent=text; storyEl.style.animation='none'; void storyEl.offsetWidth;
-  storyEl.style.animation=`storyfade ${dur}s ease-out`; }
+function storyPop(){ storyEl.textContent=''; storyEl.style.animation='none'; }
 
 /* ================= THE FORGE: scales, saddle fittings, and earned mastery ================= */
 const UPGRADES=[
@@ -3097,7 +3104,7 @@ function renderBook(){
 }
 function fieldCardSnapshot(){
   const root=$('book'),rect=root.getBoundingClientRect(),style=getComputedStyle(root);
-  return {profile:'saddle-field-card-v1',visible:root.classList.contains('on'),title:root.querySelector('.bk-title')?.textContent||'',
+  return {profile:'saddle-field-card-v2',visible:root.classList.contains('on'),title:root.querySelector('.bk-title')?.textContent||'',
     itemCount:root.querySelectorAll('[data-flight-gesture]').length,
     items:[...root.querySelectorAll('[data-flight-gesture]')].map(node=>({id:node.dataset.flightGesture,
       label:node.querySelector('strong')?.textContent||'',key:node.querySelector('kbd')?.textContent||'',
@@ -3176,8 +3183,15 @@ function objectiveProgressState(){
   if(S.duelMode) return {hidden:true,current:0,total:0,label:'duel'};
   if(S.chapter===0) return {hidden:false,current:tutRings.filter(r=>r.userData.hit).length,total:3,label:'bond rings'};
   if(S.chapter===1) return {hidden:false,current:Math.max(0,Math.min(4,S.score)),total:4,label:'coastal signals'};
-  if(S.chapter===2) return {hidden:false,current:Math.max(0,Math.min(4,S.score-4)),total:4,label:'answering echoes'};
-  if(S.chapter===3) return {hidden:false,current:Math.max(0,Math.min(3,S.score-8)),total:3,label:'pursuit vanes'};
+  if(S.chapter===2){
+    const routeFound=S.score>=7?1:0,altitude=S.altitudeCollected?1:0;
+    const hearth=hearthDecision?.snapshot?.().status==='resolved'?1:0;
+    return {hidden:false,current:routeFound+altitude+hearth,total:3,label:'lost wing tasks'};
+  }
+  if(S.chapter===3){
+    const shrines=searchlights.filter(shrine=>shrine.destroyed).length;
+    return {hidden:false,current:Math.min(3,shrines)+(S.score>=11?1:0),total:4,label:'pursuit tasks'};
+  }
   const apexDone=STORY_DRAGONS.apex.defeated?1:0;
   const finalVane=S.score>=12?1:0;
   return {hidden:false,current:apexDone+finalVane,total:2,label:'apex and final vane'};
